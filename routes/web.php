@@ -3,6 +3,13 @@
 use App\Http\Controllers\Front\HomeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\controllers\Front\CartController; 
+use App\Http\Controllers\SocialAuthController;
+use App\Http\Controllers\Front\ShopController;
+use App\Http\Controllers\Front\BulkOrderController;
+use App\Http\Controllers\Front\OrderController;
+use App\Http\Controllers\Front\CheckoutController;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -64,86 +71,91 @@ Route::post('subscribers/create',[HomeController::class,'storeNewsletterRecord']
 
 
 Route::post('/set-currency', [HomeController::class, 'setCurrency'])->name('set-currency');
-Route::match(['get', 'post'], 'variant-combination/prices', [HomeController::class, 'variantCombinationPrices'])->name('variant.combination.prices');
+Route::post('variant-combination/prices', [HomeController::class, 'variantCombinationPrices'])->name('variant.combination.prices');
 
 Route::get('/get-states/{country_id}', [App\Http\Controllers\Front\HomeController::class, 'getStates']);
 Route::get('/get-cities/{state_id}', [App\Http\Controllers\Front\HomeController::class, 'getCities']);
 Route::name('front-')->group(function () {
     Route::get('/', [App\Http\Controllers\Front\HomeController::class, 'index'])->name('home.index');
     Route::get('/shop/{categoryId?}/{subCategoryId?}/{childCategoryId?}', [App\Http\Controllers\Front\ShopController::class, 'index'])->name('shop.index');
+    
+        Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name("google");
+        Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
+        Route::get('/auth/facebook', [SocialAuthController::class, 'redirectToFacebook']);
+        Route::get('/auth/facebook/callback', [SocialAuthController::class, 'handleFacebookCallback']);
+        Route::post('reset-password-save', [App\Http\Controllers\Front\Auth\AuthController::class, 'resetPasswordSave'])->name('user.resetPasswordSave'); 
+        Route::middleware(['GuestCustomer'])->group(function () {        
+            Route::get('/login', [App\Http\Controllers\Front\Auth\AuthController::class, 'login'])->name('user.login');
+            Route::get('/signup', [App\Http\Controllers\Front\Auth\AuthController::class, 'signup'])->name('user.signup');
+            Route::post('/sign-in', [App\Http\Controllers\Front\Auth\AuthController::class, 'postLogin'])->name('user.postLogin');
+            Route::post('/signup', [App\Http\Controllers\Front\Auth\AuthController::class, 'postSignup'])->name('user.postSignup');
+            Route::post('/postSignupVerify', [App\Http\Controllers\Front\Auth\AuthController::class, 'postSignupVerify'])->name('user.postSignupVerify');
+            Route::match(['get', 'post'], 'forget-password', [App\Http\Controllers\Front\Auth\AuthController::class, 'forgetPassword'])->name('user.forgetPassword');
+            Route::match(['get', 'post'], 'send-password', [App\Http\Controllers\Front\Auth\AuthController::class, 'sendResetLinkEmail'])->name('user.sendPassword');
+            Route::match(['get', 'post'], 'reset-password/{validstring}', [App\Http\Controllers\Front\Auth\AuthController::class, 'resetPassword'])->name('user.resetPassword');
+            // Route::post('reset-password-save', [App\Http\Controllers\Front\Auth\AuthController::class, 'resetPasswordSave'])->name('user.resetPasswordSave');
+        
 
-    Route::middleware(['GuestCustomer'])->group(function () {        
-        Route::get('/login', [App\Http\Controllers\Front\Auth\AuthController::class, 'login'])->name('user.login');
-        Route::get('/signup', [App\Http\Controllers\Front\Auth\AuthController::class, 'signup'])->name('user.signup');
-        Route::post('/sign-in', [App\Http\Controllers\Front\Auth\AuthController::class, 'postLogin'])->name('user.postLogin');
-        Route::post('/signup', [App\Http\Controllers\Front\Auth\AuthController::class, 'postSignup'])->name('user.postSignup');
-        Route::post('/postSignupVerify', [App\Http\Controllers\Front\Auth\AuthController::class, 'postSignupVerify'])->name('user.postSignupVerify');
-        Route::get('auth/{provider}', [SocialAuthController::class, 'redirect'])->name('social.redirect');
-        Route::get('auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
-        Route::match(['get', 'post'], 'forget-password', [App\Http\Controllers\Front\Auth\AuthController::class, 'forgetPassword'])->name('user.forgetPassword');
-        Route::match(['get', 'post'], 'send-password', [App\Http\Controllers\Front\Auth\AuthController::class, 'sendResetLinkEmail'])->name('user.sendPassword');
-        Route::match(['get', 'post'], 'reset-password/{validstring}', [App\Http\Controllers\Front\Auth\AuthController::class, 'resetPassword'])->name('user.resetPassword');
-        Route::match(['get', 'post'], 'reset-password-save/{validstring}', [App\Http\Controllers\Front\Auth\AuthController::class, 'resetPasswordSave'])->name('user.resetPasswordSave');
-        Route::post('/resentotp', [App\Http\Controllers\Front\Auth\AuthController::class, 'resentotp'])->name('user.resentotp');
-    });
+            Route::post('/resentotp', [App\Http\Controllers\Front\Auth\AuthController::class, 'resentotp'])->name('user.resentotp');
+        });
 
+        Route::get('user/logout', [App\Http\Controllers\Front\Auth\AuthController::class, 'logout'])->name('user.logout');
+        Route::middleware(['AuthCustomer'])->group(function () {
+            Route::get('/order-confirm/{id}', [App\Http\Controllers\Front\HomeController::class, 'order_confirm'])->name('user.order.confirm');
+            /* dashboard routes */
+            Route::get('/wishlist', [App\Http\Controllers\Front\DashboardController::class, 'wishlist'])->name('user.wishlist');
+            // Route::get('user/logout', [App\Http\Controllers\Front\Auth\AuthController::class, 'logout'])->name('user.logout');
+            Route::post('/update-profile', [App\Http\Controllers\Front\DashboardController::class, 'updateProfile'])->name('user.updateProfile');
+            Route::post('/change-password', [App\Http\Controllers\Front\DashboardController::class, 'changePassword'])->name('user.changePassword');
+            Route::get('/addresses', [App\Http\Controllers\Front\DashboardController::class, 'addresses'])->name('user.addresses');
+            Route::post('/addresses/add-address', [App\Http\Controllers\Front\DashboardController::class, 'addAddress'])->name('user.addAddress');
+            Route::post('/addresses/edit-address/{addressId}', [App\Http\Controllers\Front\DashboardController::class, 'editAddress'])->name('user.editAddress');
+            Route::get('/addresses/make-primary-address/{addressId}', [App\Http\Controllers\Front\DashboardController::class, 'makeAddressPrimary'])->name('user.makeAddressPrimary');
+            Route::get('/addresses/delete-address/{addressId}', [App\Http\Controllers\Front\DashboardController::class, 'deleteAddress'])->name('user.deleteAddress');
+            Route::get('/orders', [App\Http\Controllers\Front\DashboardController::class, 'orders'])->name('user.orders');
 
+            /* new dashboard routes */
+            Route::get('/myorders', [App\Http\Controllers\Front\DashboardController::class, 'myPurchase'])->name('user.myPurchase');
+            Route::get('/myorderdetails/{id}', [App\Http\Controllers\Front\DashboardController::class, 'myPurchaseDetail'])->name('user.myPurchaseDetail');
+            Route::get('/accountsetting', [App\Http\Controllers\Front\DashboardController::class, 'accountSetting'])->name('user.accountSetting');
+            Route::get('/walletpayment', [App\Http\Controllers\Front\DashboardController::class, 'walletPayment'])->name('user.walletPayment');
+            Route::get('/suggestion', [App\Http\Controllers\Front\DashboardController::class, 'suggestion'])->name('user.suggestion');
+            Route::get('/contactwithus', [App\Http\Controllers\Front\DashboardController::class, 'contactwithus'])->name('user.contactwithus');
+            Route::post('/contactSuggestionSave', [App\Http\Controllers\Front\DashboardController::class, 'contactSuggestionSave'])->name('user.contactSuggestionSave');
+            Route::get('/rateing-review', [App\Http\Controllers\Front\DashboardController::class, 'rateingReview'])->name('user.rateingReview');
+            Route::get('/invite-friends', [App\Http\Controllers\Front\DashboardController::class, 'inviteFriends'])->name('user.inviteFriends');
+            Route::get('/myaddress',[App\Http\Controllers\Front\DashboardController::class,'myAddresses'])->name('user.address'); 
+            Route::get('/mysetting',[App\Http\Controllers\Front\DashboardController::class,'mySetting'])->name('user.setting'); 
+            Route::get('user/address/delete/{addressId}',[App\Http\Controllers\Front\DashboardController::class,'userAddressDelete'])->name('user.address.delete'); 
+            Route::post('user/address/update',[App\Http\Controllers\Front\DashboardController::class,'userAddressUpdate'])->name('user.address.update');
+            /* new dashboard routes */
+            /* dashboard routes */
+            Route::match(['get', 'post'], '/add-to-wishlist', [App\Http\Controllers\Front\CartController::class, 'addToWishlist'])->name('user.addToWishlist');
+            Route::match(['get', 'post'], '/remove-from-wishlist', [App\Http\Controllers\Front\CartController::class, 'removeFromWishlist'])->name('user.removeFromWishlist');
 
-    Route::middleware(['AuthCustomer'])->group(function () {
-        Route::get('/order-confirm/{id}', [App\Http\Controllers\Front\HomeController::class, 'order_confirm'])->name('user.order.confirm');
+            Route::any('/save-user-address', [App\Http\Controllers\Front\CheckoutController::class, 'saveAddress'])->name('user.save_address');
+            Route::get('/get-user-address/{addressId}', [App\Http\Controllers\Front\CheckoutController::class, 'getUserAddress'])->name('user.get_user_address');
+            Route::post('/update-address', [App\Http\Controllers\Front\CheckoutController::class, 'updateAddress'])->name('user.update_user_address');
+            Route::get('/get-user-wallet/{user_id}', [App\Http\Controllers\Front\CheckoutController::class, 'getuserWallet']);
 
-        /* dashboard routes */
-        Route::get('/wishlist', [App\Http\Controllers\Front\DashboardController::class, 'wishlist'])->name('user.wishlist');
-        Route::get('/logout', [App\Http\Controllers\Front\Auth\AuthController::class, 'logout'])->name('user.logout');
-        Route::post('/update-profile', [App\Http\Controllers\Front\DashboardController::class, 'updateProfile'])->name('user.updateProfile');
-        Route::post('/change-password', [App\Http\Controllers\Front\DashboardController::class, 'changePassword'])->name('user.changePassword');
-        Route::get('/addresses', [App\Http\Controllers\Front\DashboardController::class, 'addresses'])->name('user.addresses');
-        Route::post('/addresses/add-address', [App\Http\Controllers\Front\DashboardController::class, 'addAddress'])->name('user.addAddress');
-        Route::post('/addresses/edit-address/{addressId}', [App\Http\Controllers\Front\DashboardController::class, 'editAddress'])->name('user.editAddress');
-        Route::get('/addresses/make-primary-address/{addressId}', [App\Http\Controllers\Front\DashboardController::class, 'makeAddressPrimary'])->name('user.makeAddressPrimary');
-        Route::get('/addresses/delete-address/{addressId}', [App\Http\Controllers\Front\DashboardController::class, 'deleteAddress'])->name('user.deleteAddress');
-        Route::get('/orders', [App\Http\Controllers\Front\DashboardController::class, 'orders'])->name('user.orders');
+            Route::POST('/place-order', [App\Http\Controllers\Front\CheckoutController::class, 'placeOrder']);
+            Route::any('/checkout-callback', [App\Http\Controllers\Front\CheckoutController::class, 'checkout_callback'])->name('product.checkout.callback');
+            Route::get('/order-details/{orderId}', [App\Http\Controllers\Front\OrderController::class, 'orderDetails']);
+            //Route::get('/order-confirm/{id}', [App\Http\Controllers\Front\HomeController::class, 'order_confirm'])->name('user.order.confirm');
+            Route::get('/checkout', [HomeController::class, 'checkoutBag'])->name('product.checkoutBag');
+            Route::match(['get', 'post'], '/orders/change-status', [OrderController::class, 'change_status'])->name('orders.change-status');
+            Route::post('/cancel-order-submit', [OrderController::class, 'submitCancelOrder'])->name('cancel.order.submit');
+            Route::post('/refund-submit', [OrderController::class, 'submitRefundRequest'])->name('refund.submit');
+            Route::get('/order-success/{order_id}', [OrderController::class, 'orderSuccess'])->name('order.success');
+            Route::post('/add-review', [App\Http\Controllers\Front\DashboardController::class, 'addReview'])->name('user.addReview');
+            Route::post('/wishlist/toggle', [App\Http\Controllers\Front\DashboardController::class, 'toggle'])->name('addwish');
+            Route::match(['get', 'post'], '/orders/generate-invoice/{id}', [OrderController::class, 'generateNewInvoice'])->name('orders.generate.invoice');
+            Route::match(['post'], '/orders/generate-items-invoice', [OrderController::class, 'generateItemsInvoice'])->name('orders.generate.items.invoice');
+            Route::match(['get', 'post'], '/get-shipping-address', [CheckoutController::class, 'getShippingData'])->name('get.shipping.address');
 
-       /* new dashboard routes */
-        Route::get('/mypurchase', [App\Http\Controllers\Front\DashboardController::class, 'myPurchase'])->name('user.myPurchase');
-        Route::get('/mypurchasedetail/{id}', [App\Http\Controllers\Front\DashboardController::class, 'myPurchaseDetail'])->name('user.myPurchaseDetail');
-        Route::get('/accountsetting', [App\Http\Controllers\Front\DashboardController::class, 'accountSetting'])->name('user.accountSetting');
-        Route::get('/walletpayment', [App\Http\Controllers\Front\DashboardController::class, 'walletPayment'])->name('user.walletPayment');
-        Route::get('/suggestion', [App\Http\Controllers\Front\DashboardController::class, 'suggestion'])->name('user.suggestion');
-        Route::get('/contactwithus', [App\Http\Controllers\Front\DashboardController::class, 'contactwithus'])->name('user.contactwithus');
-        Route::post('/contactSuggestionSave', [App\Http\Controllers\Front\DashboardController::class, 'contactSuggestionSave'])->name('user.contactSuggestionSave');
-        Route::get('/rateing-review', [App\Http\Controllers\Front\DashboardController::class, 'rateingReview'])->name('user.rateingReview');
-        Route::get('/invite-friends', [App\Http\Controllers\Front\DashboardController::class, 'inviteFriends'])->name('user.inviteFriends');
-        /* new dashboard routes */
-
-        /* dashboard routes */
-
-        Route::match(['get', 'post'], '/add-to-wishlist', [App\Http\Controllers\Front\CartController::class, 'addToWishlist'])->name('user.addToWishlist');
-        Route::match(['get', 'post'], '/remove-from-wishlist', [App\Http\Controllers\Front\CartController::class, 'removeFromWishlist'])->name('user.removeFromWishlist');
-
-        Route::any('/save-user-address', [App\Http\Controllers\Front\CheckoutController::class, 'saveAddress'])->name('user.save_address');
-        Route::get('/get-user-address/{addressId}', [App\Http\Controllers\Front\CheckoutController::class, 'getUserAddress'])->name('user.get_user_address');
-        Route::post('/update-address', [App\Http\Controllers\Front\CheckoutController::class, 'updateAddress'])->name('user.update_user_address');
-        Route::get('/get-user-wallet/{user_id}', [App\Http\Controllers\Front\CheckoutController::class, 'getuserWallet']);
-
-        Route::POST('/place-order', [App\Http\Controllers\Front\CheckoutController::class, 'placeOrder']);
-        Route::any('/checkout-callback', [App\Http\Controllers\Front\CheckoutController::class, 'checkout_callback'])->name('product.checkout.callback');
-        Route::get('/order-details/{orderId}', [App\Http\Controllers\Front\OrderController::class, 'orderDetails']);
-        //Route::get('/order-confirm/{id}', [App\Http\Controllers\Front\HomeController::class, 'order_confirm'])->name('user.order.confirm');
-        Route::get('/checkout', [HomeController::class, 'checkoutBag'])->name('product.checkoutBag');
-        Route::match(['get', 'post'], '/orders/change-status', [OrderController::class, 'change_status'])->name('orders.change-status');
-        Route::post('/cancel-order-submit', [OrderController::class, 'submitCancelOrder'])->name('cancel.order.submit');
-        Route::post('/refund-submit', [OrderController::class, 'submitRefundRequest'])->name('refund.submit');
-        Route::get('/order-success/{order_id}', [OrderController::class, 'orderSuccess'])->name('order.success');
-        Route::post('/add-review', [App\Http\Controllers\Front\DashboardController::class, 'addReview'])->name('user.addReview');
-        Route::post('/wishlist/toggle', [App\Http\Controllers\Front\DashboardController::class, 'toggle'])->name('addwish');
-        Route::match(['get', 'post'], '/orders/generate-invoice/{id}', [OrderController::class, 'generateNewInvoice'])->name('orders.generate.invoice');
-        Route::match(['post'], '/orders/generate-items-invoice', [OrderController::class, 'generateItemsInvoice'])->name('orders.generate.items.invoice');
-        Route::match(['get', 'post'], '/get-shipping-address', [CheckoutController::class, 'getShippingData'])->name('get.shipping.address');
-
-        Route::post('order/cancel',[CheckoutController::class,'orderCancelled'])->name('order.cancel');
-        Route::post('order/delivered',[CheckoutController::class,'orderReturn'])->name('order.return');
-    });
+            Route::post('order/cancel',[CheckoutController::class,'orderCancelled'])->name('order.cancel');
+            Route::post('order/delivered',[CheckoutController::class,'orderReturn'])->name('order.return');
+        });
 
     Route::get('header-product-search',[HomeController::class,'headerProductSearch'])->name('header-product-search'); 
     Route::get('/product/{product}/{title}/{sku}', [HomeController::class, 'productDetail'])->name('product.detail');

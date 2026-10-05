@@ -22,6 +22,8 @@ use App\Models\Coupon;
 use App\Models\ProductVariant; 
 use App\Models\ProductVariantCombination;
 use App\Models\CategoryTax;  
+use App\Models\Cart; 
+use App\Models\ProductVariantValue; 
 class HomeController extends Controller
 {
     public function index(){
@@ -57,7 +59,7 @@ class HomeController extends Controller
         $today = now()->toDateString();
         $priceDrop = PriceDrop::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->where('is_deleted',0)->latest()->first();
         
-        $DB = Product::select('id','name','slug','buying_price','selling_price','discount','discount_type','sku')->where('is_deleted', 0)
+        $DB = Product::select('id','name','slug','buying_price','selling_price','discount','discount_type','sku','best_seller')->where('is_deleted', 0)
             ->where('is_active', "1")->orderBy('id','DESC'); 
 
         $hasCategoryFilter = $request->filled('category_id') || $request->filled('sub_category_id') ||  $request->filled('sub_child_category_id');
@@ -239,11 +241,11 @@ class HomeController extends Controller
                 'nextOffset' => $offset + $results->count(),
             ]);
         } 
-        return view('front.home.product_list',compact('results','categoriesData','totalResults','variants','attributes','limit','category','isWishlisteddata','parent','grandParent','AllMainCategory','allSubCategory','variantColor','hasMore','allChildCategory','path','priceDrop'));
+        return view('front.home.product_list',compact('results','categoriesData','totalResults','variants','attributes','limit','category','isWishlisteddata','parent','grandParent','AllMainCategory','allSubCategory','variantColor','hasMore','allChildCategory','path','priceDrop','subCategory','subChildCategory'));
     }
 
-    public function productDetail(Request $request, $product, $title, $sku){
-        
+    public function productDetail(Request $request, $product, $title, $sku)
+    {
         $isWishlisted = null;
         $isWishlisteddata = [];
         $productcat = '';
@@ -251,6 +253,9 @@ class HomeController extends Controller
         $productChildCat = '';
         $user = Auth::guard('customer')->user();
         $product = Product::where('sku', $sku)->first();
+        if(!$product){
+            abort(404); 
+        }
         if ($user) {
             RecentlyViewed::updateOrCreate(
                 [
@@ -263,81 +268,69 @@ class HomeController extends Controller
             );
         } else {
             $recent = session()->get('recently_viewed', []);
-            if (($key = array_search($product->id, $recent)) !== false) {
-                unset($recent[$key]);
+
+            if (!is_array($recent)) {
+                $recent = [];
             }
+
+            $recent = array_values(array_diff($recent, [$product->id]));
+
             array_unshift($recent, $product->id);
-            $recent = array_slice($recent, 0, 50);
-            session(['recently_viewed' => $recent]);
+
+            $recent = array_slice($recent, 0, 10);
+
+            session()->put('recently_viewed', $recent);
         }
+
         $today = now()->toDateString();
         $priceDrop = PriceDrop::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->where('is_deleted',0)->latest()->first();
-
         $productcat = Category::where('id', $product->main_category_id)->orWhere('id',$product->main_collection_id)->first();
         $sizeChartData = SizeChartManager::with([ 'sizes', 'sections.measurements.values' ])->where('id',$productcat->size_chart_id)->first(); 
         $productDetailId = explode(',',$productcat->product_detail_manager); 
         $productDetailManager = ProductDetailManager::whereIn('id',$productDetailId)->select('id','section_name','content','order')->orderBy('order','asc')->get(); 
         $productSubCat = Category::where('id', $product->main_sub_category_id)->first(); 
-        
         $productChildCat = Category::where('id', $product->main_child_category_id)->first();
-        
         $productreview = Product::with(['reviews.user'])->where('sku', $sku)->where('is_active', "1")->first();
         $reviews = $productreview->reviews()->latest()->get();
-
-        $productvariants = ProductVariant::with([
+       $productvariants = ProductVariant::with([
             'variant:id,name,type',
             'variantValues.variant_value:id,name,color_code',
             'variantValues.first_image' => function ($q) use ($product) {
-                $q->where('product_id', $product->id);
+                $q->where('product_id', $product->id)
+                ->where('is_variant_icon', 1);
             }
         ])
-            ->select('id', 'variant_id', 'product_id')
-            ->where('product_id', $product->id)
-            ->get()
-        
-            ->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'variant_id' => $item->variant_id,
-                    'product_id' => $item->product_id,
-                    'variant_name' => $item->variant->name ?? null,
-                    'variant_type' => $item->variant->type ?? null,
-                    'variant_values' => $item->variantValues->map(function ($v) {
-                        return [
-                            'id' => $v->id,
-                            'product_variant_id' => $v->product_variant_id,
-                            'is_main' => $v->is_main,
-                            'variant_value_id' => $v->variant_value_id,
-                            'name' => $v->variant_value->name ?? null,
-                            'color_code' => $v->variant_value->color_code ?? null,
-                            'image' => $v->first_image?->graphic ?? null,
-                        ];
-                    })->toArray()
-                ];
-            })->toArray();
-        // @dd($productvariants);
-        $related_product_ids = Product::where('id', $product->id)->value('related_products');
-        $related_ids_array = array_filter(explode(',', $related_product_ids));
-        $related_products = Product::leftJoin('product_graphics', 'products.id', '=', 'product_graphics.product_id')
-            ->whereIn('products.id', $related_ids_array)
-            ->select(
-                'products.id',
-                'products.selling_price',
-                'products.discount_type',
-                'products.discount',
-                'products.buying_price',
-                'products.name',
-                'products.sku',
-                'products.short_description',
-                'product_graphics.graphic as image'
-            )
-            ->groupBy('products.id')
-            ->get();
+        ->select('id', 'variant_id', 'product_id')
+        ->where('product_id', $product->id)
+        ->get()
+        ->map(function ($item) {
 
+            return [
+                'id' => $item->id,
+                'variant_id' => $item->variant_id,
+                'product_id' => $item->product_id,
+                'variant_name' => $item->variant->name ?? null,
+                'variant_type' => $item->variant->type ?? null,
+                'variant_values' => $item->variantValues->map(function ($v) {
+                    return [
+                        'id' => $v->id,
+                        'product_variant_id' => $v->product_variant_id,
+                        'is_main' => $v->is_main,
+                        'variant_value_id' => $v->variant_value_id,
+                        'name' => $v->variant_value->name ?? null,
+                        'color_code' => $v->variant_value->color_code ?? null,
+                        'image' => $v->first_image?->graphic ?? null,
+
+                        'is_variant_icon' => $v->first_image?->is_variant_icon ?? 0,
+                    ];
+
+                })->toArray()
+
+            ];
+
+        })->toArray();
         $productVarientCom = ProductVariantCombination::where('product_id', $product->id)->get();
         $bestproduct = Product::where('best_seller', 1)->where('is_active', "1")->where("is_deleted",  0)->where(['best_seller' => true, 'draf' => false])->orderBy('id', 'desc')->get();
-        $releatedProduct = Product::with(['productVariants.variantValues.first_image'])->where('is_active', "1")->whereIn('id', [$product->related_products])->get();
-        
         $returnexchangeProduct = Setting::where('id', 28)->first();
         $contactDetails = Setting::whereIn('key', ['Contact.contact_email', 'Contact.contact_number', 'Contact.whatsapp_number'])->get();
         $productCategoryId = Product::where('id', $product->id ?? 0)->pluck('main_category_id')->first();
@@ -353,25 +346,14 @@ class HomeController extends Controller
                 'taxes.tax_rate'
             )
             ->get()->toArray();
-
-        $recentlyViewedProducts = collect();
-
+        $recentlyViewedProducts = []; 
         if ($user) {
-
-            $recentlyViewedProducts = Product::with(['productVariants.variantValues.first_image'])->where('is_active', 1)->whereIn(
-                'id',
-                RecentlyViewed::where('user_id', $user->id)
-                    ->orderBy('updated_at', 'desc')
-                    ->pluck('product_id')
-            )->where('id', '!=', $product->id)->get();
-
+            $recentlyViewedProducts = RecentlyViewed::with(['product'])->where('user_id',$user->id)->get(); 
         } else {
-
             $recentIds = session()->get('recently_viewed', []);
-
-            $recentlyViewedProducts = Product::with(['productVariants.variantValues.first_image'])->where('is_active', 1)->whereIn('id', $recentIds)->where('id', '!=', $product->id)->get();
+            $recentlyViewedProducts = Product::where('is_active','1')->whereIn('id',$recentIds)->get(); 
         } 
-
+        // return $recentlyViewedProducts; 
         if ($user) {
             $isWishlisted = Wishlist::where('user_id', $user->id)
                 ->where('product_id', $product->id)
@@ -389,20 +371,52 @@ class HomeController extends Controller
         $pinterst = Setting::select('id','value')->where('key','Social.pinterest')->first(); 
         $youtube = Setting::select('id','value')->where('key','Social.youtube')->first(); 
         $twitter = Setting::select('id','value')->where('key','Social.twitter')->first();        
-            
-        // return $product; 
-        // 'reviews', 'productreview',
 
-        return view('front.home.product_detail', compact('product','productChildCat', 'productcat', 'productSubCat', 'productvariants', 'related_products', 'bestproduct', 'releatedProduct', 'returnexchangeProduct', 'contactDetails', 'productVarientCom', 'isWishlisted', 'isWishlisteddata', 'categoryTaxes',  'recentlyViewedProducts','facebook','instagram','pinterst','youtube','twitter','productDetailManager', 'best_seller_products','priceDrop','couponOnDetail','sizeChartData'));
+        $relatedProducts = []; 
+        $relatedProduct = $product->related_products; 
+        if(!empty($relatedProduct)){
+            $relatedIds = explode(',',$relatedProduct); 
+            $relatedProducts = Product::select('id','best_seller','name','slug','buying_price','selling_price','discount','discount_type','sku')->where('is_active','1')->whereIn('id',$relatedIds)->get(); 
+        }
+        $similarProducts = []; 
+        $similarProducts = Product::select('id','best_seller','name','slug','buying_price','selling_price','discount','discount_type','sku')
+                ->where('is_active', '1')
+                ->where('id', '!=', $product->id)
+                ->where(function ($query) use ($product) {
+                    $query->where('main_category_id', $product->main_category_id);
+                    if (!empty($product->main_sub_category_id)) {
+                        $query->orWhere('main_sub_category_id',$product->main_sub_category_id);
+                    }
+                })->get();
+
+        return view('front.home.product_detail', compact('product','productChildCat', 'productcat', 'productSubCat', 'productvariants', 'bestproduct', 'returnexchangeProduct', 'contactDetails', 'productVarientCom', 'isWishlisted', 'isWishlisteddata', 'categoryTaxes',  'recentlyViewedProducts','facebook','instagram','pinterst','youtube','twitter','productDetailManager', 'best_seller_products','priceDrop','couponOnDetail','sizeChartData','relatedProducts','similarProducts'));
 
     }
 
-    public function viewBag(){
-        return view('front.home.cart'); 
+    public function viewBag(Request $request){
+        
+        $user = Auth::guard('customer')->user();
+        
+        if($user){
+            $carts = Cart::with('product')->where('user_id',$user->id)->get(); 
+        }else{
+            $carts = []; 
+        }
+        return view('front.home.cart',compact('carts')); 
     }
 
-    public function variantCombinationPrices(Request $request)
+    public function checkoutBag(Request $request)
     {
+        $user = Auth::guard('customer')->user();
+        if(!$user){
+            return redirect()->route('front-user.login'); 
+        }
+        else{
+            return view('front.home.checkout'); 
+        }        
+    }
+    public function variantCombinationPrices(Request $request)
+    {   
         try {
             $data = $request->json()->all();
             $productId = $data['product_id'] ?? null;
@@ -506,4 +520,65 @@ class HomeController extends Controller
             'out_of_stock' => $stock > 0
         ]);
     }
+
+    public function getProductVariantImages(Request $request)
+    {
+        $productId = $request->product_id;
+        $variantValueId = $request->variant_value_id;
+
+        $productVariant = ProductVariantValue::where('product_id', $productId)
+            ->where('variant_value_id', $variantValueId)
+            ->first();
+
+        if (!$productVariant) {
+            return response()->json([
+                'status' => false,
+                'images' => [],
+                'first_image' => null,
+            ]);
+        }
+
+        $graphics = ProductGraphics::where('product_id', $productId)
+            ->where('variant_id', $productVariant->variant_value_id)
+            ->where('graphic_type', 'image')
+            ->orderByDesc('is_front')
+            ->get();
+
+        $images = $graphics->pluck('graphic')
+            ->filter()
+            ->values()
+            ->map(function ($image) {
+                return asset('uploads/products/' . $image);
+            })
+            ->values();
+
+        return response()->json([
+            'status' => true,
+            'images' => $images,
+            'first_image' => $images->first(),
+        ]);
+    }
+
+    public function removeCartProduct(Request $request)
+    {
+        $cart = Cart::where('id', $request->cartId)
+            ->where('user_id', auth()->guard('customer')->user()->id)
+            ->first();
+
+        if (!$cart) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart item not found'
+            ], 404);
+        }
+
+        $cart->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product removed from cart'
+        ]);
+    }
+
+    
 }

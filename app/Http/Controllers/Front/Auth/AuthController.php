@@ -50,166 +50,8 @@ class AuthController extends Controller
         }
     }
 
-    /*public function postLogin(Request $request)
-    {
-        $request->replace($this->arrayStripTags($request->all()));
-
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
-        ], [
-            'email.required' => 'Email is required',
-            'password.required' => 'Password is required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $user = User::where('email', $request->email)
-            ->where('user_role_id', config('constant.ROLE_ID.CUSTOMER_ROLE_ID'))
-            ->where('is_deleted', 0)
-            ->first();
-
-        if (!$user) {
-            return response()->json([
-                'message' => 'Email is not registered with Vasvi'
-            ], 404);
-        }
-
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Email or password is incorrect'
-            ], 401);
-        }
-
-        if ($user->is_active == 0) {
-            return response()->json([
-                'message' => 'Your account is blocked. Please contact admin.'
-            ], 403);
-        }
-
-        if ($user->id == 1) {
-            return response()->json([
-                'message' => 'This account is not allowed to login here.'
-            ], 403);
-        }
-
-    
-        Auth::guard('customer')->login($user);
-        $cartItems = json_decode($request->cartItems, true);
-        $this->cartItems($cartItems);
-    
-        return response()->json([
-            'message' => 'Login successful',
-        ]);
-    }*/
-
-    // public function postLogin(Request $request)
-    // {
-    //     $request->replace($this->arrayStripTags($request->all()));
-
-    //     $validator = Validator::make($request->all(), [
-    //         'email' => 'required|email',
-    //         'password' => 'required',
-    //     ], [
-    //         'email.required' => 'Email is required',
-    //         'password.required' => 'Password is required',
-    //     ]);
-    //     if ($validator->fails()) {
-    //         // return response()->json([
-    //         //     'status' => false,
-    //         //     'errors' => $validator->errors()
-    //         // ], 422);
-    //         return Redirect::back()->withErrors($validator)->withInput();
-    //     }
-
-    //     $user = User::where('email', $request->email)
-    //         ->where('user_role_id', config('constant.ROLE_ID.CUSTOMER_ROLE_ID'))
-    //         ->where('is_deleted', 0)
-    //         ->first();
-
-    //     if (!$user) {
-    //         // return response()->json([
-    //         //     'status' => false,
-    //         //     'errors' => 'Email is not registered with Us'
-    //         // ], 404);
-    //         return Redirect::back()->withErrors('Email is not registered with Us')->withInput();
-    //     }
-
-    //     if (!Hash::check($request->password, $user->password)) {
-    //         // return response()->json([
-    //         //     'status' => false,
-    //         //     'errors' => 'Email or password is incorrect'
-    //         // ], 401);
-    //         return Redirect::back()->withErrors('Email or password is incorrect')->withInput();
-    //     }
-
-    //     if ($user->is_active == 0) {
-    //         // return response()->json([
-    //         //     'status' => false,
-    //         //     'errors' => 'Your account is blocked. Please contact admin.'
-    //         // ], 403);
-    //         return Redirect::back()->withErrors('Your account is blocked. Please contact admin.')->withInput();
-    //     }
-
-    //     if ($user->id == 1) {
-    //         // return response()->json([
-    //         //     'status' => false,
-    //         //     'errors' => 'This account is not allowed to login here.'
-    //         // ], 403);
-    //         return Redirect::back()->withErrors('This account is not allowed to login here.')->withInput();
-    //     }
-
-    //     if (is_null($user->email_verified_at) || $user->email_verified_at == '0000-00-00 00:00:00')
-    //     {
-    //         // return response()->json([
-    //         //     'status' => false,
-    //         //     'errors' => 'Your email is not verified'
-    //         // ], 403);
-    //         return Redirect::back()->withErrors('Your email is not verified')->withInput();
-    //     }
-
-    //     $remember = $request->has('remember');
-    //     $credentials = $request->only('email', 'password');
-
-    //     if (Auth::attempt($credentials, $remember)) {
-    //         // ✅ Store email in a cookie for 7 days (optional)
-    //         Cookie::queue('user_email', $request->email, 60 * 24 * 15); // 15 days
-    //         Cookie::queue('user_password', $request->password, 60 * 24 * 15); // 15 days
-    //         if ($remember) {
-    //             Cookie::queue('remember', true, 60 * 24 * 15); // Store for 15 days
-    //         }
-    //         Cookie::queue('auto_login', encrypt($user->id), 60 * 24 * 30); // 15 days
-
-    //         // Optional: If using a custom guard like 'customer'
-    //         $user = Auth::user();
-    //         Auth::guard('customer')->login($user);
-
-    //         // Handle cart items if present
-    //         if ($request->has('cartItems')) {
-    //             $cartItems = json_decode($request->cartItems, true);
-    //             $this->cartItems($cartItems); // Assuming this is a valid method
-    //         }
-
-    //         return Redirect::route('user.dashboard')->with('success', trans('Login successfully'));
-    //         return response()->json([
-    //             'status' => true,
-    //             'message' => 'Login successful',
-    //         ]);
-    //     }
-    //     return response()->json([
-    //         'status' => false,
-    //         'errors' => 'Invalid credentials',
-    //     ], 401);
-    // }
-
     public function postLogin(Request $request)
-    {
-        // $request->replace($this->arrayStripTags($request->all()));
-
+    {   
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
@@ -297,8 +139,7 @@ class AuthController extends Controller
                 $this->cartItems($cartItems);
             }
         }
-        return Redirect::route('user.dashboard')
-            ->with('success', trans('Login successfully'));
+        return Redirect::route('user.dashboard')->with('success', trans('Login successfully'));
     }
 
     private function cartItems($cartItems)
@@ -343,12 +184,11 @@ class AuthController extends Controller
             Cart::insert($insertData);
         }
     }
-
-
     public function postSignup(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
+            'first_name' => 'required',
+            'last_name' =>'required',
             'email' => [
                 'required',
                 'email',
@@ -359,10 +199,6 @@ class AuthController extends Controller
                 'numeric',
                 'digits:10',
                 'unique:users,phone_number', 
-            ],
-            'referral' => [
-                'nullable',
-                'exists:users,user_referral_code',
             ],
             'password' => [
                 'required',
@@ -385,7 +221,7 @@ class AuthController extends Controller
 
         DB::beginTransaction();
         try {
-            $fullName = ucwords($request->name);
+            $fullName = ucfirst($request->first_name).' '.ucfirst($request->last_name);
 
             $user = new User();
             $user->user_role_id = config('constant.ROLE_ID.CUSTOMER_ROLE_ID');
@@ -393,6 +229,7 @@ class AuthController extends Controller
             $user->email = $request->email;
             $user->phone_number = $request->phone_number;
             $user->password = Hash::make($request->password);
+            $user->gender = $request->gender; 
             $user->referral_code = $request->referral;
             $user->is_verified = 0;
             $user->is_active = 1;
@@ -553,19 +390,13 @@ class AuthController extends Controller
         }
     }
 
-
-    public function forgetPassword()
-    {
-
+    public function forgetPassword(){
         return view('front.modules.auth.forget_password');
     }
 
-    public function sendResetLinkEmail(Request $request)
-    {
+    public function sendResetLinkEmail(Request $request){
         $request->validate(['email' => 'required|email']);
-
         $user = \App\Models\User::where('email', $request->email)->first();
-
         if (!$user) {
             return back()->withErrors(['email' => 'We can\'t find a user with that email address.']);
         }
@@ -574,8 +405,6 @@ class AuthController extends Controller
         User::where('email', $user->email)->update(array('forgot_password_validate_string' => $token));
 
         $resetLink = url('/reset-password/' . $token . '?email=' . urlencode($user->email));
-
-        // Get dynamic template
 
         $data = [
             'CUSTOMER_NAME' => $user->name,
@@ -590,8 +419,7 @@ class AuthController extends Controller
         return back()->with('success', 'We have successfully sent reset password link to your email');
     }
 
-    public function resetPassword($validate_string = null, Request $request)
-    {
+    public function resetPassword($validate_string = null, Request $request){
         if ($validate_string != "" && $validate_string != null) {
 
             $userDetail    =    User::where('is_active', '1')->where('forgot_password_validate_string', $validate_string)->first();
@@ -606,8 +434,7 @@ class AuthController extends Controller
         }
     } // end resetPassword()
 
-    public function sendPassword(Request $request)
-    {
+    public function sendPassword(Request $request){
         $thisData                =    $request->all();
         $messages = array(
             'email.required'         => trans('The email field is required.'),
@@ -662,72 +489,57 @@ class AuthController extends Controller
         }
     } // sendPassword()	
 
-    public function resetPasswordSave($validate_string = null, Request $request)
-    {
-        $thisData                =    $request->all();
-        $newPassword        =    $request->input('new_password');
-
-        $messages = array(
-            'new_password.required'                 => trans('The new password field is required.'),
-            'new_password_confirmation.required'     => trans('The confirm password field is required.'),
-            'new_password.confirmed'                 => trans('The confirm password must be match to new password.'),
-            'new_password.min'                         => trans('The password must be at least 8 characters.'),
-            'new_password_confirmation.min'         => trans('The confirm password must be at least 8 characters.'),
-            "new_password.custom_password"            =>    "Password must have combination of numeric, alphabet and special characters.",
-        );
-
-        Validator::extend('custom_password', function ($attribute, $value, $parameters) {
-            if (preg_match('#[0-9]#', $value) && preg_match('#[a-zA-Z]#', $value) && preg_match('#[\W]#', $value)) {
-                return true;
-            } else {
-                return false;
+    public function resetPasswordSave(Request $request)
+    {   
+   
+        $request->validate([
+            'firstname' => 'required',
+            'lastname'=>'required',
+            'email'=>'required', 
+            'phone_number'=>'required',
+            'current_password' => 'nullable',
+            'new_password' => 'nullable',
+            'confirm_password' => 'nullable|same:new_password',
+        ]);
+        $user = Auth::guard('customer')->user();
+        
+        if(!empty($request->current_password) && !empty($request->new_password) && !empty($request->confirm_password)){
+            if (!Hash::check($request->current_password, $user->password)) {
+                Session::flash('success', 'Please enter the correct current password.');
+                return redirect()->back();
             }
-        });
-        $validator = Validator::make(
-            $request->all(),
-            array(
-                'new_password'            => 'required|min:8|custom_password',
-                'new_password_confirmation' => 'required|same:new_password',
-
-            ),
-            $messages
-        );
-        if ($validator->fails()) {
-            return Redirect::route('front-user.resetPassword', $validate_string)
-                ->withErrors($validator)->withInput();
-        } else {
-
-            $userInfo = User::where('forgot_password_validate_string', $validate_string)->first();
-            if (empty($userInfo)) {
-                Session::flash('error', trans('Invalid Validate String.'));
-                return Redirect::back();
-            }
-            User::where('forgot_password_validate_string', $validate_string)
-                ->update(array(
-                    'password'                            =>    Hash::make($newPassword),
-                    'forgot_password_validate_string'    =>    ''
-                ));
-            $settingsEmail         = Config::get('Site.email');
-
-            Session::flash('flash_notice', trans('Thank you for resetting your password. Please login to access your account.'));
-
-            return Redirect::route('front-user.login');
+            $user->update([
+                'password' => Hash::make($request->new_password),
+            ]);
         }
-    } // end resetPasswordSave()
+        $fullName = $request->firstname.' '.$request->lastname;
+        $email = $request->email; 
+        $phoneNumber = $request->phone_number; 
+        $user->update([
+            'name'=>$fullName,
+            'email'=>$email,
+            'phone_number'=>$phoneNumber
+        ]);
+        Session::flash('success', 'Your Details are Successfully Updated');
+        return redirect()->route('front-user.setting');
+    }
 
     public function logout()
-    {   
+    {    
         try {
-            Cookie::queue(Cookie::forget('auto_login'));
-            $user = auth()->user();
-            session()->flush();
-            cache()->flush();
-            auth()->logout();
+            Auth::guard('customer')->logout();
 
-            return redirect(url('/'))->with('success', "You're logged out successfully");
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+
+            return redirect('/')->with('success',"You're logged out successfully");
+
         } catch (Exception $e) {
             Log::error($e);
-            return redirect()->back()->with(['error' => 'Somethig went wrong', 'error_msg' => $e->getMessage()]);
+            return redirect()->back()->with([
+                'error' => 'Something went wrong',
+                'error_msg' => $e->getMessage()
+            ]);
         }
     }
 }
