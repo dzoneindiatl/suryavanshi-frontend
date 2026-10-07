@@ -87,27 +87,24 @@ class CheckoutController extends Controller
         $postData = $request->all();
         $user = Auth::guard('customer')->user();
         $address = new UserAddress();
-        $address->type = $postData['address_type'];
+
+        $address->type = $postData['type'];
         $address->user_id = $user->id;
-        $address->name = $postData['firstname'] . ' ' . $postData['lastname'];
+        $address->name = $postData['first_name'] . ' ' . $postData['last_name'];
         $address->email = $user->email;
-        $address->phone_number = $postData['phone'];
-        $address->alternate_number = $postData['phone'];
-        $address->country_id = $postData['country'];
-        $address->state_id = $postData['state'];
-        $address->city_id = $postData['city'];
-        $address->postal_code = $postData['pinCode'];
-        $address->landmark = $postData['addressSecond'];
+        $address->phone_number = $postData['phone_number'];
+        $address->alternate_number = $postData['alternate_number'];
+        $address->country_id = $postData['country_id'];
+        $address->state_id = $postData['state_id'];
+        $address->city_id = $postData['city_id'];
+        $address->postal_code = $postData['pincode'];
+        $address->landmark = $postData['landmark'];
         $address->address = $postData['address'];
-        $address->address_type = $postData['address_place_type'];
+        $address->address_type = $postData['address_type'];
         $address->save();
 
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Your address has been successfully saved.',
-            'redirect_url' => url('/checkout')
-        ]);
+        session()->flash('success','User Address Saved Successfully'); 
+        return redirect()->route('front-product.checkoutBag'); 
     }
 
     public function updateAddress(Request $request)
@@ -963,5 +960,24 @@ class CheckoutController extends Controller
                
             }
         }
+    }
+
+
+    public function buyNow(Request $request){
+
+        $product = Product::findOrFail($request->product_id);
+        session()->put('buy_now', [
+            'product_id' => $product->id,
+            'product_type' => $product->product_type,
+            'sku' => $product->sku,
+            'quantity' => $request->quantity ?? 1,
+            'price' => $request->price,
+            'sale_price' => $request->sale_price,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'redirect_url' => route('front-product.checkoutBag')
+        ]);
     }
 }

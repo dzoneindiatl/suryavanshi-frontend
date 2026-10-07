@@ -8,6 +8,7 @@ use App\Http\Controllers\Front\ShopController;
 use App\Http\Controllers\Front\BulkOrderController;
 use App\Http\Controllers\Front\OrderController;
 use App\Http\Controllers\Front\CheckoutController;
+use App\Http\Controllers\Front\CCAvenueController;
 
 
 
@@ -73,8 +74,8 @@ Route::post('subscribers/create',[HomeController::class,'storeNewsletterRecord']
 Route::post('/set-currency', [HomeController::class, 'setCurrency'])->name('set-currency');
 Route::post('variant-combination/prices', [HomeController::class, 'variantCombinationPrices'])->name('variant.combination.prices');
 
-Route::get('/get-states/{country_id}', [App\Http\Controllers\Front\HomeController::class, 'getStates']);
-Route::get('/get-cities/{state_id}', [App\Http\Controllers\Front\HomeController::class, 'getCities']);
+Route::get('/get-states', [App\Http\Controllers\Front\HomeController::class, 'getStates']);
+Route::get('/get-cities', [App\Http\Controllers\Front\HomeController::class, 'getCities']);
 Route::name('front-')->group(function () {
     Route::get('/', [App\Http\Controllers\Front\HomeController::class, 'index'])->name('home.index');
     Route::get('/shop/{categoryId?}/{subCategoryId?}/{childCategoryId?}', [App\Http\Controllers\Front\ShopController::class, 'index'])->name('shop.index');
@@ -133,7 +134,7 @@ Route::name('front-')->group(function () {
             Route::match(['get', 'post'], '/add-to-wishlist', [App\Http\Controllers\Front\CartController::class, 'addToWishlist'])->name('user.addToWishlist');
             Route::match(['get', 'post'], '/remove-from-wishlist', [App\Http\Controllers\Front\CartController::class, 'removeFromWishlist'])->name('user.removeFromWishlist');
 
-            Route::any('/save-user-address', [App\Http\Controllers\Front\CheckoutController::class, 'saveAddress'])->name('user.save_address');
+            Route::post('/save-user-address', [App\Http\Controllers\Front\CheckoutController::class, 'saveAddress'])->name('user.save_address');
             Route::get('/get-user-address/{addressId}', [App\Http\Controllers\Front\CheckoutController::class, 'getUserAddress'])->name('user.get_user_address');
             Route::post('/update-address', [App\Http\Controllers\Front\CheckoutController::class, 'updateAddress'])->name('user.update_user_address');
             Route::get('/get-user-wallet/{user_id}', [App\Http\Controllers\Front\CheckoutController::class, 'getuserWallet']);
@@ -155,6 +156,12 @@ Route::name('front-')->group(function () {
 
             Route::post('order/cancel',[CheckoutController::class,'orderCancelled'])->name('order.cancel');
             Route::post('order/delivered',[CheckoutController::class,'orderReturn'])->name('order.return');
+
+            Route::post('/buy-now', [App\Http\Controllers\Front\CheckoutController::class, 'buyNow'])->name('product.buyNow');
+
+            Route::post('/ccavenue/pay', [CCAvenueController::class, 'pay'])->name('ccavenue.pay');
+            Route::post('/ccavenue/response', [CCAvenueController::class, 'response'])->name('ccavenue.response');
+            Route::post('/ccavenue/cancel', [CCAvenueController::class, 'cancel'])->name('ccavenue.cancel');
         });
 
     Route::get('header-product-search',[HomeController::class,'headerProductSearch'])->name('header-product-search'); 

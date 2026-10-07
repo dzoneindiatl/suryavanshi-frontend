@@ -232,14 +232,16 @@
 					<button class="cart_apply_coupon">Apply Coupon<div class="apply_coup_arrow"></div></button>
 					<div class="order_summary_txt">
 						<div class="order_summary_txt1">
-							<p class="subtotal">Subtotal <span class="price-values">₹15,792</span></p>
-							<p class="discount">Coupon Discount <span class="price-values"><a class="app_coup">Apply Coupon</a></span></p>
-							<p class="shipping-charge">Shipping <span>(Standard)</span> <span class="price-values"><span class="free">Free</span></span></p>
-						</div>
-						<div class="order_summary_txt2">
-							<p class="price-breakup-final">Total Cost <span class="price-values">₹15,792</span></p>
+                            <p class="totalMRP">Total MRP<span class="price-values">₹{{ $totalMRP }} </span></p>
+                            <p class="discount">Discount<span class="price-values">₹ {{ $totalDiscount }} </span> </p>
+							<p class="subtotal">Subtotal<span class="price-values">₹ {{ $subtotal }}</span></p>
+                            <p class="grandTotal"> Grand Total <span class="price-values">₹{{ $grandTotal }}</span></p>
+                            <p class="taxableAmount">Taxable Amount <span class="price-values">₹ {{ $taxableAmount }}</span></p>
+                            <p class="totalGst">TotalGst(Tax) <span class="price-values">₹ {{ $totalGst }}</span> </p>
+                            <p class="totalPayable">Total Payable (Tax Included) <span class="price-values">₹{{ $totalPayable }}</span> </p>
 						</div>
 					</div>
+                    {{-- <a href="{{ route('front-product.checkoutBag') }}" class="btn_place_order">CHECKOUT</a> --}}
 					<button class="btn_place_order">CHECKOUT</button>
 				</div>
 			</div>
@@ -251,12 +253,9 @@
     const cartData = localStorage.getItem('cartItems'); 
      if (cartData) {
         const cartItems = JSON.parse(cartData);
-
         let html = '';
-
         cartItems.forEach(function(item,index) {
             const productUrl = item.sku ? "{{ route('front-product.detail', ['product' => 'product', 'title' => 'SLUG.html', 'sku' => 'SKU']) }}".replace('SLUG.html', item.slug + '.html').replace('SKU', item.sku): '#';
-
             html += `
                 <div class="cart_main_item">
 
@@ -269,9 +268,7 @@
                     </div>
 
                     <div class="cart_item_right">
-
                         <div class="cart_item_top">
-
                             <div class="cart-item-product-name">
                                 <a href="${productUrl}" style="text-decoration:none;color:#000">
                                 ${item.name} </a>
@@ -287,7 +284,6 @@
 
                             <div class="cart_item_select">
                                 <span>Quantity: </span>
-
                                 <select class="cart-quantity"
                                         data-random-id="${item.randomId}">
                                     <option value="1" ${item.quantity == 1 ? 'selected' : ''}>1</option>
@@ -295,27 +291,22 @@
                                     <option value="3" ${item.quantity == 3 ? 'selected' : ''}>3</option>
                                 </select>
                             </div>
-
                         </div>
 
                         <button class="cart_item_close remove-cart-product"
                                 data-randomId="${item.randomId}" data-index="${index}" data-productId="${item.productId}">
                             Close
                         </button>
-
                     </div>
-
                 </div>
             `;
         });
-
         $('.localCartData').html(html);
     }
 
     $(document).on('click', '.remove-cart-product', function(){
         if(isLoggedIn){
             let cartId = $(this).data('cartid'); 
-           
             $.ajax({
                 url: "{{ route('front-remove-cart-product') }}",
                 type: "POST",
@@ -353,7 +344,15 @@
             cartItems.splice(index,1); 
             localStorage.setItem('cartItems', JSON.stringify(cartItems));
         }
-    
     } 
+
+    $('.btn_place_order').on('click',function(){
+        if(isLoggedIn){
+			window.location.href = "{{ route('front-product.checkoutBag') }}";
+		}else{
+			window.location.href = "{{ route('front-user.login') }}";
+		}
+    }); 
+
 </script>
 @endsection 

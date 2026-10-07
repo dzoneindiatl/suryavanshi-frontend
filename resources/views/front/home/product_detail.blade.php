@@ -483,7 +483,6 @@
 				data-zoom-image-2x="{{ $firstImageUrl }}"
 				data-image-2x="{{ $firstImageUrl }}">
 					<img src="{{ $firstImageUrl }}"
-						srcset="{{ $firstImageUrl }}"
 						alt="{{ $product->name }}" class="default-image"/>
 				</a>
 
@@ -499,7 +498,6 @@
 						data-zoom-image-2x="{{ $imageUrl }}"
 						data-image-2x="{{ $imageUrl }}">
 							<img src="{{ $imageUrl }}"
-								srcset="{{ $imageUrl }}"
 								alt="{{ $product->name }}" class="default-image"/>
 						</a>
 					@endforeach
@@ -963,27 +961,30 @@
 					</div>
 					<div class="product_box_cart">
 						<button class="btn_add_to_cart addToCartBtn addToCartBtnText"
-						data-id="{{ $product->id }}"
-                        data-name="{{ $product->name }}"
-                        data-producttype="{{ $product->product_type }}"
-                        data-sku="{{ $product->sku }}"
-						data-slug="{{ $product->slug }}"
-                        data-price="{{ $buying_price }}"
-                        data-salePrice="{{ $selling_price }}"
-                        data-discountType="{{ $product->discount_type }}"
-                        data-discount="{{ $discount_product }}"
-            			data-tax-arr="{{ e(json_encode($categoryTaxes)) }}"
-						><span>ADD TO CART</span></button>
-						<button class="btn_buy_now buyNowBtn" data-id="{{ $product->id }}"
-                        data-name="{{ $product->name }}"
-                        data-producttype="{{ $product->product_type }}"
-                        data-sku="{{ $product->sku }}"
-						data-slug="{{ $product->slug }}"
-                        data-price="{{ $buying_price }}"
-                        data-salePrice="{{ $selling_price }}"
-                        data-discountType="{{ $product->discount_type }}"
-                        data-discount="{{ $discount_product }}"
-            			data-tax-arr="{{ e(json_encode($categoryTaxes)) }}"><span>BUY NOW</span></button>
+							data-id="{{ $product->id }}"
+							data-name="{{ $product->name }}"
+							data-producttype="{{ $product->product_type }}"
+							data-sku="{{ $product->sku }}"
+							data-slug="{{ $product->slug }}"
+							data-price="{{ $buying_price }}"
+							data-salePrice="{{ $selling_price }}"
+							data-discountType="{{ $product->discount_type }}"
+							data-discount="{{ $discount_product }}"
+							data-tax-arr="{{ e(json_encode($categoryTaxes)) }}"><span>ADD TO CART</span>
+						</button>
+
+						<button class="btn_buy_now buyNowBtn" 
+							data-id="{{ $product->id }}"
+							data-name="{{ $product->name }}"
+							data-producttype="{{ $product->product_type }}"
+							data-sku="{{ $product->sku }}"
+							data-slug="{{ $product->slug }}"
+							data-price="{{ $buying_price }}"
+							data-salePrice="{{ $selling_price }}"
+							data-discountType="{{ $product->discount_type }}"
+							data-discount="{{ $discount_product }}"
+							data-tax-arr="{{ e(json_encode($categoryTaxes)) }}"><span>BUY NOW</span>
+						</button>
 					</div>
 
 					<div class="price_breakup_modal" id="price_breakup_modal">
@@ -1603,13 +1604,36 @@
 	});
 </script>
 <script>
-	$('.buyNowBtn').on('click',function(){
-		if(isLoggedIn){
-			window.location.href="{{ route('front-product.checkoutBag') }}"; 
-		}else{
-			window.location.href="{{ route('front-user.login') }}"; 
-		}
-	}); 
+	$('.buyNowBtn').on('click', function(){
+		let button = $(this);
+		let productId = button.data('id');
+		let price = button.data('price');
+		let salePrice = button.data('saleprice');
+		$.ajax({
+			url: "{{ route('front-product.buyNow') }}",
+			type: "POST",
+			data: {
+				_token: "{{ csrf_token() }}",
+				product_id: productId,
+				price: price,
+				sale_price: salePrice,
+				quantity: 1
+			},
+			success: function(response){
+				if(response.success){
+					if(isLoggedIn){
+						window.location.href = response.redirect_url;
+					}else{
+						window.location.href = "{{ route('front-user.login') }}";
+					}
+				}
+			},
+			error: function(xhr){
+				console.log(xhr.responseText);
+			}
+		});
+
+	});
 </script>
 <script>
 	$(document).ready(function(){
@@ -1827,71 +1851,123 @@
 		}
 	});
 	function updateVariantImages(productId, variantValueId) {
-		console.log('Changing color image:', {
-			productId: productId,
-			variantValueId: variantValueId
-		});
+        console.log('Changing color image:', {
+            productId: productId,
+            variantValueId: variantValueId
+        });
+    
+        $.ajax({
+            url: "{{ route('front-product-variant-image') }}",
+            type: "GET",
+            data: {
+                product_id: productId,
+                variant_value_id: variantValueId
+            },
+            success: function(response) {
+    
+                console.log('Variant Images Response:', response);
+    
+                if (!response.images || response.images.length === 0) {
+                    console.log('No images found for this variant');
+                    return;
+                }
+    
+                const firstImage = response.images[0];
+    
+                console.log('First Variant Image:', firstImage);
+    
+                /*
+                |--------------------------------------------------------------------------
+                | MAIN IMAGE
+                |--------------------------------------------------------------------------
+                */
+    
+                const zoomLink = document.getElementById('Zoom-1');
+    
+                if (zoomLink) {
+    
+                    zoomLink.setAttribute('href', firstImage);
+                    zoomLink.setAttribute('data-zoom-image-2x', firstImage);
+                    zoomLink.setAttribute('data-image-2x', firstImage);
+    
+                    const zoomImg = zoomLink.querySelector('img');
+    
+                    if (zoomImg) {
+                        zoomImg.setAttribute('src', firstImage);
+                        zoomImg.removeAttribute('srcset');
+                    }
+                }
+    
+                /*
+                |--------------------------------------------------------------------------
+                | THUMBNAILS
+                |--------------------------------------------------------------------------
+                */
+    
+                let html = '';
+    
+                response.images.forEach(function(image, index) {
+    
+                    html += `
+                        <a data-zoom-id="Zoom-1"
+                           href="${image}"
+                           data-image="${image}"
+                           data-zoom-image-2x="${image}"
+                           data-image-2x="${image}">
+    
+                            <img src="${image}"
+                                 alt=""
+                                 class="default-image">
+                        </a>
+                    `;
+                });
+    
+                $('#productImageSelectors').html(html);
+    
+                if (typeof MagicZoom !== 'undefined') {
+    
+                    try {
+                        MagicZoom.refresh('Zoom-1');
+                    } catch (e) {
+                        console.log('MagicZoom refresh error:', e);
+    
+                        try {
+                            MagicZoom.refresh();
+                        } catch (e2) {
+                            console.log('MagicZoom general refresh error:', e2);
+                        }
+                    }
+                }
 
-		$.ajax({
-			url: "{{ route('front-product-variant-image') }}",
-			type: "GET",
-			data: {
-				product_id: productId,
-				variant_value_id: variantValueId
-			},
-			success: function(response) {
-
-				console.log('Variant Images Response:', response);
-
-				if (!response.images || response.images.length === 0) {
-					console.log('No images found for this variant');
-					return;
-				}
-
-				const firstImage = response.images[0];
-
-				// Main image
-				$('#Zoom-1')
-					.attr('href', firstImage)
-					.attr('data-zoom-image-2x', firstImage)
-					.attr('data-image-2x', firstImage);
-
-				$('#Zoom-1 img')
-					.attr('src', firstImage)
-					.attr('srcset', firstImage);
-
-				// Thumbnails
-				let html = '';
-
-				response.images.forEach(function(image) {
-
-					html += `
-						<a data-zoom-id="Zoom-1"
-						href="${image}"
-						data-image="${image}"
-						data-zoom-image-2x="${image}"
-						data-image-2x="${image}">
-
-							<img src="${image}"
-								srcset="${image}"
-								alt="">
-						</a>
-					`;
-				});
-
-				$('#productImageSelectors').html(html);
-
-				// MagicZoom refresh
-				if (typeof MagicZoom !== 'undefined') {
-					MagicZoom.refresh();
-				}
-			},
-
-			error: function(xhr) {
-				console.log('Variant image error:', xhr.responseText);
-			}
-		});
-	}
+                setTimeout(function() {
+                    const zoomLinkAfterRefresh = document.getElementById('Zoom-1');
+                    if (!zoomLinkAfterRefresh) {
+                        return;
+                    }
+                    zoomLinkAfterRefresh.setAttribute('href', firstImage);
+                    zoomLinkAfterRefresh.setAttribute('data-image', firstImage);
+                    zoomLinkAfterRefresh.setAttribute('data-zoom-image-2x', firstImage);
+                    zoomLinkAfterRefresh.setAttribute('data-image-2x', firstImage);
+    
+                    const imgAfterRefresh =
+                        zoomLinkAfterRefresh.querySelector('img');
+    
+                    if (imgAfterRefresh) {
+                        imgAfterRefresh.setAttribute('src', firstImage);
+                        imgAfterRefresh.removeAttribute('srcset');
+                    }
+    
+                    console.log('Main image forced:', firstImage);
+    
+                }, 100);
+    
+            },
+    
+            error: function(xhr) {
+                console.log('Variant image error:', xhr.responseText);
+            }
+        });
+    }
 	
     function checkVariantStock(el) {
 		const productId = el.dataset.productId || $('#product_id').val();
@@ -2032,22 +2108,6 @@
   });
 </script>
 
-<!-- <script>
-	$(document).ready(function(){
-	  $('.carousel_main').slick({
-	  slidesToShow: 1,
-	  autoplay: true,
-    autoplaySpeed: 7000,
-    arrows: true,
-    dots: true,
-    fade: true,
-    speed: 500,
-    infinite: true,
-    cssEase: 'ease-in-out',
-    touchThreshold: 100
-	  });
-	});
-</script> -->
 
 <script>
 	$(document).ready(function(){
@@ -2137,57 +2197,6 @@
 	});
 </script>
 
-{{-- <script>
-	var windowHeight =  Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
-    lastTop;
-
-	window.addEventListener('scroll', function(event) {
-		var train = document.getElementById('home_collection_sec'),
-		top = train.getBoundingClientRect().top,
-		offset = top - windowHeight;  
-		if (offset > 70) {
-			train.classList.remove('animate_collection');
-			return;
-		}
-		
-		if (top < windowHeight / 2 && top > lastTop) {
-			train.classList.remove('animate_collection');
-		}
-		
-		if (train.className.indexOf('animate_collection') === -1 && top < lastTop) {
-			train.classList.add('animate_collection');
-		}
-		
-		lastTop = top;
-	});
-</script>
-
-
-<script>
-	var windowHeight1 =  Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
-    Toplast;
-
-	window.addEventListener('scroll', function(event) {
-		var train1 = document.getElementById('home_collection_sec1'),
-		top1 = train1.getBoundingClientRect().top1,
-		offset = top1 - windowHeight1;
-		
-		if (offset > 70) {
-			train1.classList.remove('animate_collection1');
-			return;
-		}
-		
-		if (top1 < windowHeight1 / 2 && top1 > Toplast) {
-			train1.classList.remove('animate_collection1');
-		}
-		
-		if (train1.className.indexOf('animate_collection1') === -1 && top1 < Toplast) {
-			train1.classList.add('animate_collection1');
-		}  
-		Toplast = top1; 
-	});
-</script> --}}
-
 <script>
 	$(window).scroll(function(){
   		var sticky = $('.main_header_top'),
@@ -2199,11 +2208,7 @@
 </script>
 
 <script>
-// $(document).ready(function(){
-//   	$(window).scroll(function () {
-//     	triggerSlideIns( $(this), [ $('.shop_img1') ]);
-//   	});
-// });
+
 
 $.getDocHeight = function(){
   return Math.max(
@@ -2220,19 +2225,6 @@ $.getScrollPercentage = function(){
     );
 };
 
-// var triggerSlideIns = function(t, items) {
-//   	for (var i = 0; i < items.length; i++) {
-//     	if((( $.getDocHeight() - $(window).height()) - ( $.getDocHeight() - items[i].offset().top )) <= t.scrollTop()) {
-//       		if(!items[i].hasClass('transitionSlideIn'))
-//       		{
-//         		items[i].addClass('transitionSlideIn');
-//       		}
-//     	} 
-// 		else { 
-// 			items[i].removeClass('transitionSlideIn'); 
-// 		}
-//   	}
-// };
 </script>
 
 
@@ -2401,45 +2393,6 @@ $(function() {
 	$window.trigger('scroll');
 });
 </script>
-{{-- <script>
-	document.getElementById("sort-btn").onclick = function () {
-		document.getElementById("exampleModal").classList.add("active");
-	};
-	document.getElementById("btn-close").onclick = function () {
-		document.getElementById("exampleModal").classList.remove("active");
-	};
-
-	document.getElementById("filter-btn").onclick = function () {
-		document.getElementById("exampleModal1").classList.add("active");
-	};
-	document.getElementById("btn-close1").onclick = function () {
-		document.getElementById("exampleModal1").classList.remove("active");
-	};
-</script> --}}
-
-{{-- <script>
-	document.getElementById("btn_price_breakup").onclick = function () {
-  		document.getElementById("price_breakup_modal").classList.add("active");
-	};
-	document.getElementById("price_breakup_modal_head").onclick = function () {
-  		document.getElementById("price_breakup_modal").classList.remove("active");
-	};
-</script> --}}
-
-{{-- <script>
-	document.getElementById("customise_size").onclick = function () {
-  		document.getElementById("dropdown_text_customise").classList.toggle("active");
-	};
-
-	document.getElementById("customise_metal").onclick = function () {
-  		document.getElementById("dropdown_text_customise1").classList.toggle("active");
-	};
-
-	document.getElementById("customise_diamond").onclick = function () {
-  		document.getElementById("dropdown_text_customise2").classList.toggle("active");
-	};
-</script> --}}
-
 <script>
     var mzOptions = {};
     mzOptions = {

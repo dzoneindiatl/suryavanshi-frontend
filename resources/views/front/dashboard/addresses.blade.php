@@ -174,18 +174,28 @@
                     @include("front.dashboard.sidebar")
                     <div class="col-md-9">
                         @if(Session::has('success'))
-                                <div class="alert alert-info">
-                                    {{ Session::get('success') }}
-                                </div>
-                            @endif
+                            <div class="alert alert-info">
+                                {{ Session::get('success') }}
+                            </div>
+                        @endif
 				        <div class="my-account-content">
 					        <h2 class="account-title">My Address</h2>
 					        <div class="account-my_address">
                                 @foreach($userAddresses as $address)    
                                     <div class="account-address-item file-delete">
                                         <div class="address-item_content">
-                                            <h4 class="address-title">{{ ucfirst($address->type) }}</h4>
-                                            <div class="address-info">
+                                            <h4 class="address-title">
+                                                @php 
+                                                    if($address->type == 1){
+                                                        $type = "Shipping"; 
+                                                    }
+                                                    if($address->type == 2){
+                                                        $type = "Billing"; 
+                                                    }
+                                                @endphp    
+                                                {{ ucfirst($type) }}</h4>
+                                        
+                                                <div class="address-info">
                                                 @php 
                                                     if($address->address_type == 1){
                                                         $type = "Home"; 

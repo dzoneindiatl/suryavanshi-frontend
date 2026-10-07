@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Models\Country;
 use App\Models\SizeChartManager;
+use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category; 
@@ -24,6 +26,8 @@ use App\Models\ProductVariantCombination;
 use App\Models\CategoryTax;  
 use App\Models\Cart; 
 use App\Models\ProductVariantValue; 
+use App\Models\State; 
+use App\Models\City;
 class HomeController extends Controller
 {
     public function index(){
@@ -393,27 +397,285 @@ class HomeController extends Controller
 
     }
 
-    public function viewBag(Request $request){
-        
+    public function viewBag(Request $request)
+    {
         $user = Auth::guard('customer')->user();
-        
-        if($user){
-            $carts = Cart::with('product')->where('user_id',$user->id)->get(); 
-        }else{
-            $carts = []; 
+        if (!$user) {
+            $carts = collect();
+        } else {
+            $carts = Cart::with('product')->where('user_id', $user->id)->get();
         }
-        return view('front.home.cart',compact('carts')); 
+        $today = now()->toDateString();
+        $priceDrop = PriceDrop::whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->where('is_deleted', 0)
+            ->latest()
+            ->first();
+        $totalMRP = 0;
+        $totalDiscount = 0;
+        $subtotal = 0;
+        $taxableAmount = 0;
+        $totalGst = 0;
+        $taxRate = 0;
+        $taxOption = '';
+        $taxType = '';
+        $taxId = '';
+        $taxFrom = 0;
+        $taxTo = 0;
+        $categoryTaxes = [];
+        $carts->each(function ($cartItem) use ($priceDrop,&$totalMRP,&$totalDiscount,&$subtotal,&$taxRate,&$taxOption,&$taxType,&$taxId,&$taxFrom,&$taxTo,&$categoryTaxes) {
+            $combination = ProductVariantCombination::find($cartItem->product_variant_combination_id);
+            if (!$combination || !$cartItem->product) {
+                return;
+            }
+            $originalSellingPrice = (float) $combination->selling_price;
+            $mainPrice = $originalSellingPrice;
+            if ($priceDrop) {
+                $productId = $priceDrop->product_id;
+                $discountAmount = (float) $priceDrop->amount;
+                $applyPriceDrop = false;
+                if ($productId == 'all') {
+                    $applyPriceDrop = true;
+                } else {
+                    $productIdArray = explode(',', $productId);
+                    $productIdArray = array_map(
+                        'trim',
+                        $productIdArray
+                    );
+
+                    if (in_array((string) $cartItem->product_id,$productIdArray)) {
+                        $applyPriceDrop = true;
+                    }
+                }
+
+                if ($applyPriceDrop) {
+                    if ($priceDrop->gain_type == 'drop') {
+                        if ($priceDrop->drop_type == 'percentage') {
+                            $mainPrice = $originalSellingPrice - (($discountAmount / 100)* $originalSellingPrice);
+                        } elseif ($priceDrop->drop_type == 'flat') {
+                            $mainPrice = $originalSellingPrice - $discountAmount;
+                        }
+                    }
+                    elseif ($priceDrop->gain_type == 'gain') {
+                        if ($priceDrop->drop_type == 'percentage') {
+                            $mainPrice = $originalSellingPrice + (($discountAmount / 100)* $originalSellingPrice);
+                        } elseif ($priceDrop->drop_type == 'flat') {
+                            $mainPrice = $originalSellingPrice + $discountAmount;
+                        }
+                    }
+                }
+            }
+            $quantity = (int) ($cartItem->quantity ?? 1);
+            if ($quantity < 1) {
+                $quantity = 1;
+            }
+
+            $price = (float) ($combination->price ?? 0);
+            $sellingPrice = max(0,(float) $mainPrice);
+            $itemMRP = $price * $quantity;
+            $itemSellingTotal = $sellingPrice * $quantity;
+            $itemDiscount = max(0,$itemMRP - $itemSellingTotal);
+            $totalMRP += $itemMRP;
+            $totalDiscount += $itemDiscount;
+            $subtotal += $itemSellingTotal;
+            $selectedVariants = [];
+            if ($combination->combination_id) {
+                $combinationIds = json_decode($combination->combination_id,true);
+                foreach ($combinationIds ?? [] as $variantValueId) {
+                    $variantValue = VariantValue::with('variant')->find($variantValueId);
+                    if ($variantValue && $variantValue->variant) {
+                        $selectedVariants[strtolower($variantValue->variant->name)] = $variantValue->name;
+                    }
+                }
+            }
+
+            $productCategoryId = $cartItem->product->main_category_id ?? 0;
+            $categoryTaxes = CategoryTax::where('category_taxes.category_id',$productCategoryId)
+                ->leftJoin('taxes','taxes.id','=','category_taxes.tax_id')
+                ->select(
+                    'category_taxes.id',
+                    'category_taxes.category_id',
+                    'taxes.tax_type',
+                    'taxes.tax_option',
+                    'taxes.tax_from',
+                    'taxes.tax_to',
+                    'taxes.tax_rate'
+                )
+                ->get()
+                ->toArray();
+            if (!empty($categoryTaxes)) {
+                foreach ($categoryTaxes as $tax) {
+                    $taxOption = $tax['tax_option'] ?? '';
+                    $taxType = $tax['tax_type'] ?? '';
+                    $taxId = $tax['id'] ?? '';
+                    $taxRate = (float) ($tax['tax_rate'] ?? 0);
+                    $taxFrom = (float) ($tax['tax_from'] ?? 0);
+                    $taxTo = (float) ($tax['tax_to'] ?? 0);
+                    break;
+                }
+            }
+            $cartItem->selectedVariants = $selectedVariants;
+            $cartItem->sku = $combination->sku;
+            $cartItem->image = $cartItem->product->images['first'] ?? '';
+            $cartItem->productType = $cartItem->product->product_type;
+            $cartItem->sellingPrice = $sellingPrice;
+            $cartItem->discountAmount = $combination->discount ?? 0;
+            $cartItem->discountType = $combination->discount_type ?? '';
+            $cartItem->quantity =$quantity;
+            $cartItem->price =$price;
+            $cartItem->name =$cartItem->product->name;
+            $cartItem->tax_price = 0;
+            $cartItem->tax_option = $taxOption;
+            $cartItem->tax_type = $taxType;
+            $cartItem->tax_id = $taxId;
+            $cartItem->tax_rate = $taxRate;
+            $cartItem->tax_from = $taxFrom;
+            $cartItem->tax_to = $taxTo;
+            $cartItem->rawTaxArr =$categoryTaxes;
+        });
+
+        $finalTaxRate = 0;
+        if ($taxType === 'flat') {
+            $finalTaxRate = (float) $taxRate;
+        } 
+
+        elseif ($taxType === 'floating') {
+            if ($subtotal >= $taxFrom && $subtotal <= $taxTo) {
+                $finalTaxRate = (float) $taxRate;
+            }
+        }
+        $totalGst = ($subtotal * $finalTaxRate) / 100;
+        if ($taxOption === 'inclusive') {
+            $taxableAmount = $subtotal - $totalGst;
+        } else {
+            $taxableAmount = $subtotal;
+        }
+
+        $couponDiscount = 0;
+        if ($taxOption === 'inclusive') {
+            $grandTotal = $subtotal - $couponDiscount;
+        } else {
+            $grandTotal =$subtotal + $totalGst  - $couponDiscount;
+        }
+
+        $totalPayable = $grandTotal;
+        return view('front.home.cart',compact('carts','totalMRP','totalDiscount','subtotal','couponDiscount','grandTotal','taxableAmount','totalGst','totalPayable')
+        );
     }
 
     public function checkoutBag(Request $request)
     {
         $user = Auth::guard('customer')->user();
-        if(!$user){
-            return redirect()->route('front-user.login'); 
+        if (!$user) {
+            return redirect()->route('front-user.login');
         }
-        else{
-            return view('front.home.checkout'); 
-        }        
+
+        $isBuyNow = session()->has('buy_now_product_id');
+        if ($isBuyNow) {
+            $productId = session('buy_now_product_id');
+            $variantId = session('buy_now_variant_id');
+            $quantity = (int) session('buy_now_quantity', 1);
+            $product = Product::find($productId);
+            if (!$product) {
+                return redirect()->route('front-user.cart')->with('error', 'Product not found.');
+            }
+
+            $cartItem = new Cart();
+            $cartItem->product = $product;
+            $cartItem->product_id = $productId;
+            $cartItem->product_variant_combination_id = $variantId;
+            $cartItem->quantity = $quantity;
+            $carts = collect([$cartItem]);
+        } else {
+            $carts = Cart::with('product')
+                ->where('user_id', $user->id)
+                ->get();
+        }
+
+        $userAddress = UserAddress::with(['city','state','country'])
+            ->where('user_id', $user->id)
+            ->get();
+
+        $countries = Country::select('id','name')
+            ->where('is_active',1)
+            ->get();
+
+        $subtotal = 0;
+        $totalGst = 0;
+        $taxableAmount = 0;
+        $taxRate = 0;
+        $taxOption = null;
+        $taxType = null;
+        $taxId = null;
+        $taxFrom = 0;
+        $taxTo = 0;
+
+        foreach ($carts as $cartItem) {
+            $quantity = (int) $cartItem->quantity;
+            $sellingPrice = 0;
+            if ($cartItem->product_variant_combination_id) {
+                $variant = ProductVariantCombination::find($cartItem->product_variant_combination_id);
+                if ($variant) {
+                    $sellingPrice = (float) $variant->selling_price;
+                }
+            }
+
+            if ($sellingPrice <= 0) {
+                $sellingPrice = (float) ($cartItem->product->selling_price ?? 0);
+            }
+
+            $cartItem->final_selling_price = $sellingPrice;
+            $cartItem->item_total = $sellingPrice * $quantity;
+            $subtotal += $cartItem->item_total;
+            $productCategoryId = $cartItem->product->main_category_id ?? 0;
+            $categoryTaxes = CategoryTax::where('category_taxes.category_id',$productCategoryId)
+                ->leftJoin('taxes','taxes.id','=','category_taxes.tax_id')
+                ->select(
+                    'category_taxes.id',
+                    'category_taxes.category_id',
+                    'taxes.id as tax_id',
+                    'taxes.tax_type',
+                    'taxes.tax_option',
+                    'taxes.tax_from',
+                    'taxes.tax_to',
+                    'taxes.tax_rate'
+                )->get();
+
+            if ($categoryTaxes->count()) {
+                $tax = $categoryTaxes->first();
+                $taxRate = (float) $tax->tax_rate;
+                $taxOption = $tax->tax_option;
+                $taxType = $tax->tax_type;
+                $taxId = $tax->tax_id;
+                $taxFrom = (float) $tax->tax_from;
+                $taxTo = (float) $tax->tax_to;
+            }
+        }
+
+        $finalTaxRate = 0;
+        if ($taxType === 'flat') {
+            $finalTaxRate = (float) $taxRate;
+        } elseif ($taxType === 'floating') {
+            if ($subtotal >= $taxFrom && $subtotal <= $taxTo) {
+                $finalTaxRate = (float) $taxRate;
+            }
+        }
+        $totalGst = ($subtotal * $finalTaxRate) / 100;
+        if ($taxOption === 'inclusive') {
+            $taxableAmount = $subtotal - $totalGst;
+        } else {
+            $taxableAmount = $subtotal;
+        }
+        $couponDiscount = 0;
+        if ($taxOption === 'inclusive') {
+            $grandTotal = $subtotal - $couponDiscount;
+        } else {
+            $grandTotal = $subtotal + $totalGst - $couponDiscount;
+        }
+        $totalPayable = $grandTotal;
+        return view(
+            'front.home.checkout',
+            compact('countries','userAddress','carts','subtotal','totalGst','taxableAmount','taxRate','finalTaxRate','taxOption','taxType','taxId','taxFrom','taxTo','couponDiscount','grandTotal','totalPayable','isBuyNow'));
     }
     public function variantCombinationPrices(Request $request)
     {   
@@ -580,5 +842,19 @@ class HomeController extends Controller
         ]);
     }
 
+    public function getStates(Request $request)
+    {
+        $countryId = $request->countryId; 
+        $states = State::where('country_id', $countryId)->where('is_active', 1)->pluck('name', 'id');
+        return response()->json($states);
+    }
+
+    public function getCities(Request $request)
+    {   
+        $countryId = $request->countryId; 
+        $stateId = $request->stateId; 
+        $cities = City::where('country_id',$countryId)->where('state_id', $stateId)->where('is_active',1)->pluck('name', 'id');
+        return response()->json($cities);
+    }
     
 }
