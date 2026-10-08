@@ -563,120 +563,182 @@ class HomeController extends Controller
         );
     }
 
-    public function checkoutBag(Request $request)
-    {
-        $user = Auth::guard('customer')->user();
-        if (!$user) {
-            return redirect()->route('front-user.login');
+    public function checkoutBag(Request $request) 
+    { 
+        $user = Auth::guard('customer')->user(); 
+        if (!$user) 
+        { 
+            return redirect()->route('front-user.login'); 
         }
-
-        $isBuyNow = session()->has('buy_now_product_id');
-        if ($isBuyNow) {
-            $productId = session('buy_now_product_id');
-            $variantId = session('buy_now_variant_id');
-            $quantity = (int) session('buy_now_quantity', 1);
-            $product = Product::find($productId);
-            if (!$product) {
-                return redirect()->route('front-user.cart')->with('error', 'Product not found.');
-            }
-
-            $cartItem = new Cart();
-            $cartItem->product = $product;
-            $cartItem->product_id = $productId;
-            $cartItem->product_variant_combination_id = $variantId;
-            $cartItem->quantity = $quantity;
-            $carts = collect([$cartItem]);
-        } else {
-            $carts = Cart::with('product')
-                ->where('user_id', $user->id)
-                ->get();
-        }
-
-        $userAddress = UserAddress::with(['city','state','country'])
-            ->where('user_id', $user->id)
-            ->get();
-
-        $countries = Country::select('id','name')
-            ->where('is_active',1)
-            ->get();
-
-        $subtotal = 0;
-        $totalGst = 0;
-        $taxableAmount = 0;
-        $taxRate = 0;
-        $taxOption = null;
-        $taxType = null;
-        $taxId = null;
-        $taxFrom = 0;
-        $taxTo = 0;
-
-        foreach ($carts as $cartItem) {
-            $quantity = (int) $cartItem->quantity;
-            $sellingPrice = 0;
-            if ($cartItem->product_variant_combination_id) {
-                $variant = ProductVariantCombination::find($cartItem->product_variant_combination_id);
-                if ($variant) {
-                    $sellingPrice = (float) $variant->selling_price;
+        $isBuyNow = session()->has('buy_now'); 
+        $buyNow = session('buy_now'); 
+        if ($isBuyNow) 
+        { 
+            $productId = $buyNow['product_id'] ?? null; 
+            $productType = $buyNow['product_type'] ?? null; 
+            $sku = $buyNow['sku'] ?? null; 
+            $quantity = (int) ($buyNow['quantity'] ?? 1); 
+            $price = (float) ($buyNow['price'] ?? 0); 
+            $salePrice = (float) ($buyNow['sale_price'] ?? 0); 
+            $selectedVariant = $buyNow['selectedVariant'] ?? []; 
+            $variantIds = []; 
+            foreach ($selectedVariant as $variantName => $variantValue)
+            { 
+                $variant = Variant::whereRaw( 'LOWER(name) = ?', [strtolower($variantName)] )->first(); 
+                if (!$variant) 
+                { 
+                    continue; 
+                } 
+                $variantValueData = VariantValue::where('variant_id', $variant->id)->whereRaw( 'LOWER(name) = ?', [strtolower($variantValue)] ) ->first(); 
+                if ($variantValueData) 
+                { 
+                    $variantIds[] = $variantValueData->id; 
                 }
-            }
-
-            if ($sellingPrice <= 0) {
-                $sellingPrice = (float) ($cartItem->product->selling_price ?? 0);
-            }
-
-            $cartItem->final_selling_price = $sellingPrice;
-            $cartItem->item_total = $sellingPrice * $quantity;
-            $subtotal += $cartItem->item_total;
-            $productCategoryId = $cartItem->product->main_category_id ?? 0;
-            $categoryTaxes = CategoryTax::where('category_taxes.category_id',$productCategoryId)
-                ->leftJoin('taxes','taxes.id','=','category_taxes.tax_id')
-                ->select(
-                    'category_taxes.id',
-                    'category_taxes.category_id',
-                    'taxes.id as tax_id',
-                    'taxes.tax_type',
-                    'taxes.tax_option',
-                    'taxes.tax_from',
-                    'taxes.tax_to',
-                    'taxes.tax_rate'
-                )->get();
-
-            if ($categoryTaxes->count()) {
-                $tax = $categoryTaxes->first();
-                $taxRate = (float) $tax->tax_rate;
-                $taxOption = $tax->tax_option;
-                $taxType = $tax->tax_type;
-                $taxId = $tax->tax_id;
-                $taxFrom = (float) $tax->tax_from;
-                $taxTo = (float) $tax->tax_to;
-            }
-        }
-
-        $finalTaxRate = 0;
-        if ($taxType === 'flat') {
-            $finalTaxRate = (float) $taxRate;
-        } elseif ($taxType === 'floating') {
-            if ($subtotal >= $taxFrom && $subtotal <= $taxTo) {
+            } 
+            $combinationIds = json_encode($variantIds); 
+            $variantCombination = ProductVariantCombination::where( 'combination_id', $combinationIds )->first(); $product = Product::find($productId); 
+            if (!$product) 
+            { 
+                return redirect()->route('front-user.cart')->with('error', 'Product not found.'); 
+            } 
+            $cartItem = new Cart(); 
+            $cartItem->product = $product; 
+            $cartItem->product_id = $productId; 
+            $cartItem->product_variant_combination_id = $variantCombination->id ?? null; 
+            $cartItem->quantity = $quantity;
+            $cartItem->selectedVariants = $selectedVariant; 
+            $carts = collect([$cartItem]); 
+        } 
+        else { 
+            $carts = Cart::with('product') ->where('user_id', $user->id) ->get(); 
+        } 
+        $userAddress = UserAddress::with([ 'user', 'city', 'state', 'country' ])->where('user_id', $user->id)->get(); 
+        $countries = Country::select('id', 'name') ->where('is_active', 1) ->get();
+        $subtotal = 0; 
+        $totalGst = 0; 
+        $taxableAmount = 0; 
+        $taxRate = 0; 
+        $taxOption = null; 
+        $taxType = null; 
+        $taxId = null; 
+        $taxFrom = 0; 
+        $taxTo = 0; 
+        $checkoutData = []; 
+        foreach ($carts as $cartItem) 
+        { 
+            $quantity = (int) $cartItem->quantity; 
+            $sellingPrice = 0; 
+            if ($cartItem->product_variant_combination_id) 
+            { 
+                $variant = ProductVariantCombination::find( $cartItem->product_variant_combination_id ); 
+                if ($variant) 
+                { 
+                    $sellingPrice = (float) $variant->selling_price;
+                } 
+            } 
+            if ($sellingPrice <= 0) 
+            { 
+                $sellingPrice = (float) ( $cartItem->product->selling_price ?? 0 ); 
+            }  
+            $mrp = (float) ( $cartItem->product->price ?? $cartItem->product->mrp ?? $sellingPrice );  
+            $itemTotal = $sellingPrice * $quantity; 
+            $productCategoryId = $cartItem->product->main_category_id ?? 0; 
+            $categoryTax = CategoryTax::where( 'category_taxes.category_id', $productCategoryId ) ->leftJoin( 'taxes', 'taxes.id', '=', 'category_taxes.tax_id' ) ->select( 'category_taxes.id', 'category_taxes.category_id', 'taxes.id as tax_id', 'taxes.tax_type', 'taxes.tax_option', 'taxes.tax_from', 'taxes.tax_to', 'taxes.tax_rate' ) ->first(); 
+            $itemTaxRate = 0; 
+            $itemTaxOption = null; 
+            $itemTaxType = null; 
+            $itemTaxId = null; 
+            $itemTaxFrom = 0; 
+            $itemTaxTo = 0; 
+            if ($categoryTax) { 
+                $itemTaxRate = (float) $categoryTax->tax_rate; 
+                $itemTaxOption = $categoryTax->tax_option; 
+                $itemTaxType = $categoryTax->tax_type; 
+                $itemTaxId = $categoryTax->tax_id; 
+                $itemTaxFrom = (float) $categoryTax->tax_from; 
+                $itemTaxTo = (float) $categoryTax->tax_to; 
+            } 
+            $itemFinalTaxRate = 0; 
+            if ($itemTaxType === 'flat') 
+            { 
+                $itemFinalTaxRate = $itemTaxRate; 
+            } 
+            elseif ($itemTaxType === 'floating') 
+            { 
+                if ( $itemTotal >= $itemTaxFrom && $itemTotal <= $itemTaxTo ) 
+                    { 
+                        $itemFinalTaxRate = $itemTaxRate; 
+                    } 
+            } 
+            $itemTaxPrice = ( $itemTotal * $itemFinalTaxRate ) / 100; 
+            $totalGst += $itemTaxPrice;
+            $subtotal += $itemTotal;
+            if ($categoryTax) 
+            { 
+                $taxRate = $itemTaxRate; 
+                $taxOption = $itemTaxOption;
+                $taxType = $itemTaxType; 
+                $taxId = $itemTaxId; 
+                $taxFrom = $itemTaxFrom; 
+                $taxTo = $itemTaxTo; 
+            } 
+            $selectedVariants = []; 
+            if (!empty($cartItem->selectedVariants)) 
+            { 
+                $selectedVariants = $cartItem->selectedVariants; 
+            } 
+            elseif ( !empty($cartItem->combination) ) 
+            { 
+                $selectedVariants = is_array($cartItem->combination) ? $cartItem->combination : json_decode( $cartItem->combination, true ); 
+            } 
+            $image = ''; 
+            if ( isset($cartItem->product->image) && !empty($cartItem->product->image) ) 
+            { 
+                $image = $cartItem->product->image; 
+            }  
+            $checkoutData[] = [ 'product_id' => $cartItem->product_id, 'productId' => $cartItem->product_id, 'product_type' => $productType ?? ( $cartItem->product->product_type ?? null ), 'sku' => $cartItem->product->sku ?? $sku ?? '', 'name' => $cartItem->product->name ?? '', 'quantity' => $quantity, 'price' => $mrp, 'sellingPrice' => $sellingPrice, 'tax_price' => round($itemTaxPrice, 2), 'tax_id' => $itemTaxId, 'tax_rate' => $itemFinalTaxRate, 'tax_option' => $itemTaxOption, 'tax_type' => $itemTaxType, 'tax_from' => $itemTaxFrom, 'tax_to' => $itemTaxTo, 'selectedVariants' => $selectedVariants, 'image' => $image, 'item_total' => round($itemTotal, 2), 'product_variant_combination_id' => $cartItem->product_variant_combination_id, ]; 
+            $cartItem->final_selling_price = $sellingPrice; 
+            $cartItem->item_total = $itemTotal; 
+            $cartItem->tax_price = round($itemTaxPrice, 2); 
+            $cartItem->tax_id = $itemTaxId; 
+            $cartItem->tax_rate = $itemFinalTaxRate; 
+            $cartItem->tax_option = $itemTaxOption; 
+            $cartItem->tax_type = $itemTaxType; 
+        } 
+        $finalTaxRate = 0; 
+        if ($taxType === 'flat') 
+        { 
+            $finalTaxRate = (float) $taxRate; 
+        } 
+        elseif ($taxType === 'floating') 
+        { 
+            if ( $subtotal >= $taxFrom && $subtotal <= $taxTo ) 
+            { 
                 $finalTaxRate = (float) $taxRate;
-            }
-        }
-        $totalGst = ($subtotal * $finalTaxRate) / 100;
-        if ($taxOption === 'inclusive') {
+            } 
+        }  
+        $totalGst = round( ($subtotal * $finalTaxRate) / 100, 2 ); 
+        if ($taxOption === 'inclusive') 
+        { 
             $taxableAmount = $subtotal - $totalGst;
-        } else {
-            $taxableAmount = $subtotal;
-        }
-        $couponDiscount = 0;
-        if ($taxOption === 'inclusive') {
-            $grandTotal = $subtotal - $couponDiscount;
-        } else {
+        } 
+        else { 
+            $taxableAmount = $subtotal; 
+        } 
+        $couponDiscount = 0;  
+        if ($taxOption === 'inclusive') 
+        { 
+        $grandTotal = $subtotal - $couponDiscount;
+        } 
+        else 
+        { 
             $grandTotal = $subtotal + $totalGst - $couponDiscount;
-        }
+        } 
         $totalPayable = $grandTotal;
-        return view(
-            'front.home.checkout',
-            compact('countries','userAddress','carts','subtotal','totalGst','taxableAmount','taxRate','finalTaxRate','taxOption','taxType','taxId','taxFrom','taxTo','couponDiscount','grandTotal','totalPayable','isBuyNow'));
+        $shippingcharge = 0; 
+        return view( 'front.home.checkout', compact( 'user', 'countries', 'userAddress', 'carts', 'checkoutData', 'subtotal', 'totalGst', 'taxableAmount', 'taxRate', 'finalTaxRate', 'taxOption', 'taxType', 'taxId', 'taxFrom', 'taxTo', 'couponDiscount', 'grandTotal', 'totalPayable', 'shippingcharge', 'isBuyNow' ) ); 
     }
+    
     public function variantCombinationPrices(Request $request)
     {   
         try {

@@ -224,26 +224,44 @@
         @endif
 		<div class="shipping-address">
 			{{-- <p class="f-16 font-medium mb-3">Shipping Addrress</p> --}}
+			<div class="error-msg"></div>
 			<div class="shipping-address-items">
-				@foreach($userAddress as $add)	
-					@php  
-						if($add->type == 1){
-							$type = 'billing'; 
-						}
-						if($add->type == 2){
-							$type = 'shipping'; 
-						}
-					@endphp 
-					<div class="shipping-address-item selected-item">
-						
-						<input class="shipping-address-input" id="add-{{ $type }}" value="{{ $add->id }}" type="radio" name="Addresses">
-						<label class="shipping-address-label" for="add-{{ $type }}">
-							 <p>{{ ucfirst($type) }} Address</p>
-							<p>{{ $add->name }} <span class="ml-3">{{ $add->phone_number }}</span></p>
-							<p> {{ $add->address }}, {{ $add->city->name }}, {{ $add->state->name }} - <span>{{ $add->postal_code }}</span></p>						
-						</label>                           
-					</div>
-				@endforeach 		
+				@foreach($userAddress as $key => $add)
+    @php
+        $type = $add->type == 1 ? 'billing' : 'shipping';
+    @endphp
+
+    <div class="shipping-address-item selected-item">
+        <input
+            class="shipping-address-input"
+            id="add-{{ $type }}-{{ $add->id }}"
+            value="{{ $add->id }}"
+            type="radio"
+            name="address"
+            data-name="{{ $add->name }}"
+            data-phone="{{ $add->phone_number }}"
+            data-address="{{ $add->address }}"
+            data-city="{{ $add->city->name }}"
+            data-state="{{ $add->state->name }}"
+            data-pincode="{{ $add->postal_code }}"
+            {{ $key == 0 ? 'checked' : '' }}
+        >
+
+        <label class="shipping-address-label" for="add-{{ $type }}-{{ $add->id }}">
+            <p>{{ ucfirst($type) }} Address</p>
+            <p>
+                {{ $add->name }}
+                <span class="ml-3">{{ $add->phone_number }}</span>
+            </p>
+            <p>
+                {{ $add->address }},
+                {{ $add->city->name }},
+                {{ $add->state->name }} -
+                <span>{{ $add->postal_code }}</span>
+            </p>
+        </label>
+    </div>
+@endforeach		
 				{{-- <div class="shipping-address-item not-selected-item">
 					<input class="shipping-address-input"  id="add2" type="radio" name="ship" >
 					<label class="shipping-address-label" for="add2">
@@ -272,29 +290,45 @@
 											<option value="1">Shipping</option>
 											<option value="2">Billing</option>
 										</select>
+										@error('type')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
+
 									<div class="form-row form-row-first">
 										<label for="billing_first_name" class="">First name <abbr class="required" title="required">*</abbr></label>
-										<input type="text" class="input-text" name="first_name" id="billing_first_name" placeholder="e.g. Rahul" value="">
+										<input type="text" class="input-text" name="first_name" placeholder="e.g. Rahul" value="{{ old('first_name') }}">
+										@error('first_name')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
 											
 									<div class="form-row form-row-last">
 										<label for="billing_last_name" class="">Last name <abbr class="required" title="required">*</abbr></label>
-										<input type="text" class="input-text" name="last_name" id="billing_last_name" placeholder="e.g. sharma" value="">
+										<input type="text" class="input-text" name="last_name" placeholder="e.g. sharma" value="{{ old('last_name') }}">
+										@error('last_name')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
 											
 									<div class="form-row form-row-wide">
-										<label for="billing_email" class="">Email address <abbr class="required" title="required">*</abbr></label>
-										<input type="email" class="input-text" name="billing_email" id="billing_email" placeholder="e.g. test@gmail.com" value="" autocomplete="email username">
+										<label for="Email" class="">Email address <abbr class="required" title="required">*</abbr></label>
+										<input type="email" class="input-text" name="email" placeholder="e.g. test@gmail.com" value="{{ old('email') }}" autocomplete="email username">
+										@error('email')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
 
 									<div class="form-row form-row-wide">
 										<label for="billing_phone" class="">Phone Number<abbr class="required" title="required">*</abbr></label>
-										<input type="tel" class="input-text" name="phone_number" id="billing_phone_number" placeholder="e.g. 9874563210" value="" autocomplete="tel">
+										<input type="tel" class="input-text" name="phone_number" value="{{ old('phone_number') }}" id="billing_phone_number" placeholder="e.g. 9874563210" value="" autocomplete="tel">
+										@error('phone_number')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
 
 									<div class="form-row form-row-wide">
-										<label for="billing_phone" class="">Alternate Phone Number<abbr class="required" title="required">*</abbr></label>
+										<label for="billing_phone" class="">Alternate Phone Number</label>
 										<input type="tel" class="input-text" name="alternate_number" id="billing_alternate_number" placeholder="e.g. 9874563210" value="" autocomplete="tel">
 									</div>
 										
@@ -303,46 +337,69 @@
 										<select class="input-text" name="country_id" id="country_id">
 											<option value="">Select Country</option>
 											@foreach($countries as $country)
-												<option value="{{ $country->id }}">{{ $country->name }}</option>
+												<option value="{{ $country->id }} {{ old('country_id') }}">{{ $country->name }}</option>
 											@endforeach
 										</select>
+										@error('country_id')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
+
 									<div class="form-row form-row-wide">
 										<label for="billing_country" class="">State <abbr class="required" title="required">*</abbr></label>
 										<select class="input-text" name="state_id" id="state_id">
 											<option value="">Select State</option>
 										</select>
+										@error('state_id')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
+
 									<div class="form-row form-row-wide">
 										<label for="billing_city" class="">Town / City <abbr class="required" title="required">*</abbr></label>
 										<select name="city_id" class="input-text" id="city_id">
 											<option value="">Select City</option>
 										</select>
+										@error('city_id')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
 							
 									<div class="form-row form-row-wide">
 										<label for="billing_postcode" class="">Postcode <abbr class="required" title="required">*</abbr></label>
-										<input type="text" class="input-text" name="pincode" id="pincode" placeholder="e.g. 202032" value="" autocomplete="postal-code">
+										<input type="text" class="input-text" name="pincode" value="{{ old('pincode') }}" id="pincode" placeholder="e.g. 202032" value="" autocomplete="postal-code">
+										@error('pincode')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
 
 									<div class="form-row form-row-wide">
-										<label for="billing_address_2" class="screen-reader-text">Address</label>
+										<label for="billing_address_2" class="screen-reader-text">Address <abbr class="required" title="required">*</abbr></label>
 										<input type="text" class="input-text" name="address" id="billing_address_2" placeholder="Apartment, suite," value="">
+										@error('address')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
 
 									<div class="form-row form-row-wide">
-										<label for="billing_address_2" class="screen-reader-text">Landmark</label>
+										<label for="billing_address_2" class="screen-reader-text">Landmark <abbr class="required" title="required">*</abbr></label>
 										<input type="text" class="input-text" name="landmark" id="billing_address_2" placeholder="e.g. near lotus apartment..." value="">
+										@error('landmark')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>
 
 									<div class="form-row form-row-wide">
-										<label for="billing_company" class="input-text">Type</label>
+										<label for="billing_company" class="input-text">Type <abbr class="required" title="required">*</abbr></label>
 										<select name="address_type" class="form-control" id="">
 											<option value="">Select Address Type</option>
 											<option value="1">Home</option>
 											<option value="2">Office</option>
 											<option value="3">Others</option>
 										</select>
+										@error('address_type')
+											<span class="text-danger">{{ $message }}</span>
+										@enderror
 									</div>  
 								</div>
 								<button type="submit" class="btn btn-success">Submit</button>
@@ -357,19 +414,19 @@
 					<form action="">
 						<div class="checkout-payment-items">
 							<div class="checkout-payment-item">
-								<input class="checkout-payment-input" id="payment1" type="radio" name="payment" >
+								<input class="checkout-payment-input payment_method" id="payment1" type="radio" name="payment" value="wallet">
 								<label class="checkout-payment-label" for="payment1">
 									<p class="checkout-payment-title"><img src="images/icon-wallet.png" alt=""> Wallet</p>
 									<div class="checkout-payment-box">
 										<p>Pay with your wallet</p>
-										<p>Balance : ₹ 1000.00</p>                            
+										<p>Balance : ₹ {{ $user->wallet_avl_balance }}</p>                            
 									</div>
 								</label>     
 							</div>
 							
 							<div class="checkout-payment-item">
-								<input class="checkout-payment-input" id="payment3" type="radio" name="payment" >
-								<label class="checkout-payment-label" for="payment3">
+								<input class="checkout-payment-input payment_method" id="payment2" type="radio" name="payment" value="cod">
+								<label class="checkout-payment-label" for="payment2">
 									<p class="checkout-payment-title"><img src="images/icon-cod.png" alt=""> Cash on delivery</p>
 									<div class="checkout-payment-box">                               
 										<p>Pay with cash upon delivery.</p>                           
@@ -378,8 +435,8 @@
 							</div>
 							
 							<div class="checkout-payment-item">
-								<input class="checkout-payment-input" id="payment2" type="radio" name="payment" >
-								<label class="checkout-payment-label" for="payment2">
+								<input class="checkout-payment-input payment_method" id="payment3" type="radio" name="payment" value="ccavenue">
+								<label class="checkout-payment-label" for="payment3">
 									<p class="checkout-payment-title"><img src="images/icon-upi.png" alt=""> Pay With CC Avenue</p>
 									<div class="checkout-payment-box">
 										<p>Pay via CC avenue; you can pay with your credit card if you don’t have a CC Avenue account.</p>   
@@ -388,7 +445,7 @@
 							</div>
 							
 							<div class="checkout-payment-item">
-								<input class="checkout-payment-input" id="payment4" type="radio" name="payment" >
+								<input class="checkout-payment-input payment_method" id="payment4" type="radio" name="payment" value="paypal">
 								<label class="checkout-payment-label" for="payment4">
 									<p class="checkout-payment-title"><img src="images/icon-paypal.png" alt=""> Pay with PayPal</p>
 										<div class="checkout-payment-box">                              
@@ -431,62 +488,80 @@
 							@endforeach
 						</tbody>
 						<tfoot>
-    <tr>
-        <th>Subtotal</th>
-        <td>
-            <span class="price_subtotal">
-                ₹{{ number_format($subtotal, 2) }}
-            </span>
-        </td>
-    </tr>
+						<tr>
+							<th>Subtotal</th>
+							<td>
+								<span class="price_subtotal">
+									₹{{ number_format($subtotal, 2) }}
+								</span>
+							</td>
+						</tr>
 
-    <tr>
-        <th>GST ({{ $finalTaxRate }}%)</th>
-        <td>
-            <span class="gst_txt_price">
-                ₹{{ number_format($totalGst, 2) }}
-            </span>
-        </td>
-    </tr>
+						<tr>
+							<th>GST ({{ $finalTaxRate }}%)</th>
+							<td>
+								<span class="gst_txt_price">
+									₹{{ number_format($totalGst, 2) }}
+								</span>
+							</td>
+						</tr>
 
-    <tr>
-        <th>Shipping</th>
-        <td>
-            <span class="shipping_txt_price">
-                <div class="flat_txt_gray">Flat Rate:</div>
-                ₹20.00
-            </span>
-        </td>
-    </tr>
+						<tr>
+							<th>Shipping</th>
+							<td>
+								<span class="shipping_txt_price">
+									<div class="flat_txt_gray">Flat Rate:</div>
+									₹20.00
+								</span>
+							</td>
+						</tr>
 
-    @if($couponDiscount > 0)
-        <tr>
-            <th>Discount</th>
-            <td>
-                <span class="discount_txt_price">
-                    -₹{{ number_format($couponDiscount, 2) }}
-                </span>
-            </td>
-        </tr>
-    @endif
+						@if($couponDiscount > 0)
+							<tr>
+								<th>Discount</th>
+								<td>
+									<span class="discount_txt_price">
+										-₹{{ number_format($couponDiscount, 2) }}
+									</span>
+								</td>
+							</tr>
+						@endif
 
-    <tr class="order-total">
-        <th>Total</th>
-        <td>
-            <span class="price_total">
-                ₹{{ number_format($totalPayable, 2) }}
-            </span>
-        </td>
-    </tr>
-</tfoot>
+						<tr class="order-total">
+							<th>Total</th>
+							<td>
+								<span class="price_total">
+									₹{{ number_format($totalPayable, 2) }}
+								</span>
+							</td>
+						</tr>
+					</tfoot>
 					</table>
-					<button type="submit" class="btn_place_order" id="place_order">Place order</button>
+					<button type="submit" class="btn_place_order" id="placeOrder">Place order</button>
 				</div>
 			</div>
 		</div>	
 	</div>
 </div>
 <script>
+	window.dbCartItems = @json($checkoutData); 
+	window.subtotal = @json($subtotal); 
+	window.totalGst = @json($totalGst); 
+	window.taxableAmount = @json($taxableAmount); 
+	window.taxRate = @json($taxRate); 
+	window.finalTaxRate = @json($finalTaxRate); 
+	window.taxOption = @json($taxOption); 
+	window.taxType = @json($taxType); 
+	window.taxFrom = @json($taxFrom); 
+	window.taxTo = @json($taxTo); 
+	window.grandTotal = @json($grandTotal); 
+	window.totalPayable = @json($totalPayable); 
+	window.shippingcharge = @json($shippingcharge); 
+	window.isBuyNow = @json($isBuyNow); 
+	console.log('CHECKOUT DATA:', window.dbCartItems);
+</script>
+<script>
+	
 	$('#country_id').on('change',function(){
 		var countryId = $(this).val();  
 		$.ajax({
@@ -534,6 +609,103 @@
 				console.log(err); 
 			}
 		});
+	});
+
+	$('#placeOrder').on('click', function (e) {
+		e.preventDefault();
+		$('.error-msg').html('');
+		let that = $(this);
+		let paymentMethod = $('input[name="payment"]:checked').val();
+		let addressInput = $('input[name="address"]:checked');
+		let addressId = addressInput.val();
+		let cartItems = window.dbCartItems || [];
+
+		if (cartItems.length === 0) {
+			$('.error-msg').html('Your cart is empty, Please add some product in cart.');
+			return false;
+		}
+
+		if (!paymentMethod) {
+			$('.error-msg').html('Please select payment method.');
+			return false;
+		}
+
+		if (!addressId) {
+			$('.error-msg').html('Please select an address.');
+			return false;
+		}
+
+		let selectedAddress = {
+			id: addressId,
+			name: addressInput.data('name'),
+			phone: addressInput.data('phone'),
+			address: addressInput.data('address'),
+			city: addressInput.data('city'),
+			state: addressInput.data('state'),
+			pincode: addressInput.data('pincode')
+		};
+		if (paymentMethod === 'cod') {
+
+			let postData = {
+				cartItems: window.dbCartItems,
+				sub_total: window.totalPayable,
+				total_gst: window.totalGst,
+				taxable_amount: window.taxableAmount,
+				tax_rate: window.taxRate,
+				final_tax_rate: window.finalTaxRate,
+				tax_option: window.taxOption,
+				tax_type: window.taxType,
+				tax_from: window.taxFrom,
+				tax_to: window.taxTo,
+				grand_total: window.grandTotal,
+				total_payable: window.totalPayable,
+				payment_mode: 'cod',
+				coupon_id: localStorage.getItem('coupon_id'),
+				coupon_discount: parseFloat(localStorage.getItem('coupon_discount')) || 0,
+
+				// Abhi shipping charge nahi hai
+				shippingcharge: 0,
+
+				billing_id: addressId,
+				shipping_id: addressId
+			};
+			console.log('COD POST DATA:', postData);
+			that.prop('disabled', true).text('Please wait...');
+
+			$.ajax({
+				type: 'POST',
+				url: "{{ route('front-place.order') }}",
+				headers: {
+					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+					'Content-Type': 'application/json'
+				},
+				data: JSON.stringify(postData),
+				success: function (data) {
+					console.log('COD RESPONSE:', data);
+					if (data.success === false) {
+						$('.error-msg').html(
+							data.message || 'Something went wrong.'
+						);
+						that.prop('disabled', false).text('Place Order');
+						return false;
+					}
+
+					if (data.success === true) {
+						localStorage.removeItem('coupon_id');
+						localStorage.removeItem('coupon_discount');
+						window.location.href = data.url;
+					}
+				},
+
+				error: function (xhr) {
+					console.log('COD ERROR:', xhr);
+					that.prop('disabled', false).text('Place Order');
+					$('.error-msg').html(xhr.responseJSON?.message || 'Something went wrong while placing order.');
+				}
+			});
+
+			return false;
+		}
 	});
 </script>
 @endsection

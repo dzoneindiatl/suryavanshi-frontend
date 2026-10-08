@@ -439,6 +439,11 @@
     .related_products_head {margin-bottom: 20px;}
     .related_products_head h2 {font-size: 25px;margin: 0px;}
     .related_product_inner .collection_inner_box, .similar_product_inner .collection_inner_box {margin-right: 10px;margin-left: 10px;}
+    .quantity-option h5{ font-size:18px; color:#38271e; font-weight: 500;}
+    .quantity {width:140px; height:40px; border:1px solid #E7DDD4; border-radius:1rem; display:flex; overflow:hidden; background:#fff;}
+    .quantity button{ width:40px; border:none; background:none; cursor:pointer; font-size:22px; transition:.3s;}
+    .quantity button:hover{ background:#F2D7D5;}
+    .quantity input{ flex:1; border:none; outline:none; text-align:center; font-size:18px; background:none; width: 100%;}
 </style>
 <div class="breadcrumb_main">
 	<div class="container">
@@ -557,77 +562,6 @@
                 @endphp
 					<p class="offer_txt">(MRP Inclusive of all taxes)</p>
 					<div class="product_variants">
-						{{-- @foreach($productvariants as $variant)
-							@php
-								$variantId = data_get($variant, 'variant_id');
-								$variantName = data_get($variant, 'variant_name');
-								$variantType = strtolower(trim(data_get($variant, 'variant_type', '')));
-								$variantValues = collect(data_get($variant, 'variant_values', []));
-							@endphp
-							@if($variantValues->isNotEmpty())
-								<div class="product_variant_group"
-									data-variant-id="{{ $variantId }}"
-									data-variant-type="{{ $variantType }}">
-									<div class="product_variant_title">
-										<strong>{{ $variantName }}</strong>
-									</div>
-									<div class="product_variant_values">
-										@foreach($variantValues as $variantValue)
-											@php
-												$valueId = data_get($variantValue, 'id');
-												$variantValueId = data_get($variantValue, 'variant_value_id');
-												$valueName = data_get($variantValue, 'name');
-												$colorCode = data_get($variantValue, 'color_code');
-												$image = data_get($variantValue, 'image');
-												$isVariantIcon = data_get($variantValue, 'is_variant_icon', 0);
-											@endphp
-
-											@if(in_array($variantName, ['Color', 'colour']))
-												<button type="button"
-													class="s-variant color-swatch"
-													data-product-id="{{ $product->id }}"
-													data-type="color"
-													data-value="{{ $valueName }}"
-													data-variant-id="{{ $variantId }}"
-													data-variant-value-id="{{ $variantValueId }}"
-													data-value-id="{{ $valueId }}"
-													onclick="selectVariant(this); checkVariantStock(this);">
-
-													<span class="color-swatch-circle"
-														style="background-color: {{ $colorCode ?: '#ddd' }};">
-													</span>
-
-													<span class="color-swatch-name">
-														{{ $valueName }}
-													</span>
-												</button>
-
-											@elseif(in_array($variantName, ['Size']))
-												<button type="button" class="s-variant" data-type="size" data-value="{{ $valueName }}" data-variant-id="{{ $variantId }}" data-variant-value-id="{{ $variantValueId }}"data-value-id="{{ $valueId }}">
-													{{ $valueName }}
-												</button>
-
-											@elseif(in_array($variantName, ['Metal Purity', 'metal_purity', 'purity']))
-												<button
-													type="button"
-													class="s-variant"
-													data-type="metal_purity"
-													data-value="{{ $valueName }}"
-													data-variant-id="{{ $variantId }}"
-													data-variant-value-id="{{ $variantValueId }}"
-													data-value-id="{{ $valueId }}">
-													{{ $valueName }}
-												</button>
-											@else
-												<button type="button" class="s-variant" data-type="{{ $variantType }}" data-value="{{ $valueName }}" data-variant-id="{{ $variantId }}" data-variant-value-id="{{ $variantValueId }}" data-value-id="{{ $valueId }}">
-													{{ $valueName }}
-												</button>
-											@endif
-										@endforeach
-									</div>
-								</div>
-							@endif
-						@endforeach --}}
 						@if (!empty($productvariants))
                             @foreach ($productvariants as $variant)
                                 @php
@@ -959,7 +893,19 @@
                             @endforeach
                         @endif
 					</div>
-					<div class="product_box_cart">
+                    <div class="product-option quantity-option">
+                        <h5 class="mb-10">
+                            Quantity
+                        </h5>
+
+                        <div class="quantity" data-max-quantity="{{ $product->qty }}">
+                            <button class="minus">-</button>
+                            <input type="text" value="1">
+                            <button class="plus">+</button>
+                        </div>
+                    </div>
+					
+                    <div class="product_box_cart">
 						<button class="btn_add_to_cart addToCartBtn addToCartBtnText"
 							data-id="{{ $product->id }}"
 							data-name="{{ $product->name }}"
@@ -1570,6 +1516,7 @@
     var wishlistUrl = "{{ route('front-user.wishlist') }}";
     var viewCartUrl = "{{ route('product.viewBag') }}";
     var headerSearchUrl = "{{ route('front-header-product-search') }}"; 
+    var newBuyNowUrl = "{{ route('product.buynow') }}"; 
 </script>
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.3.15/slick.min.js"></script>
@@ -1609,15 +1556,17 @@
 		let productId = button.data('id');
 		let price = button.data('price');
 		let salePrice = button.data('saleprice');
+        let selectedVariant = getSelectedVariantsForBuyNow();  
 		$.ajax({
-			url: "{{ route('front-product.buyNow') }}",
-			type: "POST",
+			url:newBuyNowUrl,
+			type:"POST",
 			data: {
-				_token: "{{ csrf_token() }}",
+                _token: $('meta[name="csrf-token"]').attr('content'),
 				product_id: productId,
 				price: price,
 				sale_price: salePrice,
-				quantity: 1
+				quantity: 1,
+                selectedVariant:selectedVariant
 			},
 			success: function(response){
 				if(response.success){
@@ -1632,8 +1581,22 @@
 				console.log(xhr.responseText);
 			}
 		});
-
 	});
+
+    function getSelectedVariantsForBuyNow() {
+        let selected = {};
+        $('.s-variant.active[data-type]').each(function() {
+            const $variant = $(this);
+            const type = String($variant.attr('data-type') || '').toLowerCase();
+            const value = String($variant.attr('data-value') || '');
+
+            if (type && value) {
+                selected[type] = value;
+            }
+        });
+        console.log('Selected Variants: data====', selected);
+        return selected; 
+    }
 </script>
 <script>
 	$(document).ready(function(){
@@ -1654,25 +1617,24 @@
     var maxSellingQty = '{{ $maxSellingQty }}';
     var getVarient = "{{ route('variant.combination.prices') }}";
 		console.log("=======getVariant===========",getVarient); 
-    $(document).off('click.qty', '.qty-btn');
+    $(".qty-btn").off('click.changeQuantity').on('click.changeQuantity', function(e) {
+		e.preventDefault();
+		e.stopPropagation();	
+		let oldValue = $('.qty').val(),
+			newVal = 1;
+		let totalinvent = $('.qty').attr('maxlength');	
+		if($(this).hasClass('inc')) {
+		if(parseInt(oldValue) < parseInt(totalinvent)) {
+		newVal = parseInt(oldValue) + 1;
+		}
+		}
+		else if(oldValue > 1) {
+		newVal = parseInt(oldValue) - 1;
+		}
 
-    $(document).on('click.qty', '.qty-btn', function (e) {
-        e.preventDefault();
-        const input = $(this).siblings('.qty');
-        let qty = parseInt(input.val(), 10) || 1;
-        const maxQty = parseInt(input.attr('max'), 10) || 1;
-        if ($(this).hasClass('plus')) {
-            if (qty < maxQty) {
-                input.val(qty + 1).trigger('change');
-            }
-        }
-        if ($(this).hasClass('minus')) {
-            if (qty > 1) {
-                input.val(qty - 1).trigger('change');
-            }
-        }
-    });
-    
+		$(".qty").val(newVal);	
+		
+	})
     $(document).on('click', '.customise_title', function(e) {
         e.preventDefault();
 
@@ -1684,19 +1646,24 @@
 
         $icon.toggleClass('fa-plus fa-minus');
     });
+    $('.plus').on('click', function () {
+        let quantityBox = $(this).closest('.quantity');
+        let input = quantityBox.find('input');
+        let maxQuantity = parseInt(quantityBox.data('max-quantity')) || 1;
+        let value = parseInt(input.val()) || 1;
 
-    $(document).off('input.qty', '.qty');
-    
-    $(document).on('input.qty', '.qty', function () {
-        let qty = parseInt($(this).val(), 10) || 1;
-        const maxQty = parseInt($(this).attr('max'), 10) || 1;
-        if (qty < 1) {
-                qty = 1;
+        if (value < maxQuantity) {
+            input.val(value + 1);
         }
-        if (qty > maxQty) {
-            qty = maxQty;
+    });
+
+    $('.minus').on('click', function () {
+        let input = $(this).siblings('input');
+        let value = parseInt(input.val()) || 1;
+
+        if (value > 1) {
+            input.val(value - 1);
         }
-        $(this).val(qty);
     });
 
     function checkItemInCart() {
@@ -1826,7 +1793,7 @@
                 }
             });
 
-            if (type === 'color' || type == 'colour') {
+            if (type === 'gemstone name' || type == 'gemstone name') {
                 updateVariantImages(productId, variantValueId);
             }
         }

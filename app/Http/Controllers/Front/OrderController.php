@@ -177,7 +177,7 @@ class OrderController extends Controller
     {
         $order = Order::where('id', decrypt($orderNumber))->firstOrFail();
         $walletamount = WalletHistory::where('transaction_id', $order->order_number)->first();
-        return view('front.modules.dashboard.order-success', compact('order', 'walletamount'));
+        return view('front.dashboard.order-success', compact('order', 'walletamount'));
     }
 
 

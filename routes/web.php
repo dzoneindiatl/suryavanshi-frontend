@@ -48,6 +48,7 @@ Route::get('/dashboard', [\App\Http\Controllers\Front\DashboardController::class
 Route::post('/subscribe', [HomeController::class, 'subscribe'])->name('subscribe');
 Route::get('/product/product-sort-filter', [ShopController::class, 'productSortFilter'])->name('sort.filter');
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+  Route::post('/buy-now', [CheckoutController::class,'buyNow'])->name('product.buynow');
 Route::match(['get', 'post'], '/add-to-cart', [CartController::class, 'addToCart'])->name('user.addToCart');
 Route::match(['get', 'post'], '/get-cart-items', [CartController::class, 'getCartItems'])->name('user.get-cart-items');
 Route::post('/apply-coupons', [CartController::class, 'applyCoupon'])->name('apply.coupon');
@@ -139,7 +140,7 @@ Route::name('front-')->group(function () {
             Route::post('/update-address', [App\Http\Controllers\Front\CheckoutController::class, 'updateAddress'])->name('user.update_user_address');
             Route::get('/get-user-wallet/{user_id}', [App\Http\Controllers\Front\CheckoutController::class, 'getuserWallet']);
 
-            Route::POST('/place-order', [App\Http\Controllers\Front\CheckoutController::class, 'placeOrder']);
+            Route::POST('/place-order', [App\Http\Controllers\Front\CheckoutController::class, 'placeOrder'])->name('place.order');
             Route::any('/checkout-callback', [App\Http\Controllers\Front\CheckoutController::class, 'checkout_callback'])->name('product.checkout.callback');
             Route::get('/order-details/{orderId}', [App\Http\Controllers\Front\OrderController::class, 'orderDetails']);
             //Route::get('/order-confirm/{id}', [App\Http\Controllers\Front\HomeController::class, 'order_confirm'])->name('user.order.confirm');
@@ -157,13 +158,12 @@ Route::name('front-')->group(function () {
             Route::post('order/cancel',[CheckoutController::class,'orderCancelled'])->name('order.cancel');
             Route::post('order/delivered',[CheckoutController::class,'orderReturn'])->name('order.return');
 
-            Route::post('/buy-now', [App\Http\Controllers\Front\CheckoutController::class, 'buyNow'])->name('product.buyNow');
-
+        
             Route::post('/ccavenue/pay', [CCAvenueController::class, 'pay'])->name('ccavenue.pay');
             Route::post('/ccavenue/response', [CCAvenueController::class, 'response'])->name('ccavenue.response');
             Route::post('/ccavenue/cancel', [CCAvenueController::class, 'cancel'])->name('ccavenue.cancel');
         });
-
+  
     Route::get('header-product-search',[HomeController::class,'headerProductSearch'])->name('header-product-search'); 
     Route::get('/product/{product}/{title}/{sku}', [HomeController::class, 'productDetail'])->name('product.detail');
 

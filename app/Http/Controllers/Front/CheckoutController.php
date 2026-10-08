@@ -39,6 +39,7 @@ use App\Models\ProductVariantCombination;
 use App\Models\ProductVariantCombinationImage;
 use App\Models\{OrderNotifications, OrderAddress, CouponUse};
 use App\Service\MailService;
+use Illuminate\Support\Facades\Validator;
 
 class CheckoutController extends Controller
 {
@@ -84,27 +85,65 @@ class CheckoutController extends Controller
 
     public function saveAddress(Request $request)
     {
-        $postData = $request->all();
         $user = Auth::guard('customer')->user();
-        $address = new UserAddress();
 
-        $address->type = $postData['type'];
-        $address->user_id = $user->id;
-        $address->name = $postData['first_name'] . ' ' . $postData['last_name'];
-        $address->email = $user->email;
-        $address->phone_number = $postData['phone_number'];
-        $address->alternate_number = $postData['alternate_number'];
-        $address->country_id = $postData['country_id'];
-        $address->state_id = $postData['state_id'];
-        $address->city_id = $postData['city_id'];
-        $address->postal_code = $postData['pincode'];
-        $address->landmark = $postData['landmark'];
-        $address->address = $postData['address'];
-        $address->address_type = $postData['address_type'];
-        $address->save();
+        if($user){
+            $validator = Validator::make($request->all(),
+                array(
+                    'type'=>'required',
+                    'first_name'=>'required',
+                    'last_name'=>'required',
+                    'email'=>'required',
+                    'phone_number'=>'required',
+                    'country_id'=>'required',
+                    'state_id'=>'required',
+                    'city_id'=>'required',
+                    'address_type'=>'required',
+                    'address'=>'required',
+                    'landmark'=>'required',
+                    'pincode'=>'required'
+                ),
+                array(
+                    'type.required'=>'Please select the type',
+                    'first_name.required'=>'First Name is required',
+                    'last_name.required'=>'Last Name is required',
+                    'email.required'=>'Email is required',
+                    'phone_number'=>'Phone Number is required',
+                    'country_id.required'=>'Country is required',
+                    'state_id.required'=>'State is required',
+                    'city_id.required'=>'City is required',
+                    'address_type.required'=>'Address type is required',
+                    'address.required'=>'Address is required',
+                    'landmark.required'=>'landmark is required',
+                    'pincode.required'=>'Postal Code is required'
+                )
+            );
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }else{
+                $address = new UserAddress();
+                $address->type = $request->type;
+                $address->user_id = $user->id;
+                $address->name = $request->first_name . ' ' . $request->last_name;
+                $address->email = $request->email;
+                $address->phone_number = $request->phone_number;
+                $address->alternate_number = $request->alternate_number;
+                $address->country_id = $request->country_id;
+                $address->state_id = $request->state_id;
+                $address->city_id = $request->city_id;
+                $address->postal_code = $request->pincode;
+                $address->landmark = $request->landmark;
+                $address->address = $request->address;
+                $address->address_type = $request->address_type;
+                $address->save();
 
-        session()->flash('success','User Address Saved Successfully'); 
-        return redirect()->route('front-product.checkoutBag'); 
+                session()->flash('success','User Address Saved Successfully'); 
+                return redirect()->route('front-product.checkoutBag'); 
+            }
+        }
+        else{
+            return redirect()->route('front.user-login'); 
+        }
     }
 
     public function updateAddress(Request $request)
@@ -225,9 +264,6 @@ class CheckoutController extends Controller
             return response()->json($responseError);
         }
         // Backend Order validation 
-
-        
-
         $ip_address = $request->ip(); 
         if ($request->payment_mode == 'cod') {
             $order_id = $this->createOrder(
@@ -238,7 +274,7 @@ class CheckoutController extends Controller
                 $request->coupon_id,
                 $request->coupon_discount,
                 0,
-                $request->shippingcharge,
+                $request->shippingcharge ?? 0,
                 $request->billing_id,
                 $request->shipping_id,
                 $request->cartItems
@@ -284,7 +320,19 @@ class CheckoutController extends Controller
         } elseif ($request->payment_mode == 'wallet') {
             $order_number = $this->random_strings(8);
 
-            $order_id = $this->createOrder($ip_address,$request->payment_mode, $request->wallet_amount, 'received', $request->coupon_id, $request->coupon_discount, $request->wallet_amount, $request->shippingcharge, $request->billing_id, $request->shipping_id, $request->cartItems);
+            $order_id = $this->createOrder(
+                $ip_address,
+                $request->payment_mode,
+                $request->wallet_amount,
+                'received',
+                $request->coupon_id,
+                $request->coupon_discount,
+                $request->wallet_amount,
+                $request->shippingcharge ?? 0,
+                $request->billing_id,
+                $request->shipping_id,
+                $request->cartItems
+            );
             Order::find($order_id)->update([
                 'payment_status'      => 'paid',
             ]);
@@ -371,10 +419,8 @@ class CheckoutController extends Controller
         return redirect()->back();
     }
 
-
-    public function createOrder($ip_address,$payment_method, $amount, $order_status, $coupon_id, $coupon_discount, $wallet_amount = 0, $shippingcharge, $billingId, $shippingId, $checkout_data)
+    public function createOrder($ip_address,$payment_method,$amount,$order_status,$coupon_id,$coupon_discount,$wallet_amount,$shippingcharge,$billingId,$shippingId,$checkout_data)
     {
-
         $debitFromWallet = 0;
         $user_id =  Auth::guard('customer')->user()->id;
         $customerName = Auth::guard('customer')->user()->name ?? 'Customer';
@@ -422,14 +468,14 @@ class CheckoutController extends Controller
         $order->user_id = $user_id;
         $order->billing_address = json_encode($billAddress);
         $order->shipping_address = json_encode($shipAddress);
-        $order->shippingcharge = floor($shippingcharge);
+        $order->shippingcharge = floor($shippingcharge ?? 0);
         //$order->sub_total = floor($amount + $discount - ($taxPrice + $coupon_discount)); 
         $order->sub_total = floor($amount + $discount);
 
         $order->total = floor($amount);
         $order->payment_method = $payment_method;
         $order->payment_status = $order_status;
-        $order->payment_status = 'pending';
+        // $order->payment_status = 'pending';
         $order->ip_address = $ip_address;
         $order->save();
 
@@ -964,7 +1010,6 @@ class CheckoutController extends Controller
 
 
     public function buyNow(Request $request){
-
         $product = Product::findOrFail($request->product_id);
         session()->put('buy_now', [
             'product_id' => $product->id,
@@ -973,6 +1018,7 @@ class CheckoutController extends Controller
             'quantity' => $request->quantity ?? 1,
             'price' => $request->price,
             'sale_price' => $request->sale_price,
+            'selectedVariant'=>$request->selectedVariant
         ]);
 
         return response()->json([

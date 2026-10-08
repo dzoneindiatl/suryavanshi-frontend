@@ -4,7 +4,7 @@
 			<div class="row">
 				<div class="col-md-4">
 					<div class="head_logo">
-						<a href="{{ url('/') }}" title="SuryaVanshi">
+						<a href="{{ url('/') }}" title="Jaipur Jewellery House">
 							{{-- <img class="main_logo" src="{{ asset('assets/image/suryavanshi-text.png') }}" alt="logo"> --}}
 							<span class="logo-icon">
 								<img class="logo-icon-holder" src="{{ asset('assets/logos/1.png') }}" alt="logo">

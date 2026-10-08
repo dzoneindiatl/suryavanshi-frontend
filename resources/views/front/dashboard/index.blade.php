@@ -206,15 +206,15 @@
                                               <td>
                                                   <div class="tb-order_product">
                                                       <a href="@if(!empty($product->product->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $product->product->slug . '.html', 'sku' => $product->product->sku]) }}@endif" class="img-prd">
-                                                          <img src="{{ $product->product->images['first'] }}" alt="img">
+                                                          <img src="@if(!empty($product->product)){{ $product->product->images['first'] }}@endif" alt="img">
                                                       </a>
                                                       <div class="infor-prd">
-                                                          <a href="@if(!empty($product->product->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $product->product->slug . '.html', 'sku' => $product->product->sku]) }}@endif" class="prd_name">{{ $product->product->name }}</a>
+                                                          <a href="@if(!empty($product->product->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $product->product->slug . '.html', 'sku' => $product->product->sku]) }}@endif" class="prd_name">@if(!empty($product->product)){{ $product->product->name }}@endif</a>
                                                           <p class="prd_select">Clothing <span>Size: XS</span></p>
                                                       </div>
                                                   </div>
                                               </td>
-                                              <td class="tb-order_price">{{ $product->selling_price }}</td>
+                                              <td class="tb-order_price">@if(!empty($product->product)){{ $product->selling_price }}@endif</td>
                                               <td>
                                                   @php 
                                                       if($product->status == 'pending'){
