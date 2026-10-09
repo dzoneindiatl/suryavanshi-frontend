@@ -186,10 +186,10 @@
                                         <div class="address-item_content">
                                             <h4 class="address-title">
                                                 @php 
-                                                    if($address->type == 1){
+                                                    if($address->type == '1'){
                                                         $type = "Shipping"; 
                                                     }
-                                                    if($address->type == 2){
+                                                    if($address->type == '2'){
                                                         $type = "Billing"; 
                                                     }
                                                 @endphp    
@@ -198,14 +198,14 @@
                                                 <div class="address-info">
                                                 @php 
                                                     if($address->address_type == 1){
-                                                        $type = "Home"; 
+                                                        $addressType = "Home"; 
                                                     }elseif($address->address_type ==2){
-                                                        $type = "Office"; 
+                                                        $addressType = "Office"; 
                                                     }else{
-                                                        $type = "Others"; 
+                                                        $addressType = "Others"; 
                                                     }
                                                 @endphp  
-                                                <h5>{{ $type }}</h5>
+                                                <h5>{{ $addressType }}</h5>
                                                 <p>{{ $address->address }}</p>
                                             </div>
                                             <div class="address-info">
@@ -232,8 +232,8 @@
                                                         <fieldset>
                                                             <select name="type" class="form-control" id="">
                                                                 <option value="">Select Type</option>
-                                                                <option value="billing" {{ $address->type == 'billing' ? 'selected' : ''  }}>Billing</option>
-                                                                <option value="shipping" {{ $address->type == 'shipping' ? 'selected' : '' }}>Shipping</option>
+                                                                <option value="2" {{ $address->type == '2' ? 'selected' : ''  }}>Billing</option>
+                                                                <option value="1" {{ $address->type == '1' ? 'selected' : '' }}>Shipping</option>
                                                             </select>
                                                         </fieldset>
                                                         <fieldset>

@@ -228,7 +228,7 @@
 			<div class="shipping-address-items">
 				@foreach($userAddress as $key => $add)
     @php
-        $type = $add->type == 1 ? 'billing' : 'shipping';
+        $type = $add->type == '1' ? 'billing' : 'shipping';
     @endphp
 
     <div class="shipping-address-item selected-item">
