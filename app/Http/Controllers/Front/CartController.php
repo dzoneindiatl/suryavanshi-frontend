@@ -279,6 +279,47 @@ class CartController extends Controller
         }
     }
 
+
+    public function updateQuantity(Request $request)
+    {
+        $request->validate([
+            'cart_id' => 'required|integer',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $userId = Auth::guard('customer')->id();
+
+        $cart = Cart::with('product')
+            ->where('id', $request->cart_id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$cart) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Cart item not found.'
+            ], 404);
+        }
+
+        $maxQuantity = $cart->product->qty;
+
+        if ($request->quantity > $maxQuantity) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Maximum available quantity is ' . $maxQuantity,
+                'quantity' => $cart->quantity
+            ]);
+        }
+
+        $cart->quantity = $request->quantity;
+        $cart->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Quantity updated successfully.',
+            'quantity' => $cart->quantity
+        ]);
+    }
     public function getCartItems(Request $request)
     {
         try {

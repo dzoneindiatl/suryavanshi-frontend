@@ -48,7 +48,8 @@ Route::get('/dashboard', [\App\Http\Controllers\Front\DashboardController::class
 Route::post('/subscribe', [HomeController::class, 'subscribe'])->name('subscribe');
 Route::get('/product/product-sort-filter', [ShopController::class, 'productSortFilter'])->name('sort.filter');
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-  Route::post('/buy-now', [CheckoutController::class,'buyNow'])->name('product.buynow');
+Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.update.quantity');
+Route::post('/buy-now', [CheckoutController::class,'buyNow'])->name('product.buynow');
 Route::match(['get', 'post'], '/add-to-cart', [CartController::class, 'addToCart'])->name('user.addToCart');
 Route::match(['get', 'post'], '/get-cart-items', [CartController::class, 'getCartItems'])->name('user.get-cart-items');
 Route::post('/apply-coupons', [CartController::class, 'applyCoupon'])->name('apply.coupon');

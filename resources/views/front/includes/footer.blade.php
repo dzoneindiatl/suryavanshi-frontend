@@ -333,11 +333,11 @@
 	});
 </script>
 
-<script>
+{{-- <script>
 	var windowHeight =  Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
     lastTop;
 
-  window.addEventListener('scroll', function(event) {
+    window.addEventListener('scroll', function(event) {
   var train = document.getElementById('home_collection_sec'),
       top = train.getBoundingClientRect().top,
       offset = top - windowHeight;
@@ -386,7 +386,7 @@ window.addEventListener('scroll', function(event) {
       Toplast = top1;
      
 });
-</script>
+</script> --}}
 
 <script>
 	$(window).scroll(function(){
@@ -400,7 +400,7 @@ window.addEventListener('scroll', function(event) {
 
 
 
-<script>
+{{-- <script>
 $(document).ready(function(){
   $(window).scroll(function () {
     triggerSlideIns( $(this), [ $('.shop_img1') ]);
@@ -433,7 +433,7 @@ var triggerSlideIns = function(t, items) {
     } else { items[i].removeClass('transitionSlideIn'); }
   }
 };
-</script>
+</script> --}}
 
 
 <script>
@@ -613,7 +613,7 @@ $window.trigger('scroll');
 });
 </script>
 
-<script>
+{{-- <script>
 const button = document.querySelector('.back_to_top_btn');
 
 const displayButton = () => {
@@ -641,7 +641,7 @@ const scrollToTop = () => {
 
 displayButton();
 scrollToTop();
-</script>
+</script> --}}
 
 </body>
 </html>

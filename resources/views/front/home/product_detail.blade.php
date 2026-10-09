@@ -900,7 +900,7 @@
 
                         <div class="quantity" data-max-quantity="{{ $product->qty }}">
                             <button class="minus">-</button>
-                            <input type="text" value="1">
+                            <input type="text" value="1" id="quantity">
                             <button class="plus">+</button>
                         </div>
                     </div>
@@ -1617,24 +1617,6 @@
     var maxSellingQty = '{{ $maxSellingQty }}';
     var getVarient = "{{ route('variant.combination.prices') }}";
 		console.log("=======getVariant===========",getVarient); 
-    $(".qty-btn").off('click.changeQuantity').on('click.changeQuantity', function(e) {
-		e.preventDefault();
-		e.stopPropagation();	
-		let oldValue = $('.qty').val(),
-			newVal = 1;
-		let totalinvent = $('.qty').attr('maxlength');	
-		if($(this).hasClass('inc')) {
-		if(parseInt(oldValue) < parseInt(totalinvent)) {
-		newVal = parseInt(oldValue) + 1;
-		}
-		}
-		else if(oldValue > 1) {
-		newVal = parseInt(oldValue) - 1;
-		}
-
-		$(".qty").val(newVal);	
-		
-	})
     $(document).on('click', '.customise_title', function(e) {
         e.preventDefault();
 

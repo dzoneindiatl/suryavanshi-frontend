@@ -28,6 +28,7 @@ use App\Models\Cart;
 use App\Models\ProductVariantValue; 
 use App\Models\State; 
 use App\Models\City;
+use Illuminate\Support\Facades\Session;
 class HomeController extends Controller
 {
     public function index(){
@@ -917,6 +918,54 @@ class HomeController extends Controller
         $stateId = $request->stateId; 
         $cities = City::where('country_id',$countryId)->where('state_id', $stateId)->where('is_active',1)->pluck('name', 'id');
         return response()->json($cities);
+    }
+
+
+    public function getExactVariantComboQty(Request $request)
+    {
+        $product_id = $request->product_id;
+        $sku = $request->sku;
+        $getExactVariantComboQty = 0;
+        if(!empty($product_id) && !empty($sku)){
+            if(time() > Session::get($product_id.'_'.$sku.'_expire')){
+                $qtyArr = ProductVariantCombination::where('product_id', $product_id)->where('sku', $sku)->where('status', '1')->select('qty')->first();
+                if(!empty($qtyArr)){
+                    $getExactVariantComboQty =  $qtyArr->qty;
+                    Session::put($product_id.'_'.$sku , $getExactVariantComboQty);
+                    Session::put($product_id.'_'.$sku.'_expire', time() + 600);
+                    
+                    //$_SESSION[$product_id][$sku] = $getExactVariantComboQty;
+                   // $_SESSION[$product_id][$sku]['expire'] = time() + 120; // 120 = 2 minutes
+                }
+            } else {
+                // $getExactVariantComboQty =  $_SESSION[$product_id][$sku];
+                $getExactVariantComboQty =  Session::get($product_id.'_'.$sku);
+            }
+        }
+        return $getExactVariantComboQty;
+    }
+
+    public function isOutOfStock(Request $request)
+    {
+        $variant_sku = $request->variant_sku;
+        $product_id = $request->product_id;
+        
+        $isOutOfStock = false;
+        if(!empty($product_id)){
+            $productArr = Product::select('sku')->where('id', $product_id)->where('in_stock', 1)->first();
+            if(empty($productArr)){
+                $isOutOfStock = true;
+            } else {
+                if(!empty($variant_sku) && !empty($productArr->sku)){
+                    $variant_sku =  strtolower($productArr->sku).'_'.$variant_sku;
+                    $variantArr = ProductVariantCombination::where('sku', $variant_sku)->where('qty', 0)->first();
+                    if(!empty($variantArr)){
+                        $isOutOfStock = true;
+                    }
+                } 
+            }
+        }
+        return $isOutOfStock;
     }
     
 }

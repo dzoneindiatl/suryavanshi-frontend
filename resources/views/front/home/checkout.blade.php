@@ -506,7 +506,7 @@
 							</td>
 						</tr>
 
-						<tr>
+						{{-- <tr>
 							<th>Shipping</th>
 							<td>
 								<span class="shipping_txt_price">
@@ -514,7 +514,7 @@
 									₹20.00
 								</span>
 							</td>
-						</tr>
+						</tr> --}}
 
 						@if($couponDiscount > 0)
 							<tr>
@@ -619,7 +619,7 @@
 		let addressInput = $('input[name="address"]:checked');
 		let addressId = addressInput.val();
 		let cartItems = window.dbCartItems || [];
-
+		console.log("=======paymentMethod========",paymentMethod); 
 		if (cartItems.length === 0) {
 			$('.error-msg').html('Your cart is empty, Please add some product in cart.');
 			return false;
@@ -645,7 +645,6 @@
 			pincode: addressInput.data('pincode')
 		};
 		if (paymentMethod === 'cod') {
-
 			let postData = {
 				cartItems: window.dbCartItems,
 				sub_total: window.totalPayable,
@@ -701,6 +700,109 @@
 					console.log('COD ERROR:', xhr);
 					that.prop('disabled', false).text('Place Order');
 					$('.error-msg').html(xhr.responseJSON?.message || 'Something went wrong while placing order.');
+				}
+			});
+
+			return false;
+		}
+		if (paymentMethod === 'ccavenue') {
+
+			let postData = {
+				cartItems: window.dbCartItems,
+				sub_total: window.totalPayable,
+				total_gst: window.totalGst,
+				taxable_amount: window.taxableAmount,
+				tax_rate: window.taxRate,
+				final_tax_rate: window.finalTaxRate,
+				tax_option: window.taxOption,
+				tax_type: window.taxType,
+				tax_from: window.taxFrom,
+				tax_to: window.taxTo,
+				grand_total: window.grandTotal,
+				total_payable: window.totalPayable,
+				payment_mode: 'ccavenue',
+				coupon_id: localStorage.getItem('coupon_id'),
+				coupon_discount: parseFloat(localStorage.getItem('coupon_discount')) || 0,
+				shippingcharge: 0,
+				billing_id: addressId,
+				shipping_id: addressId
+			};
+
+			console.log('CCAvenue PLACE ORDER DATA:', postData);
+
+			that.prop('disabled', true).text('Please wait...');
+
+			$.ajax({
+				type: 'POST',
+				url: "{{ route('front-place.order') }}",
+				headers: {
+					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+					'Content-Type': 'application/json'
+				},
+				data: JSON.stringify(postData),
+
+				success: function(data) {
+
+					console.log('CCAvenue PLACE ORDER RESPONSE:', data);
+
+					if (data.success === false) {
+						$('.error-msg').html(
+							data.message || 'Something went wrong.'
+						);
+
+						that.prop('disabled', false).text('Place Order');
+						return false;
+					}
+
+					if (data.success === true && data.payment_mode === 'ccavenue') {
+
+						let paymentData = data.data;
+
+						$.ajax({
+							type: 'POST',
+							url: "{{ route('front-ccavenue.pay') }}",
+							headers: {
+        						'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    						},
+							data: paymentData,
+							success: function(paymentResponse) {
+
+								console.log(
+									'CCAvenue PAYMENT RESPONSE:',
+									paymentResponse
+								);
+
+								$('body').html(paymentResponse);
+							},
+							error: function(xhr) {
+
+								console.log(
+									'CCAvenue PAYMENT ERROR:',
+									xhr
+								);
+
+								that.prop('disabled', false)
+									.text('Place Order');
+
+								$('.error-msg').html(
+									xhr.responseJSON?.message ||
+									'Unable to start CCAvenue payment.'
+								);
+							}
+						});
+					}
+				},
+
+				error: function(xhr) {
+
+					console.log('CCAvenue PLACE ORDER ERROR:', xhr);
+
+					that.prop('disabled', false).text('Place Order');
+
+					$('.error-msg').html(
+						xhr.responseJSON?.message ||
+						'Something went wrong while placing order.'
+					);
 				}
 			});
 

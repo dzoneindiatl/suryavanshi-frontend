@@ -210,7 +210,7 @@
                                                       </a>
                                                       <div class="infor-prd">
                                                           <a href="@if(!empty($product->product->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $product->product->slug . '.html', 'sku' => $product->product->sku]) }}@endif" class="prd_name">@if(!empty($product->product)){{ $product->product->name }}@endif</a>
-                                                          <p class="prd_select">Clothing <span>Size: XS</span></p>
+                                                          {{-- <p class="prd_select">Clothing <span>Size: XS</span></p> --}}
                                                       </div>
                                                   </div>
                                               </td>

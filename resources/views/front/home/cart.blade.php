@@ -189,6 +189,11 @@
         right: 16px;
         top: 12px;
     }
+        .quantity-option h5{ font-size:18px; color:#38271e; font-weight: 500;}
+    .quantity {width:140px; height:40px; border:1px solid #E7DDD4; border-radius:1rem; display:flex; overflow:hidden; background:#fff;}
+    .quantity button{ width:40px; border:none; background:none; cursor:pointer; font-size:22px; transition:.3s;}
+    .quantity button:hover{ background:#F2D7D5;}
+    .quantity input{ flex:1; border:none; outline:none; text-align:center; font-size:18px; background:none; width: 100%;}
 </style>
 
 <div class="cart_main_top">
@@ -209,14 +214,18 @@
                                         <div class="cart-item-product-name">{{ $cart->product->name }}</div>
                                         <div class="cart-item-price">₹{{ $cart->product->selling_price }}</div>
                                         <div class="cart-item-sku">{{ $cart->product->sku }}</div>
-                                        <div class="cart_item_select">
-                                            <span>Quantity: </span>
-                                            <select>
-                                                <option>1</option>
-                                                <option>2</option>
-                                                <option>3</option>
-                                            </select>
+                                        <div class="dbCartData">
+                                            <div class="cart_item_select">
+                                                <div class="quantity"
+                                                    data-cart-id="{{ $cart->id }}"
+                                                    data-max-quantity="{{ $cart->product->qty }}">
+                                                    <button type="button" class="minus">-</button>
+                                                    <input type="text" class="cart-quantity" value="{{ $cart->quantity }}" readonly>
+                                                    <button type="button" class="plus">+</button>
+                                                </div>
+                                            </div>
                                         </div>
+                                        
                                     </div>
                                     <button class="cart_item_close remove-cart-product" data-cartId ="{{ $cart->id }}" data-productId = {{ $cart->product->id }}>Close</button>
                                 </div>
@@ -231,15 +240,27 @@
 				<div class="cart_item_right_box">
 					<button class="cart_apply_coupon">Apply Coupon<div class="apply_coup_arrow"></div></button>
 					<div class="order_summary_txt">
-						<div class="order_summary_txt1">
-                            <p class="totalMRP">Total MRP<span class="price-values">₹{{ $totalMRP }} </span></p>
-                            <p class="discount">Discount<span class="price-values">₹ {{ $totalDiscount }} </span> </p>
-							<p class="subtotal">Subtotal<span class="price-values">₹ {{ $subtotal }}</span></p>
-                            <p class="grandTotal"> Grand Total <span class="price-values">₹{{ $grandTotal }}</span></p>
-                            <p class="taxableAmount">Taxable Amount <span class="price-values">₹ {{ $taxableAmount }}</span></p>
-                            <p class="totalGst">TotalGst(Tax) <span class="price-values">₹ {{ $totalGst }}</span> </p>
-                            <p class="totalPayable">Total Payable (Tax Included) <span class="price-values">₹{{ $totalPayable }}</span> </p>
-						</div>
+                        @if (Auth::guard('customer')->check())
+                            <div class="order_summary_txt1">
+                                <p class="totalMRP">Total MRP<span class="price-values">₹{{ $totalMRP }} </span></p>
+                                <p class="discount">Discount<span class="price-values">₹ {{ $totalDiscount }} </span> </p>
+                                <p class="subtotal">Subtotal<span class="price-values">₹ {{ $subtotal }}</span></p>
+                                <p class="grandTotal"> Grand Total <span class="price-values">₹{{ $grandTotal }}</span></p>
+                                <p class="taxableAmount">Taxable Amount <span class="price-values">₹ {{ $taxableAmount }}</span></p>
+                                <p class="totalGst">TotalGst(Tax) <span class="price-values">₹ {{ $totalGst }}</span> </p>
+                                <p class="totalPayable">Total Payable (Tax Included) <span class="price-values">₹{{ $totalPayable }}</span> </p>
+                            </div>
+                        @else 
+                            <div class="order_summary_txt1">
+                                <p class="totalMRP">Total MRP <span class="price-values">₹0</span></p>
+                                <p class="discount">Discount <span class="price-values">₹0</span></p>
+                                <p class="subtotal">Subtotal <span class="price-values">₹0</span></p>
+                                <p class="grandTotal">Grand Total <span class="price-values">₹0</span></p>
+                                <p class="taxableAmount">Taxable Amount <span class="price-values">₹0</span></p>
+                                <p class="totalGst">TotalGst(Tax) <span class="price-values">₹0</span></p>
+                                <p class="totalPayable">Total Payable (Tax Included) <span class="price-values">₹0</span></p>
+                            </div>
+                        @endif     
 					</div>
                     {{-- <a href="{{ route('front-product.checkoutBag') }}" class="btn_place_order">CHECKOUT</a> --}}
 					<button class="btn_place_order">CHECKOUT</button>
@@ -248,34 +269,49 @@
 		</div>
 	</div>
 </div>
+@php
+    $minSellingQty = 1;
+    $maxSellingQty = 10;
+    $couponDiscount = 0;
+@endphp
+<script>
+    var isOutOfStock = "{{ url('is-outofstock') }}"; 
+    var getVarientReaminingQty  = "{{ route('get-variant-remaining-qty') }}"; 
+    var minSellingQty = '{{ $minSellingQty }}';
+    var maxSellingQty = '{{ $maxSellingQty }}';
+    const isLoggedIn = "{{ Auth::guard('customer')->check() ? true : false }}";
+    var couponDiscount = '{{ $couponDiscount }}'
+     
+</script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="{{ asset('assets/js/cart.js') }}"></script>
 <script>
     const cartData = localStorage.getItem('cartItems'); 
-     if (cartData) {
+    if (cartData) {
         const cartItems = JSON.parse(cartData);
         let html = '';
         cartItems.forEach(function(item,index) {
             const productUrl = item.sku ? "{{ route('front-product.detail', ['product' => 'product', 'title' => 'SLUG.html', 'sku' => 'SKU']) }}".replace('SLUG.html', item.slug + '.html').replace('SKU', item.sku): '#';
+            var newSellingPrice = item.sellingPrice * item.quantity ; 
             html += `
-                <div class="cart_main_item">
-
+                <div class="cart_main_item" data-random-id="${item.randomId}">
                     <div class="cart_item_left">
                         <a href="${productUrl}">
-                            <img class="cart_left_img"
-                                 src="${item.image || ''}"
-                                 alt="${item.name}">
+                            <img class="cart_left_img" src="${item.image || ''}" alt="${item.name}">
                         </a>
                     </div>
 
                     <div class="cart_item_right">
                         <div class="cart_item_top">
+
                             <div class="cart-item-product-name">
                                 <a href="${productUrl}" style="text-decoration:none;color:#000">
-                                ${item.name} </a>
+                                    ${item.name}
+                                </a>
                             </div>
 
                             <div class="cart-item-price">
-                                ₹${item.sellingPrice}
+                                ₹${(parseFloat(item.sellingPrice))}
                             </div>
 
                             <div class="cart-item-sku">
@@ -283,18 +319,19 @@
                             </div>
 
                             <div class="cart_item_select">
-                                <span>Quantity: </span>
-                                <select class="cart-quantity"
-                                        data-random-id="${item.randomId}">
-                                    <option value="1" ${item.quantity == 1 ? 'selected' : ''}>1</option>
-                                    <option value="2" ${item.quantity == 2 ? 'selected' : ''}>2</option>
-                                    <option value="3" ${item.quantity == 3 ? 'selected' : ''}>3</option>
-                                </select>
+                                <div class="quantity">
+                                    <button type="button" class="minus">-</button>
+                                    <input type="text" class="cart-quantity" value="${item.quantity}" readonly>
+                                    <button type="button" class="plus">+</button>
+                                </div>
                             </div>
+
                         </div>
 
                         <button class="cart_item_close remove-cart-product"
-                                data-randomId="${item.randomId}" data-index="${index}" data-productId="${item.productId}">
+                            data-randomId="${item.randomId}"
+                            data-index="${index}"
+                            data-productId="${item.productId}">
                             Close
                         </button>
                     </div>
@@ -353,6 +390,99 @@
 			window.location.href = "{{ route('front-user.login') }}";
 		}
     }); 
+   
+    $(document).on('click', '.localCartData .plus', function () {
 
+        let cartItem = $(this).closest('.cart_main_item');
+        let randomId = cartItem.data('random-id');
+
+        let input = $(this).siblings('.cart-quantity');
+        let quantity = parseInt(input.val()) || 1;
+
+        quantity++;
+
+        input.val(quantity);
+
+        updateLocalCartQuantity(randomId, quantity);
+    });
+
+    $(document).on('click', '.localCartData .minus', function () {
+        let cartItem = $(this).closest('.cart_main_item');
+        let randomId = cartItem.data('random-id');
+        let input = $(this).siblings('.cart-quantity');
+        let quantity = parseInt(input.val()) || 1;
+        if (quantity <= 1) {
+            return;
+        }
+        quantity--;
+        input.val(quantity);
+        updateLocalCartQuantity(randomId, quantity);
+    });
+    function updateLocalCartQuantity(randomId, quantity) {
+        let cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+        let item = cartItems.find(function (cartItem) {
+            return String(cartItem.randomId) === String(randomId);
+        });
+        if (!item) {
+            return;
+        }
+        item.quantity = quantity;
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+        displayCartItems();
+        priceCalculation();
+    }
+    $(document).on('click', '.dbCartData .plus', function () {
+        let quantityBox = $(this).closest('.quantity');
+        let cartId = quantityBox.data('cart-id');
+        let input = quantityBox.find('.cart-quantity');
+        let maxQuantity = parseInt(quantityBox.data('max-quantity')) || 1;
+        let quantity = parseInt(input.val()) || 1;
+
+        if (quantity >= maxQuantity) {
+            return;
+        }
+        quantity++;
+        updateDbCartQuantity(cartId, quantity, input);
+    });
+
+    $(document).on('click', '.dbCartData .minus', function () {
+        let quantityBox = $(this).closest('.quantity');
+        let cartId = quantityBox.data('cart-id');
+        let input = quantityBox.find('.cart-quantity');
+        let quantity = parseInt(input.val()) || 1;
+        if (quantity <= 1) {
+            return;
+        }
+        quantity--;
+        updateDbCartQuantity(cartId, quantity, input);
+    });
+    function updateDbCartQuantity(cartId, quantity, input) {
+        $.ajax({
+            url: "{{ route('cart.update.quantity') }}",
+            type: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                cart_id: cartId,
+                quantity: quantity
+            },
+            success: function (response) {
+
+                if (response.status) {
+
+                    input.val(response.quantity);
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            },
+            error: function (xhr) {
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    alert(xhr.responseJSON.message);
+                } else {
+                    alert('Something went wrong.');
+                }
+            }
+        });
+    }
 </script>
 @endsection 

@@ -115,7 +115,7 @@ $(document).on('click', '.addToCartBtn', function() {
 
     if (isExist) {
         showFlashMessage("This product with selected options is already in your cart.");
-        openCartDropdown();
+        // openCartDropdown();
         return;
     }
 
@@ -130,27 +130,27 @@ $(document).ready(function () {
         // updateHeaderCart();
     }
 });
-function openCartDropdown() {
-    let $wrapper = $('.cart-wrapper');
-    let $dropdown = $('.cart-dropdown');
+// function openCartDropdown() {
+//     let $wrapper = $('.cart-wrapper');
+//     let $dropdown = $('.cart-dropdown');
 
-    if (!$wrapper.length || !$dropdown.length) {
-        console.log('Cart wrapper/dropdown not found');
-        return;
-    }
+//     if (!$wrapper.length || !$dropdown.length) {
+//         console.log('Cart wrapper/dropdown not found');
+//         return;
+//     }
 
-    $wrapper.addClass('open active');
-    $dropdown.addClass('open active');
+//     $wrapper.addClass('open active');
+//     $dropdown.addClass('open active');
 
-    // Agar CSS display se hidden hai to force visible
-    $dropdown.css({
-        'display': 'block',
-        'visibility': 'visible',
-        'opacity': '1'
-    });
+//     // Agar CSS display se hidden hai to force visible
+//     $dropdown.css({
+//         'display': 'block',
+//         'visibility': 'visible',
+//         'opacity': '1'
+//     });
 
-    console.log('Cart dropdown opened');
-}
+//     console.log('Cart dropdown opened');
+// }
 // function updateHeaderCart() {
 //     let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
 //     let $container = $('#headerCartItems');
@@ -232,16 +232,11 @@ function openCartDropdown() {
 
 //     console.log('Header cart updated:', cartItems);
 // }
-
+displayCartItems(true); 
 function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
    
-     let cartItems = [];
-
-    if (isLoggedIn) {
-        cartItems = window.dbCartItems || [];
-    } else {
-        cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
-    }
+    let cartItems = [];
+    cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
     let productListContainer = $('.productListContainer');
     let productListCartPageContainer = $('.productListCartPageContainer');
 
@@ -269,6 +264,7 @@ function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
     
     cartItems.forEach(function (item, index) {
         let variants = item.selectedVariants || {};
+        console.log("=======variants========",variants); 
         let product_sku = item.sku.toLowerCase();
         // console.log("-----variants-------",variants); 
         let variantHTML = '';
@@ -281,7 +277,7 @@ function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
         let variant_sku = product_sku.toLowerCase();
         if(item.productType==2){
             // variant_sku = product_sku + '_' + variants.colour.toLowerCase() + '_' + variants.size.toLowerCase();
-            variant_sku = product_sku + '_' + variants.color.toLowerCase();
+            variant_sku = product_sku + '_' + variants['gemstone name'].toLowerCase() + '_' + variants.size.toLowerCase();
         }
         //  sku accoring to variant && product type 
         
@@ -315,7 +311,7 @@ function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
             let variant_sku = product_sku.toLowerCase();
             if(item.productType==2){
                 // variant_sku = product_sku + '_' + variants.colour.toLowerCase() + '_' + variants.size.toLowerCase();
-                variant_sku = product_sku + '_' + variants.color.toLowerCase();
+                variant_sku = product_sku + '_' + variants['gemstone name'].toLowerCase() + '_' + variants.size.toLowerCase();
             }
             //  sku accoring to variant && product type 
 
@@ -401,54 +397,6 @@ function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
            var offer_tag =  `<span class="offer-tag"><i class="fa-regular fa-clock"></i> Limited time offer</span>`;
         }
 
-        let productHTML = `<li class="mini-cart-item" data-index="${index}">  
-            <div class="mini-cart-image">
-                <a href="javascript:void(0)"><img src="${item.image}" alt="${item.name}"></a>
-            </div>    
-            <div class="mini-cart-summery"> 
-                <div class="mini-cart-summerydata">
-                    <a href="javascript:void(0)" class="mini-cart-title">${item.name}</a>
-                    <p>Quantity : ${item.quantity}</p>
-                </div> 
-                <div class="mini-cart-summeryprice">
-                    <span class="mini-cart-price">
-                        <del>₹ ${item.price}</del>
-                        <ins>₹ ${item.sellingPrice}</ins>
-                    </span>
-                    <a href="javascript:void('0');" data-index="${index}" class="remove remove_from_cart_button trash-icon close-product">Remove</a>
-                </div>
-            </div>
-        </li>`;
-
-        productListContainer.html(productHTML);
-
-        let productCartPageHTML =`<div class="cart-item">
-                        <div class="cart-image">
-                          <a href="javascript:void(0)"><img src="${item.image}" alt="${item.name}"></a>
-                        </div>
-                        <div class="cart-summery">
-                          <div class="cart-summerydata">
-                            <a href="javascript:void(0)" class="cart-title">${item.name}</a>                               
-                            <div class="cart-quantity">
-                              <div class="quantity-group">
-                                <a href="javascript:void(0)" class="dec qty-btn"></a>
-                                <input type="text" id="quantity" class="input-text qty" name="quantity" value="${item.quantity}"
-                                  maxlength="50">
-                                <a href="javascript:void(0)" class="inc qty-btn"></a>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="cart-summeryprice">
-                            <span class="cart-price">
-                                <del>₹ ${item.price}</del>
-                                <ins>₹ ${item.sellingPrice}</ins>
-                            </span>
-                            <a href="javascript:void('0');" data-index="${index}" class="remove remove_from_cart_button trash-icon close-product">Remove</a>
-                          </div>                              
-                        </div>
-                        </div>`;
-        productListCartPageContainer.append(productCartPageHTML);
-
         cartTotal += item.sellingPrice;
     });
 
@@ -456,7 +404,9 @@ function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
 
     // localStorage.setItem('applied_coupon',[]);
     // localStorage.setItem('coupon_discount',0);
-    priceCalculation();
+    if (!isLoggedIn) {
+        priceCalculation();
+    }
 }
 
 function decodeHtml(html) {
@@ -466,43 +416,55 @@ function decodeHtml(html) {
 }
 
 function priceCalculation() {
-    let couponDiscount = parseFloat(localStorage.getItem('coupon_discount')) || 0;
-    let cartItems;
+    let cartItems = [];
+    cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    let totalQuantity = cartItems.reduce((sum, item) => {
+        return sum + (parseInt(item.quantity) || 0);
+    }, 0);
 
-    if (window.buyNowData) {
-        cartItems = [{
-            product_id: window.buyNowData.product_id,
-            name: window.buyNowData.product_name || '',
-            sku: window.buyNowData.sku || '',
-            price: parseFloat(window.buyNowData.price) || 0,
-            sellingPrice: parseFloat(window.buyNowData.selling_price) || 0,
-            quantity: parseInt(window.buyNowData.quantity) || 1,
-            image: window.buyNowData.image || '',
-            rawTaxArr: window.buyNowData.tax_arr || ''
-        }];
-    } else if (isLoggedIn) {
-        cartItems = (window.dbCartItems || []).map(item => ({
-            ...item,
-            product_id: item.product_id,
-            name: item.name || '',
-            sku: item.sku || '',
-            productType: item.productType || '',
-            selectedVariants: item.selectedVariants || {},
-            price: parseFloat(item.price) || 0,
-            sellingPrice: parseFloat(item.sellingPrice) || 0,
-            discountAmount: parseFloat(item.discountAmount) || 0,
-            discountType: item.discountType || '',
-            quantity: parseInt(item.quantity) || 1,
-            image: item.image || item.product?.image || '',
-            rawTaxArr: item.rawTaxArr || item.product?.tax_arr || ''
-        }));
-    } else {
-        cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+    let couponDiscountValue = parseFloat(couponDiscount) || 0;
+
+    let totalMrp = 0;
+    let totalDiscount = 0;
+    let subtotal = 0;
+    let totalTaxPrice = 0;
+    let taxOption = 'inclusive';
+    let taxRate = 0;
+    let taxType = 'flat';
+
+    cartItems.forEach(function(item) {
+        let quantity = parseInt(item.quantity) || 1;
+        let price = parseFloat(item.price) || 0;
+        let sellingPrice = parseFloat(item.sellingPrice) || 0;
+
+        totalMrp += price * quantity;
+        totalDiscount += (price - sellingPrice) * quantity;
+        subtotal += sellingPrice * quantity;
+
+        if (item.tax_option) {
+            taxOption = item.tax_option;
+        }
+
+        if (item.tax_rate !== undefined && item.tax_rate !== null) {
+            taxRate = parseFloat(item.tax_rate) || taxRate;
+        }
+
+        if (item.tax_type) {
+            taxType = item.tax_type;
+        }
+    });
+    let grandTotal = subtotal - couponDiscountValue;
+
+    if (grandTotal < 0) {
+        grandTotal = 0;
     }
+    totalTaxPrice = 0;
+    cartItems.forEach(function(item) {
+        let quantity = parseInt(item.quantity) || 1;
+        let sellingPrice = parseFloat(item.sellingPrice) || 0;
 
-    const totalQuantity = cartItems.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
+        let itemTax = 0;
 
-    let cartData = cartItems.map(item => {
         let rawTaxArr = item.rawTaxArr || '';
         let taxArr = [];
 
@@ -516,187 +478,156 @@ function priceCalculation() {
                 }
             }
         } catch (error) {
-            console.error("Tax JSON Parse Error:", error);
+            console.error('Tax JSON Parse Error:', error);
             taxArr = [];
         }
+        let itemCouponDiscount = 0;
 
-        let tax_price_total = 0;
-        let tax_option = "inclusive";
-        let tax_id = "";
-        let tax_rate = 0;
-        let tax_type = "flat";
-        let sellingPrice = parseFloat(item.sellingPrice) || 0;
-        let netPrice = sellingPrice;
-
-        if (couponDiscount > 0 && totalQuantity > 0) {
-            netPrice = sellingPrice - (couponDiscount / totalQuantity);
+        if (couponDiscountValue > 0 && totalQuantity > 0) {
+            itemCouponDiscount = couponDiscountValue / totalQuantity;
         }
+
+        let netPrice = sellingPrice - itemCouponDiscount;
 
         if (netPrice < 0) {
             netPrice = 0;
         }
-        console.log("--------------taxArr--------------",taxArr); 
-        if (taxArr.length > 0) {
-           taxArr.forEach((tax) => {
-                let taxprice = 0;
-                let tax_price = 0;
-                tax_type = tax.tax_type;
 
-                if (tax.tax_type === "flat") {
-                    tax_option = tax.tax_option;
+        taxArr.forEach(function(tax) {
+            let currentTaxRate = 0;
 
-                    tax_id = tax.id;
-                    tax_rate = (tax.tax_rate > 0 || String(tax.tax_rate).toLowerCase() !== "no tax") ? tax.tax_rate : 0;
-                    console.log("------------tax_rate-----------------",tax_rate); 
-                    if (tax_option == "inclusive") {
-                        // taxprice = 1 + (tax_rate / 100);
-                        // console.log("----------taxprice------------",taxprice); 
-                        // tax_price = tax_rate ? (netPrice / taxprice) : 0;
-                        // console.log("==========tax--price=========",tax_price); 
-                        // tax_price_total = netPrice - tax_price;
-                        // console.log("===========tax_price_total------------",tax_price_total); 
-                        tax_price_total = ((netPrice * tax_rate) / 100);
+            if (
+                tax.tax_rate !== undefined &&
+                tax.tax_rate !== null &&
+                String(tax.tax_rate).toLowerCase() !== 'no tax'
+            ) {
+                currentTaxRate = parseFloat(tax.tax_rate) || 0;
+            }
+            if (tax.tax_type === 'flat') {
 
-                        console.log("-------tax_price_total-------if-----",tax_price_total); 
+                taxOption = tax.tax_option || 'inclusive';
+                taxType = 'flat';
+                taxRate = currentTaxRate;
+
+                if (taxOption === 'inclusive') {
+                    itemTax = (netPrice * currentTaxRate) / 100;
+                } else {
+                    itemTax = (netPrice * currentTaxRate) / 100;
+                }
+            }
+            else if (tax.tax_type === 'floating') {
+
+                let taxFrom = parseFloat(tax.tax_from) || 0;
+                let taxTo = parseFloat(tax.tax_to) || 0;
+
+                if (netPrice >= taxFrom && netPrice <= taxTo) {
+
+                    taxOption = tax.tax_option || 'inclusive';
+                    taxType = 'floating';
+                    taxRate = currentTaxRate;
+
+                    if (taxOption === 'inclusive') {
+
+                        let taxBase = 1 + (currentTaxRate / 100);
+
+                        let basePrice = currentTaxRate > 0
+                            ? netPrice / taxBase
+                            : netPrice;
+
+                        itemTax = netPrice - basePrice;
+
                     } else {
-                        tax_price_total = tax_rate ? ((netPrice * tax_rate) / 100) : 0;
-                        console.log("-------tax_price_total-------else-----",tax_price_total); 
-                    }
 
-                } else if (tax.tax_type === "floating") {
-                    tax_option = tax.tax_option;
-
-                    tax_id = tax.id;
-
-                    if ((parseInt(netPrice) >= parseInt(tax.tax_from)) && (parseInt(netPrice) <= parseInt(tax.tax_to))) {
-                        tax_rate = (tax.tax_rate > 0 || String(tax.tax_rate).toLowerCase() !== "no tax") ? tax.tax_rate : 0;
-                        if (tax_option == "inclusive") {
-                            taxprice = 1 + (tax_rate / 100);
-
-                            tax_price = tax_rate > 0 ? (netPrice / taxprice) : 0;
-
-                            tax_price_total = netPrice - tax_price;
-
-                        } else {
-                            tax_price_total = tax_rate > 0 ? ((netPrice * tax_rate) / 100) : 0;
-                        }
+                        itemTax = (netPrice * currentTaxRate) / 100;
                     }
                 }
-            });
-        }
+            }
+        });
 
-        let finalTax = item.quantity * tax_price_total;
-
-        return {
-            ...item,
-            tax_id: tax_id,
-            tax_price: finalTax,
-            tax_rate: tax_rate,
-            tax_option: tax_option,
-            tax_type: tax_type,
-            rawTaxArr: rawTaxArr
-        };
+        totalTaxPrice += itemTax * quantity;
     });
-   
-    if (window.buyNowData) {
-        cartItems = cartData;
-    } else if (isLoggedIn) {
-        cartItems = cartData;
-    } else {
-        localStorage.setItem('cartItems', JSON.stringify(cartData));
-        cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-    }
-    console.log("---------cartItem logs---------------",cartItems); 
-    let totalMrp = 0;
-    let totalDiscount = 0;
-    let totalTaxPrice = 0;
-    let totalSelling = 0;
-    let taxOption = 'inclusive';
-
-    cartItems.forEach(function(item) {
-        let quantity = parseInt(item.quantity) || 1;
-        let price = parseFloat(item.price) || 0;
-        console.log("----price------",price); 
-
-        let sellingPrice = parseFloat(item.sellingPrice) || 0;
-        console.log("-----sellingPrice----------",sellingPrice); 
-        let taxPrice = parseFloat(item.tax_price) || 0;
-        console.log("----------taxPrice--------------",taxPrice); 
-        totalMrp += price * quantity;
-        totalSelling += sellingPrice * quantity;
-        totalTaxPrice += taxPrice;
-      
-        if (item.tax_option) {
-            taxOption = item.tax_option;
-        }
-    });
-    console.log("----------totalMrp----------",totalMrp); 
-    console.log("----------total selling-----------",totalSelling);
-    console.log("========totalTaxPRice==========",totalTaxPrice); 
-    totalDiscount = totalMrp - totalSelling;
-    console.log("------------totalDiscount---------",totalDiscount); 
-    let subTotal = totalMrp - totalDiscount;
-    console.log("-------------subTotal----------",subTotal); 
-    let grandTotal = subTotal - couponDiscount;
-    console.log("===========grandTotal========",grandTotal); 
-    if (grandTotal < 0) {
-        grandTotal = 0;
-    }
 
     let taxableAmount = grandTotal;
-
     if (taxOption === 'inclusive') {
         taxableAmount = grandTotal - totalTaxPrice;
-        console.log("===========taxableAmount==========",taxableAmount); 
+
+        if (taxableAmount < 0) {
+            taxableAmount = 0;
+        }
     } else if (taxOption === 'exclusive') {
         taxableAmount = grandTotal;
     }
+    let totalPayable = grandTotal;
 
-    let finalAmount = grandTotal;
-
-    if (totalMrp > 0) {
-        $("#totalMrp").html(`₹${Math.floor(totalMrp)}`).show();
-    } else {
-        $("#totalMrp").html("0");
+    if (taxOption === 'exclusive') {
+        totalPayable = grandTotal + totalTaxPrice;
     }
 
-    if (totalDiscount > 0) {
-        $("#totalDiscount").html(`-₹${totalDiscount.toFixed(2)}`).show();
-    } else {
-        $("#totalDiscount").html("0");
-    }
+    $('.totalMRP .price-values').html(
+        `₹${totalMrp.toFixed(2)}`
+    );
 
-    $('#subTotal').html(`₹${subTotal.toFixed(2)}`);
+    $('.discount .price-values').html(
+        `₹${totalDiscount.toFixed(2)}`
+    );
 
-    if (couponDiscount > 0) {
-        $("#couponDiscount").html(`-₹${couponDiscount.toFixed(2)}`).show();
-    } else {
-        $("#couponDiscount").html("0");
-    }
+    $('.subtotal .price-values').html(
+        `₹${subtotal.toFixed(2)}`
+    );
 
+    $('.grandTotal .price-values').html(
+        `₹${grandTotal.toFixed(2)}`
+    );
+
+    $('.taxableAmount .price-values').html(
+        `₹${taxableAmount.toFixed(2)}`
+    );
+
+    $('.totalGst .price-values').html(
+        `₹${totalTaxPrice.toFixed(2)}`
+    );
+
+    $('.totalPayable .price-values').html(
+        `₹${totalPayable.toFixed(2)}`
+    );
+
+    $('#totalMrp').html(`₹${totalMrp.toFixed(2)}`);
+    $('#totalDiscount').html(`₹${totalDiscount.toFixed(2)}`);
+    $('#subTotal').html(`₹${subtotal.toFixed(2)}`);
     $('#grandTotal').html(`₹${grandTotal.toFixed(2)}`);
     $('#taxableAmount').html(`₹${taxableAmount.toFixed(2)}`);
+    $('#taxPrice').html(`₹${totalTaxPrice.toFixed(2)}`);
 
-    if (taxOption === 'inclusive' || taxOption === 'exclusive') {
-        $("#taxPrice").html(`+₹${totalTaxPrice.toFixed(2)}`).show();
-    } else {
-        $("#taxPrice").html("0");
-    }
-    console.log("-------------finalAmount------------",finalAmount); 
-    if (finalAmount > 0) {
-        console.log("-----------comes under if----------",finalAmount); 
-        if (taxOption === 'inclusive') {
-            $('.finalAmount').html(`₹${Math.floor(finalAmount)}`);
-        } else if (taxOption === 'exclusive') {
-            $('.finalAmount').html(`₹${Math.floor(finalAmount + totalTaxPrice)}`);
-        }
+    $('.finalAmount').html(`₹${Math.floor(totalPayable)}`);
+
+    if (totalPayable > 0) {
         $('.checkoutButton').removeClass('disabled-link');
+        $('.btn_place_order').prop('disabled', false);
     } else {
-        console.log("----------comes under else------------",finalAmount); 
-        $('.finalAmount').html(`₹0`);
         $('.checkoutButton').addClass('disabled-link');
+        $('.btn_place_order').prop('disabled', true);
     }
+
+    window.cartCalculation = {
+        totalMRP: totalMrp,
+        totalDiscount: totalDiscount,
+        subtotal: subtotal,
+        couponDiscount: couponDiscountValue,
+        grandTotal: grandTotal,
+        taxableAmount: taxableAmount,
+        totalGst: totalTaxPrice,
+        totalPayable: totalPayable,
+        taxOption: taxOption,
+        taxRate: taxRate,
+        taxType: taxType
+    };
+
+    console.log('========== CART CALCULATION ==========');
+    console.log(window.cartCalculation);
+
+    return window.cartCalculation;
 }
+
 
 document.addEventListener('click', function (e) {
     const button = e.target.closest('.close-product');

@@ -283,38 +283,43 @@ class CheckoutController extends Controller
             $resp['message'] = "Success";
             $resp['url'] = route('front-order.success', ['order_id' => encrypt($order_id)]);
             return response()->json($resp);
-        } elseif ($request->payment_mode == 'razorpay') {
+        } 
+        elseif ($request->payment_mode == 'ccavenue') {
+
             $cartNotes = $request->cartItems;
+
             session()->put('cart_items', $cartNotes);
-            $post_fields = [
-                "amount" => $request->sub_total * 100,
-                "currency" => "INR",
-                "receipt" => "Receipt",
-                "partial_payment" => false,
-                "first_payment_min_amount" => 200,
-                "notes" => [
-                    "coupon_id"         => $request->coupon_id,
-                    "coupon_discount"   => $request->coupon_discount,
-                    "shippingcharge"    => $request->shippingcharge,
-                    "billing_id"        => $request->billing_id,
-                    "shipping_id"       => $request->shipping_id,
-                    "wallet_amount"   => $request->wallet_amount,
-                ]
+
+            session()->put('ccavenue_checkout_data', [
+                'coupon_id' => $request->coupon_id,
+                'coupon_discount' => $request->coupon_discount ?? 0,
+                'shippingcharge' => $request->shippingcharge ?? 0,
+                'billing_id' => $request->billing_id,
+                'shipping_id' => $request->shipping_id,
+                'wallet_amount' => $request->wallet_amount ?? 0,
+                'sub_total' => $request->sub_total,
+            ]);
+
+            $address = UserAddress::find($request->billing_id);
+            $customer = Auth::guard('customer')->user();
+
+            $postData = [
+                'amount' => $request->sub_total,
+                'billing_name' => $address->name ?? $customer->name ?? '',
+                'billing_address' => $address->address ?? '',
+                'billing_city' => $address->city ?? '',
+                'billing_state' => $address->state ?? '',
+                'billing_zip' => $address->pincode ?? '',
+                'billing_tel' => $address->phone ?? $customer->phone ?? '',
+                'billing_email' => $customer->email ?? '',
             ];
 
-            $order_url = env('RAZORPAY_DEFAULT_URL') . "orders";
-            $order = $this->callApi($order_url, $post_fields, 'razorpay');
-            if (isset($order['error'])) {
-                $resp['success'] = false;
-                $resp['data'] = [];
-                $resp['product_order_id'] = false;
-                $resp['message'] = $order['error']['description'];
-            } else {
-                $resp['success'] = true;
-                $resp['data'] = $order;
-                $resp['product_order_id'] = false;
-                $resp['message'] = "Success";
-            }
+            session()->put('ccavenue_payment_order_id', 'ORD' . time() . $login_user_id);
+
+            $resp['success'] = true;
+            $resp['payment_mode'] = 'ccavenue';
+            $resp['data'] = $postData;
+            $resp['message'] = 'CCAvenue payment initiated successfully.';
 
             return response()->json($resp);
         } elseif ($request->payment_mode == 'wallet') {
