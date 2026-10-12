@@ -224,8 +224,17 @@
                                                                 if($product->status == 'returned'){
                                                                     $html = '<div class="tb-order_status stt-complete">Returned</div>'; 
                                                                 }
-                                                                if($product->status == 'out_for_delivery'){
+                                                                if($product->status == 'out-for-delivery'){
                                                                     $html = '<div class="tb-order_status stt-delivery">Out For Delivery</div>'; 
+                                                                }
+                                                                if($product->status == 'accepted'){
+                                                                    $html = '<div class="tb-order_status stt-delivery">Accepted</div>'; 
+                                                                }
+                                                                if($product->status == 'processing'){
+                                                                    $html = '<div class="tb-order_status stt-complete">Processing</div>';
+                                                                }
+                                                                if($product->status == 'in-transit'){
+                                                                    $html = '<div class="tb-order_status stt-cancel">In-Transit</div>';
                                                                 }
                                                             @endphp 
                                                             {!! $html !!}

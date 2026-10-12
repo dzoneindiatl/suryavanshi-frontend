@@ -1506,7 +1506,11 @@
 		</p>
 	</div>
 </div>
-
+@php
+    $minSellingQty = 1;
+    $maxSellingQty = 10;
+    $couponDiscount = 0;
+@endphp
 <script>
 	window.csrfToken = "{{ csrf_token() }}";
     var addToWish = "{{ route('front-addwish') }}";
@@ -1517,6 +1521,11 @@
     var viewCartUrl = "{{ route('product.viewBag') }}";
     var headerSearchUrl = "{{ route('front-header-product-search') }}"; 
     var newBuyNowUrl = "{{ route('product.buynow') }}"; 
+    var isOutOfStock = "{{ url('is-outofstock') }}"; 
+    var getVarientReaminingQty  = "{{ route('get-variant-remaining-qty') }}"; 
+    var minSellingQty = '{{ $minSellingQty }}';
+    var maxSellingQty = '{{ $maxSellingQty }}';
+    var couponDiscount = '{{ $couponDiscount }}';
 </script>
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.3.15/slick.min.js"></script>

@@ -223,45 +223,44 @@
             </div>
         @endif
 		<div class="shipping-address">
-			{{-- <p class="f-16 font-medium mb-3">Shipping Addrress</p> --}}
 			<div class="error-msg"></div>
 			<div class="shipping-address-items">
 				@foreach($userAddress as $key => $add)
-    @php
-        $type = $add->type == '1' ? 'billing' : 'shipping';
-    @endphp
+					@php
+						$type = $add->type == '1' ? 'billing' : 'shipping';
+					@endphp
 
-    <div class="shipping-address-item selected-item">
-        <input
-            class="shipping-address-input"
-            id="add-{{ $type }}-{{ $add->id }}"
-            value="{{ $add->id }}"
-            type="radio"
-            name="address"
-            data-name="{{ $add->name }}"
-            data-phone="{{ $add->phone_number }}"
-            data-address="{{ $add->address }}"
-            data-city="{{ $add->city->name }}"
-            data-state="{{ $add->state->name }}"
-            data-pincode="{{ $add->postal_code }}"
-            {{ $key == 0 ? 'checked' : '' }}
-        >
+					<div class="shipping-address-item selected-item">
+						<input
+							class="shipping-address-input"
+							id="add-{{ $type }}-{{ $add->id }}"
+							value="{{ $add->id }}"
+							type="radio"
+							name="address"
+							data-name="{{ $add->name }}"
+							data-phone="{{ $add->phone_number }}"
+							data-address="{{ $add->address }}"
+							data-city="{{ $add->city->name }}"
+							data-state="{{ $add->state->name }}"
+							data-pincode="{{ $add->postal_code }}"
+							{{ $key == 0 ? 'checked' : '' }}
+						>
 
-        <label class="shipping-address-label" for="add-{{ $type }}-{{ $add->id }}">
-            <p>{{ ucfirst($type) }} Address</p>
-            <p>
-                {{ $add->name }}
-                <span class="ml-3">{{ $add->phone_number }}</span>
-            </p>
-            <p>
-                {{ $add->address }},
-                {{ $add->city->name }},
-                {{ $add->state->name }} -
-                <span>{{ $add->postal_code }}</span>
-            </p>
-        </label>
-    </div>
-@endforeach		
+						<label class="shipping-address-label" for="add-{{ $type }}-{{ $add->id }}">
+							<p>{{ ucfirst($type) }} Address</p>
+							<p>
+								{{ $add->name }}
+								<span class="ml-3">{{ $add->phone_number }}</span>
+							</p>
+							<p>
+								{{ $add->address }},
+								{{ $add->city->name }},
+								{{ $add->state->name }} -
+								<span>{{ $add->postal_code }}</span>
+							</p>
+						</label>
+					</div>
+				@endforeach		
 				{{-- <div class="shipping-address-item not-selected-item">
 					<input class="shipping-address-input"  id="add2" type="radio" name="ship" >
 					<label class="shipping-address-label" for="add2">
@@ -808,6 +807,108 @@
 
 			return false;
 		}
+
+		if (paymentMethod === 'paypal') {
+
+			let postData = {
+				cartItems: window.dbCartItems,
+				sub_total: window.totalPayable,
+				total_gst: window.totalGst,
+				taxable_amount: window.taxableAmount,
+				tax_rate: window.taxRate,
+				final_tax_rate: window.finalTaxRate,
+				tax_option: window.taxOption,
+				tax_type: window.taxType,
+				tax_from: window.taxFrom,
+				tax_to: window.taxTo,
+				grand_total: window.grandTotal,
+				total_payable: window.totalPayable,
+				payment_mode: 'paypal',
+
+				coupon_id: localStorage.getItem('coupon_id'),
+				coupon_discount:
+					parseFloat(localStorage.getItem('coupon_discount')) || 0,
+
+				shippingcharge: 0,
+				billing_id: addressId,
+				shipping_id: addressId
+			};
+
+			that.prop('disabled', true).text('Please wait...');
+			$.ajax({
+				type: 'POST',
+				url: "{{ route('front-place.order') }}",
+				headers: {
+					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+					'Content-Type': 'application/json'
+				},
+				data: JSON.stringify(postData),
+				success: function (data) {
+					console.log('PAYPAL PLACE ORDER RESPONSE:', data);
+					if (data.success !== true) {
+						$('.error-msg').html(
+							data.message || 'Unable to create order.'
+						);
+
+						that.prop('disabled', false).text('Place Order');
+						return;
+					}
+
+					if (data.payment_mode !== 'paypal') {
+						$('.error-msg').html(
+							'Unexpected payment response. Please try again.'
+						);
+
+						that.prop('disabled', false).text('Place Order');
+						return;
+					}
+					$.ajax({
+						type: 'POST',
+						url: "{{ route('front-paypal.create') }}",
+						headers: {
+							'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+							'Content-Type': 'application/json'
+						},
+						data: JSON.stringify({
+							order_id: data.order_id
+						}),
+
+						success: function (paypalResponse) {
+							console.log('PAYPAL CREATE RESPONSE:',paypalResponse);
+
+							if (paypalResponse.success === true && paypalResponse.approval_url) {
+								window.location.href = paypalResponse.approval_url;
+								return;
+							}
+							$('.error-msg').html(paypalResponse.message || 'Unable to start PayPal payment.');
+							that.prop('disabled', false).text('Place Order');
+						},
+
+						error: function (xhr) {
+							console.log('PAYPAL CREATE ERROR:', xhr);
+							$('.error-msg').html(xhr.responseJSON?.message || 'Unable to start PayPal payment.');
+							that.prop('disabled', false).text('Place Order');
+						}
+					});
+				},
+
+				error: function (xhr) {
+
+					console.log('PAYPAL PLACE ORDER ERROR:', xhr);
+
+					$('.error-msg').html(
+						xhr.responseJSON?.message ||
+						'Something went wrong while creating the order.'
+					);
+
+					that.prop('disabled', false).text('Place Order');
+				}
+			});
+
+			return false;
+		}
+
+		
 	});
 </script>
 @endsection

@@ -71,12 +71,6 @@ class CartController extends Controller
             $quantity = (int) $request->input('quantity', 1);
             $selectedVariants = $request->input('selected_variants', []);
             $type = $request->input('addType');
-
-            info("----------productId--------", [$productId]);
-            info("------quantity------", [$quantity]);
-            info("-------selected variants-------", [$selectedVariants]);
-            info("-----type-----", [$type]);
-
             if (!$productId || $quantity < 1) {
                 return response()->json([
                     'success' => false,
@@ -84,11 +78,6 @@ class CartController extends Controller
                 ], 400);
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | VARIANT PRODUCT
-            |--------------------------------------------------------------------------
-            */
             $cartId = $request->input('cart_id');
             if ($type === 'remove') {
 
@@ -122,8 +111,6 @@ class CartController extends Controller
 
                 $nameToId = VariantValue::whereIn('name', $variantValueNames)
                     ->pluck('id', 'name');
-
-                info("-----nameToId-----", [$nameToId]);
 
                 $variantValueIds = collect($variantValueNames)
                     ->map(function ($name) use ($nameToId) {
@@ -166,13 +153,6 @@ class CartController extends Controller
                     ->first();
 
                 info("---------already exists----------", [$alreadyExists]);
-
-                /*
-                |--------------------------------------------------------------------------
-                | REMOVE
-                |--------------------------------------------------------------------------
-                */
-
                 if ($type === 'remove') {
 
                     if ($alreadyExists) {
@@ -184,13 +164,6 @@ class CartController extends Controller
                         'message' => 'Product removed from cart'
                     ]);
                 }
-
-                /*
-                |--------------------------------------------------------------------------
-                | ADD / UPDATE
-                |--------------------------------------------------------------------------
-                */
-
                 if (!$alreadyExists) {
 
                     Cart::create([
@@ -206,13 +179,6 @@ class CartController extends Controller
                     $alreadyExists->save();
                 }
             }
-
-            /*
-            |--------------------------------------------------------------------------
-            | NORMAL PRODUCT - NO VARIANT
-            |--------------------------------------------------------------------------
-            */
-
             else {
 
                 $alreadyExists = Cart::where('user_id', $userId)
@@ -221,13 +187,6 @@ class CartController extends Controller
                     ->first();
 
                 info("---------normal product already exists----------", [$alreadyExists]);
-
-                /*
-                |--------------------------------------------------------------------------
-                | REMOVE
-                |--------------------------------------------------------------------------
-                */
-
                 if ($type === 'remove') {
 
                     if ($alreadyExists) {
@@ -239,13 +198,6 @@ class CartController extends Controller
                         'message' => 'Product removed from cart'
                     ]);
                 }
-
-                /*
-                |--------------------------------------------------------------------------
-                | ADD / UPDATE
-                |--------------------------------------------------------------------------
-                */
-
                 if (!$alreadyExists) {
 
                     Cart::create([
@@ -279,7 +231,96 @@ class CartController extends Controller
         }
     }
 
+    public function mergeLocalCartData(Request $request)
+    {    
+        try {
+            $userId = Auth::guard('customer')->id();
+            if (!$userId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not logged in'
+                ], 401);
+            }
+            
+            $productId = $request->productId;
+            $quantity =  $request->quantity;
+            $selectedVariants = $request->SelectedVariants;
+            if (!$productId || $quantity < 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid data'
+                ], 400);
+            }
+            if (!empty($selectedVariants) && is_array($selectedVariants)) {
 
+                $variantValueNames = array_values($selectedVariants);
+
+                $nameToId = VariantValue::whereIn('name', $variantValueNames)
+                    ->pluck('id', 'name');
+
+                $variantValueIds = collect($variantValueNames)
+                    ->map(function ($name) use ($nameToId) {
+                        return (int) ($nameToId[$name] ?? 0);
+                    })
+                    ->filter()
+                    ->values()
+                    ->toArray();
+
+                info("-----variantValueIds-------", [$variantValueIds]);
+
+                if (empty($variantValueIds)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid variant selected'
+                    ], 400);
+                }
+
+                $jsonCombo = json_encode($variantValueIds);
+
+                $combination = ProductVariantCombination::where('product_id', $productId)
+                    ->where('combination_id', $jsonCombo)
+                    ->first();
+
+                info("---------combination--------", [$combination]);
+
+                if (!$combination) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Combination not found'
+                    ], 404);
+                }
+
+                $alreadyExists = Cart::where('user_id', $userId)
+                    ->where('product_id', $productId)
+                    ->where(
+                        'product_variant_combination_id',
+                        $combination->id
+                    )
+                    ->first();
+
+                info("---------already exists----------", [$alreadyExists]);
+                if (!$alreadyExists) {
+                    Cart::create([
+                        'user_id' => $userId,
+                        'product_id' => $productId,
+                        'product_variant_combination_id' => $combination->id,
+                        'quantity' => $quantity,
+                    ]);
+
+                }
+            }
+            
+            return "Cart Db Updated"; 
+
+        } catch (\Throwable $th) {
+            \Log::error('Merge local cart failed', [
+                'message' => $th->getMessage(),
+                'file' => $th->getFile(),
+                'line' => $th->getLine()
+            ]);
+            return response()->json(['success' => false, 'message' => 'Unable to merge cart. Please try again.'], 500);
+        }
+    }
     public function updateQuantity(Request $request)
     {
         $request->validate([

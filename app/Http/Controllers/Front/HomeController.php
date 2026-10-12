@@ -29,6 +29,7 @@ use App\Models\ProductVariantValue;
 use App\Models\State; 
 use App\Models\City;
 use Illuminate\Support\Facades\Session;
+use App\Models\Blog;
 class HomeController extends Controller
 {
     public function index(){
@@ -566,11 +567,13 @@ class HomeController extends Controller
 
     public function checkoutBag(Request $request) 
     { 
-        $user = Auth::guard('customer')->user(); 
+        $user = Auth::guard('customer')->user();   
+        info("========user detail=======",[$user]); 
         if (!$user) 
         { 
             return redirect()->route('front-user.login'); 
         }
+        session()->forget('buy_now');
         $isBuyNow = session()->has('buy_now'); 
         $buyNow = session('buy_now'); 
         if ($isBuyNow) 
@@ -967,5 +970,64 @@ class HomeController extends Controller
         }
         return $isOutOfStock;
     }
+
+    public function userExportCartRecord()
+    {
+        $user = Auth::guard('customer')->user();
+        if(!$user){
+            return redirect()->route('front-user.login'); 
+        }
+
+        $cart = Cart::with('product')->where('user_id',$user->id)->get(); 
+        $fileName = 'user_cart_' . $user->id . '_' . date('Y-m-d_H-i-s') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ];
+
+        $columns = ['Product Name', 'Selected Variants', 'Quantity', 'Price', 'Created At'];
+        $combinationIds = $cart->pluck('product_variant_combination_id')->filter()->unique();
+        $combinations = ProductVariantCombination::whereIn('id', $combinationIds)->pluck('combination_id', 'id');
+        $variantIds = $combinations->flatMap(function ($combination) {
+            $ids = is_array($combination) ? $combination : json_decode($combination, true);
+            return is_array($ids) ? $ids : [];
+        })->unique();
+        $variantNames = VariantValue::whereIn('id', $variantIds)->pluck('name', 'id');
+        $callback = function () use ($cart, $columns, $combinations, $variantNames) {
+            $file = fopen('php://output', 'w');
+            fwrite($file, "\xEF\xBB\xBF");
+            fputcsv($file, $columns);
+            foreach ($cart as $item) {
+                $combination = $combinations[$item->product_variant_combination_id] ?? [];
+                $ids = is_array($combination) ? $combination : json_decode($combination, true);
+                $selectedVariants = collect(is_array($ids) ? $ids : [])
+                    ->map(fn($id) => $variantNames[$id] ?? null)
+                    ->filter()
+                    ->implode(', ');
+                fputcsv($file, [
+                    $item->product->name ?? '',
+                    $selectedVariants,
+                    $item->quantity ?? 0,
+                    $item->product->selling_price ?? 0,
+                    $item->created_at,
+                ]);
+            }
+            fclose($file);
+        };
+        return response()->stream($callback, 200, $headers);
+    }
     
+    public function blogList(Request $request)
+    {
+        $blogs = Blog::where('is_active', 1)->orderBy('id', 'desc')->get();
+        return view("front.home.blogs", compact('blogs'));
+        
+    }
+
+    public function blogDetails(Request $request, $slug)
+    {
+        $blogs = Blog::where('is_active', '1')->orderBy('id', 'desc')->paginate(6);
+        $details = Blog::where('blog_slug', $slug)->firstOrFail();
+        return view('front.home.blog-detail', compact('details','blogs'));
+    }
 }

@@ -629,38 +629,38 @@ function priceCalculation() {
 }
 
 
-document.addEventListener('click', function (e) {
-    const button = e.target.closest('.close-product');
-    if (!button) {
-        return;
-    }
-    e.preventDefault();
-    // Guest user → LocalStorage
-    if (!window.isCustomerLoggedIn) {
-        const index = parseInt(button.dataset.index);
-        let cartItems = JSON.parse(
-            localStorage.getItem('cartItems') || '[]'
-        );
-        if (cartItems[index]) {
-            cartItems.splice(index, 1);
+// document.addEventListener('click', function (e) {
+//     const button = e.target.closest('.close-product');
+//     if (!button) {
+//         return;
+//     }
+//     e.preventDefault();
+//     // Guest user → LocalStorage
+//     if (!window.isCustomerLoggedIn) {
+//         const index = parseInt(button.dataset.index);
+//         let cartItems = JSON.parse(
+//             localStorage.getItem('cartItems') || '[]'
+//         );
+//         if (cartItems[index]) {
+//             cartItems.splice(index, 1);
 
-            localStorage.setItem(
-                'cartItems',
-                JSON.stringify(cartItems)
-            );
-            displayGuestCart();
-            showFlashMessage("Product removed from cart", "warning");
-        }
-        return;
-    }
-    // Logged-in user → Database
-    const cartId = button.dataset.cartid;
+//             localStorage.setItem(
+//                 'cartItems',
+//                 JSON.stringify(cartItems)
+//             );
+//             displayGuestCart();
+//             showFlashMessage("Product removed from cart", "warning");
+//         }
+//         return;
+//     }
+//     // Logged-in user → Database
+//     const cartId = button.dataset.cartid;
 
-    if (cartId) {
-        removeProductCartFromDB(cartId);
-    }
+//     if (cartId) {
+//         removeProductCartFromDB(cartId);
+//     }
 
-}, true);
+// }, true);
 
 
 
@@ -756,7 +756,7 @@ function isLoginUser(productId, quantity, selectedVariants, type = null, cartId 
             }
             $('.addToCartText').html("Go To Cart");
             showFlashMessage("Product added to cart successfully");
-            openCartDropdown();
+            // openCartDropdown();
         },
         error: function(error) {
             console.log('Logged-in cart error:', error);

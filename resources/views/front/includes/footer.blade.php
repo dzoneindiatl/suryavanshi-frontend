@@ -333,108 +333,17 @@
 	});
 </script>
 
-{{-- <script>
-	var windowHeight =  Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
-    lastTop;
 
-    window.addEventListener('scroll', function(event) {
-  var train = document.getElementById('home_collection_sec'),
-      top = train.getBoundingClientRect().top,
-      offset = top - windowHeight;
-      
-      if (offset > 70) {
-      	train.classList.remove('animate_collection');
-      	return;
-      }
-      
-      if (top < windowHeight / 2 && top > lastTop) {
-      	train.classList.remove('animate_collection');
-      }
-      
-      if (train.className.indexOf('animate_collection') === -1 && top < lastTop) {
-      	train.classList.add('animate_collection');
-      }
-      
-      lastTop = top;
-     
-});
-</script>
-
-
-<script>
-	var windowHeight1 =  Math.max(document.documentElement.clientHeight, window.innerHeight || 0),
-    Toplast;
-
-window.addEventListener('scroll', function(event) {
-  var train1 = document.getElementById('home_collection_sec1'),
-      top1 = train1.getBoundingClientRect().top1,
-      offset = top1 - windowHeight1;
-      
-      if (offset > 70) {
-      	train1.classList.remove('animate_collection1');
-      	return;
-      }
-      
-      if (top1 < windowHeight1 / 2 && top1 > Toplast) {
-      	train1.classList.remove('animate_collection1');
-      }
-      
-      if (train1.className.indexOf('animate_collection1') === -1 && top1 < Toplast) {
-      	train1.classList.add('animate_collection1');
-      }
-      
-      Toplast = top1;
-     
-});
-</script> --}}
 
 <script>
 	$(window).scroll(function(){
-  var sticky = $('.main_header_top'),
-    scroll = $(window).scrollTop();
+    var sticky = $('.main_header_top'),
+      scroll = $(window).scrollTop();
 
-  if (scroll >= 50) sticky.addClass('header_fixed');
-  else sticky.removeClass('header_fixed');
-});
-</script>
-
-
-
-{{-- <script>
-$(document).ready(function(){
-  $(window).scroll(function () {
-    triggerSlideIns( $(this), [ $('.shop_img1') ]);
+    if (scroll >= 50) sticky.addClass('header_fixed');
+    else sticky.removeClass('header_fixed');
   });
-});
-
-$.getDocHeight = function(){
-  return Math.max(
-      $(document).height(),
-      $(window).height(),
-      document.documentElement.clientHeight
-  );
-};
-
-$.getScrollPercentage = function(){
-  return 100 * Math.min(
-    ($(window).height() + $(window).scrollTop()) / $.getDocHeight(),
-    $(window).scrollTop()
-    );
-};
-
-var triggerSlideIns = function(t, items) {
-  
-  for (var i = 0; i < items.length; i++) {
-    if((( $.getDocHeight() - $(window).height()) - ( $.getDocHeight() - items[i].offset().top )) <= t.scrollTop()) {
-      if(!items[i].hasClass('transitionSlideIn'))
-      {
-        items[i].addClass('transitionSlideIn');
-      }
-    } else { items[i].removeClass('transitionSlideIn'); }
-  }
-};
-</script> --}}
-
+</script>
 
 <script>
 $(function() {
@@ -524,7 +433,6 @@ $(function() {
     }
   });
 });
-
 </script>
 
 
@@ -580,7 +488,6 @@ $(function() {
        }
      }
    });
-   
 </script>
 
 <script>
@@ -597,8 +504,6 @@ function check_view_area() {
 		var element_height = $(this).outerHeight();
 		var element_top_position = $(this).offset().top;
 		var element_bottom_position = (element_top_position + element_height);
- 
-		//check to see if this current container is within viewport
 		if ((element_bottom_position >= window_top_position) && (element_top_position <= window_bottom_position)) {
 			$(this).addClass('in-view');
 		}
@@ -612,36 +517,5 @@ $window.on('scroll resize', check_view_area);
 $window.trigger('scroll');
 });
 </script>
-
-{{-- <script>
-const button = document.querySelector('.back_to_top_btn');
-
-const displayButton = () => {
-  window.addEventListener('scroll', () => {
-    console.log(window.scrollY);
-  
-    if (window.scrollY > 600) {
-      button.style.display = "block";
-    } else {
-      button.style.display = "none";
-    }
-  });
-};
-
-const scrollToTop = () => {
-  button.addEventListener("click", () => {
-    window.scroll({
-      top: 0,
-      left: 0,
-      behavior: 'smooth'
-    }); 
-    console.log(event);
-  });
-};
-
-displayButton();
-scrollToTop();
-</script> --}}
-
 </body>
 </html>

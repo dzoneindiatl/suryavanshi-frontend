@@ -322,7 +322,44 @@ class CheckoutController extends Controller
             $resp['message'] = 'CCAvenue payment initiated successfully.';
 
             return response()->json($resp);
-        } elseif ($request->payment_mode == 'wallet') {
+        }
+        elseif($request->payment_mode == 'paypal'){
+            $paypalCurrency = config('services.paypal.currency', 'USD');
+            $amount = round((float) $request->sub_total, 2);
+            if ($amount <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid payment amount.',
+                ], 422);
+            }
+            if ($paypalCurrency !== 'USD') {
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        'Please configure a supported PayPal currency.',
+                ], 422);
+            }
+            $order_id = $this->createOrder(
+                $ip_address,
+                'paypal',
+                $amount,
+                'unpaid',
+                $request->coupon_id,
+                $request->coupon_discount ?? 0,
+                0,
+                $request->shippingcharge ?? 0,
+                $request->billing_id,
+                $request->shipping_id,
+                $request->cartItems
+            );
+            $resp['success'] = true;
+            $resp['payment_mode'] = 'paypal';
+            $resp['order_id'] = $order_id;
+            $resp['message'] = 'Pending order created successfully.';
+
+            return response()->json($resp);
+        } 
+        elseif ($request->payment_mode == 'wallet') {
             $order_number = $this->random_strings(8);
 
             $order_id = $this->createOrder(

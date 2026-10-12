@@ -198,6 +198,15 @@
 
 <div class="cart_main_top">
 	<div class="container">
+        @if (Auth::guard('customer')->check())
+            <div class="row">
+                <div class="col-md-8"></div>
+                <div class="col-md-2 mb-2">
+                    <a href="{{ route('user.cart.export') }}" class="btn btn-secondary">Export</a>
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+        @endif 
 		<div class="row">
 			<div class="col-md-8">
                 @if (Auth::guard('customer')->check())
@@ -280,7 +289,7 @@
     var minSellingQty = '{{ $minSellingQty }}';
     var maxSellingQty = '{{ $maxSellingQty }}';
     const isLoggedIn = "{{ Auth::guard('customer')->check() ? true : false }}";
-    var couponDiscount = '{{ $couponDiscount }}'
+    var couponDiscount = '{{ $couponDiscount }}';
      
 </script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

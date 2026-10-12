@@ -194,7 +194,7 @@ class OrderController extends Controller
 
 
         $randonNum = rand(1000, 9999);
-        $pdf = PDF::loadView('invoices.order_new_invoice', ['checkout_data' => $checkout_data, 'order' => $order, 'currency' => $currency, 'GSTIN' => $GSTIN, 'supplySetting' => $supplySetting, 'image' => $image]);
+        $pdf = Pdf::loadView('invoices.order_new_invoice', ['checkout_data' => $checkout_data, 'order' => $order, 'currency' => $currency, 'GSTIN' => $GSTIN, 'supplySetting' => $supplySetting, 'image' => $image]);
         // $path = Config('constant.ORDER_INVOICE_ROOT_PATH') . $request->id . $randonNum . "_invoice.pdf";
         // $invoiceDirectory = Config('constant.ORDER_INVOICE_ROOT_PATH');
         // if (!file_exists($invoiceDirectory)) {

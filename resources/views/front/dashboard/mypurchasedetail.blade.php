@@ -201,8 +201,17 @@
                                                 if($item->status == 'returned'){
                                                     $html = 'Returned'; 
                                                 }
-                                                if($item->status == 'out_for_delivery'){
+                                                if($item->status == 'out-for-delivery'){
                                                     $html = 'Out For Delivery'; 
+                                                }
+                                                if($item->status == 'accepted'){
+                                                    $html = 'Accepted'; 
+                                                }
+                                                if($item->status == 'processing'){
+                                                    $html = 'Processing';
+                                                }
+                                                if($item->status == 'in-transit'){
+                                                    $html = 'In-Transit'; 
                                                 }
                                             @endphp
                                             <div class="detail-info_status">
@@ -241,9 +250,15 @@
                                         <span class="br-line"></span>
                                     </div>
                                 @endforeach 
-                                <div class="btn_view_store">
-                                    <a href="{{ route('front-user.myPurchase') }}" class="btn_view_store_txt">View Store <i class="fa fa-arrow-right"></i></a>
-                                </div>    
+                                @php
+                                    $status = array('in-transit','shipped','out-for-delivery','delivered');
+                                @endphp 
+                                @if(in_array($orderDetails->status,$status))
+                                    <div class="btn_view_store">
+                                        <a href="{{ route('front-orders.generate.invoice',$orderDetails->id) }}" class="btn_view_store_txt"> Download Invoice <i class="fa fa-arrow-right"></i></a>
+                                    </div>  
+                                @endif 
+
                             </div>
                             {{-- <div class="order_tabs_main">
 	                            <nav>

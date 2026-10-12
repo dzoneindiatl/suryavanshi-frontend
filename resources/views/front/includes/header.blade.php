@@ -206,7 +206,7 @@
 						@endforeach 
 					</ul>	
 				</div>
-				<div class="top-navbar-right">
+				{{-- <div class="top-navbar-right">
 	          		<div class="menu pb-header" data-name="Store">
 	        			<a class="px-0" href="#">
 							<div class="custom-img display-lg">
@@ -260,7 +260,7 @@
 							</a>
 						@endif 		
 	  				</div>
-	        	</div>
+	        	</div> --}}
 			</div>
 		</div>
 	</div>

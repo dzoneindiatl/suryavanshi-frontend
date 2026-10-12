@@ -3,10 +3,13 @@
     var addToWish = "{{ route('front-addwish') }}";
     const isLoggedIn = "{{ Auth::guard('customer')->check() ? true : false }}";
     var addToCart = "{{ route('user.addToCart') }}";
+    var isOutOfStock = "{{ url('is-outofstock') }}"; 
     var getCouponUrl = "{{ route('get.coupon') }}";
     var wishlistUrl = "{{ route('front-user.wishlist') }}";
     var viewCartUrl = "{{ route('product.viewBag') }}";
     var headerSearchUrl = "{{ route('front-header-product-search') }}"; 
+    window.mergeAddToCart = "{{ route('merge.localcart') }}"; 
+
 </script>
 <script>
     $('.wishlist_button').on('click',function(){
@@ -91,5 +94,36 @@
         .catch(error => {
             console.error("Wishlist error:", error);
         });
+    });
+</script>
+
+<script>
+  	const localCartData = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    console.log("=========carts data============",localCartData); 
+    localCartData.forEach(function(item,index){
+        let productId = item.productId;
+        let localSelectedVariants = item.selectedVariants;
+        let quantity = item.quantity; 
+        if(isLoggedIn){
+            $.ajax({
+                url:window.mergeAddToCart,
+                method:'POST',
+                data:{
+                    _token: "{{ csrf_token() }}",
+                    productId:productId,
+                    SelectedVariants:localSelectedVariants,
+                    quantity:quantity,
+                },
+                success:function(response){
+                console.log(response);
+                    if(response == 'Cart Db Updated'){
+                        localStorage.removeItem('cartItems');
+                    }
+                },
+                error:function(err){
+                console.log(err); 
+                }
+            }); 
+        }
     });
 </script>

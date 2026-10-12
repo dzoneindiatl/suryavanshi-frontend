@@ -216,29 +216,38 @@
                                               </td>
                                               <td class="tb-order_price">@if(!empty($product->product)){{ $product->selling_price }}@endif</td>
                                               <td>
-                                                  @php 
-                                                      if($product->status == 'pending'){
-                                                          $html = '<div class="tb-order_status stt-pending">Pending</div>'; 
-                                                      }
-                                                      if($product->status == 'cancelled'){
-                                                          $html = '<div class="tb-order_status stt-cancel">Canceled</div>'; 
-                                                      }
-                                                      if($product->status == 'delivered'){
-                                                          $html = '<div class="tb-order_status stt-delivery">Delivery</div>'; 
-                                                      }
-                                                      if($product->status == 'shipped'){
-                                                          $html = '<div class="tb-order_status stt-cancel">Shipped</div>';
-                                                      }
-                                                      if($product->status == 'confirmed'){
-                                                          $html = '<div class="tb-order_status stt-complete">Completed</div>'; 
-                                                      }
-                                                      if($product->status == 'returned'){
-                                                          $html = '<div class="tb-order_status stt-complete">Returned</div>'; 
-                                                      }
-                                                      if($product->status == 'out_for_delivery'){
-                                                          $html = '<div class="tb-order_status stt-delivery">Out For Delivery</div>'; 
-                                                      }
-                                                  @endphp 
+                                                    @php 
+                                                        if($product->status == 'pending'){
+                                                            $html = '<div class="tb-order_status stt-pending">Pending</div>'; 
+                                                        }
+                                                        if($product->status == 'cancelled'){
+                                                            $html = '<div class="tb-order_status stt-cancel">Canceled</div>'; 
+                                                        }
+                                                        if($product->status == 'delivered'){
+                                                            $html = '<div class="tb-order_status stt-delivery">Delivery</div>'; 
+                                                        }
+                                                        if($product->status == 'shipped'){
+                                                            $html = '<div class="tb-order_status stt-cancel">Shipped</div>';
+                                                        }
+                                                        if($product->status == 'confirmed'){
+                                                            $html = '<div class="tb-order_status stt-complete">Completed</div>'; 
+                                                        }
+                                                        if($product->status == 'returned'){
+                                                            $html = '<div class="tb-order_status stt-complete">Returned</div>'; 
+                                                        }
+                                                        if($product->status == 'out-for-delivery'){
+                                                            $html = '<div class="tb-order_status stt-delivery">Out For Delivery</div>'; 
+                                                        }
+                                                        if($product->status == 'accepted'){
+                                                            $html = '<div class="tb-order_status stt-delivery">Accepted</div>'; 
+                                                        }
+                                                        if($product->status == 'processing'){
+                                                             $html = '<div class="tb-order_status stt-complete">Processing</div>';
+                                                        }
+                                                        if($product->status == 'in-transit'){
+                                                            $html = '<div class="tb-order_status stt-cancel">In-Transit</div>';
+                                                        }
+                                                    @endphp 
                                                   {!! $html !!}
                                               </td>
                                           </tr> 

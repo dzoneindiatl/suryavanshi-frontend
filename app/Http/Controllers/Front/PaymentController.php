@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Front;
 
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\User;
 use App\Models\Cart;
 use App\Models\ProductVariantCombination;
 use App\Models\ProductVariantCombinationImage;
@@ -16,300 +16,199 @@ use App\Models\PaymentMethod;
 use Session;
 use Ixudra\Curl\Facades\Curl;
 use Srmklive\PayPal\Services\PayPal as PayPalClient;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Order;
 class PaymentController extends Controller
+
 {
-    
-    // public function checkout_callback(Request $request)
-    // {
-    //     $postData = $request->all();
-    // //     $postData['razorpay_payment_id'] ='pay_QsqOyd3gZfndoW';
-        
-        
-    // //     $api_url = env('RAZORPAY_DEFAULT_URL') . "payments/" . $postData['razorpay_payment_id'];
-    // //     $order_info = $this->callApi($api_url, [], 'razorpay');
-        
-    // //   echo "<pre>"; print_r($order_info); die;
-       
-      
-       
-       
-    //     $user_id = (Auth::guard('customer')->check() ? Auth::guard('customer')->user()->id : 0);
-    //     if (!empty($postData)) {
-    //         $api_url = env('RAZORPAY_DEFAULT_URL') . "payments/" . $postData['razorpay_payment_id'];
-    //         $order_info = $this->callApi($api_url, [], 'razorpay');
-    //         //echo "<pre>"; print_r($order_info); die;
-            
-    //         if (!empty($order_info)) {
-    //             $order_id = $this->createOrder('razorpay', ($order_info['amount'] / 100), $order_info['order_id'], $order_info['status'], $order_info['notes']['coupon_id'], $order_info['notes']['coupon_discount'], Auth::user()->wallet_avl_balance, $order_info['notes']['shippingcharge']);
-           
-    //             if (!empty($order_id) && $order_info['status'] == 'captured') 
-    //             {
-    //                 // Retrieve the order using $order_id
-    //                 $order = Order::find($order_id);
-                
-    //                 // Check if the order exists
-    //                 if ($order) {
-    //                     $razorpay_payment_id =  $order_info['id'];  // Assuming 'id' is the Razorpay payment ID
-                
-    //                     // Update the order's payment status and Razorpay payment ID
-    //                     $order->payment_status = 'paid';
-    //                     $order->razorpay_payment_id = $razorpay_payment_id;
-                        
-    //                     // Save the changes to the database
-    //                     $order->save();
-    //                 } else {
-    //                     // Handle case where order is not found
-    //                     // For example, you can log an error or return an error message
-    //                     Log::error("Order not found: {$order_id}");
-    //                 }
-    //             }
-    //         }
-    //     }
-        
-    //     //Cart::where([['user_id','=',$user_id]])->delete();
-    //     //return redirect()->route('user.order.confirm', encrypt($order_id))->with(['success' => 'Your order has been placed successfully.']);
-    //     return redirect()->route('user.order.confirm', 'order_LvdXqEGm6ab9VZ')->with(['success' => 'Your order has been placed successfully.']);
-    // }
-    
-    // public function processPayment(Request $request){
-    //     $inputData = $request->all();
-    //     // print_r($inputData);die;
-    //     $checkoutData = session()->get('checkoutData') ?? [];
-    //     $checkoutItemData = session()->get('checkoutItemData') ?? [];
-    //     // print_r($checkoutData);die;
-    //     if(empty($checkoutData['address_id'])){
-    //         return redirect()->back()->with(['error' => 'Please select address before continuing']);  
-    //     }
-    //     if(!empty($inputData['paymentmethod'])){
-    //         $checkoutData['payment_method'] = $inputData['paymentmethod'];
-    //         session()->put('checkoutData');
+    public function createPaypalOrder(Request $request) 
+    { 
+        try 
+        { 
+            $request->validate([ 'order_id' => 'required|integer', ]); 
+            $customer = Auth::guard('customer')->user(); 
+            if (!$customer) 
+            { 
+                return response()->json([ 'success' => false, 'message' => 'Please login to continue.', ], 401); 
+            } 
+            $order = Order::where('id', $request->order_id) ->where('user_id', $customer->id) ->where('payment_method', 'paypal') ->where('payment_status', 'unpaid') ->first(); 
+            if (!$order) 
+            { 
+                return response()->json([ 'success' => false, 'message' => 'Order not found or payment is already processed.', ], 404); 
+            } 
+            $clientId = config('services.paypal.client_id'); 
+            $clientSecret = config('services.paypal.client_secret'); 
+            $baseUrl = rtrim(config('services.paypal.base_url', 'https://api-m.sandbox.paypal.com'), '/'); 
+            $currency = strtoupper(config('services.paypal.currency', 'USD')); 
+            $amount = number_format((float) $order->total, 2, '.', ''); 
+            if (empty($clientId) || empty($clientSecret)) { 
+                Log::error('PayPal credentials are missing.'); 
+                return response()->json([ 'success' => false, 'message' => 'PayPal configuration is missing. Please contact support.', ], 500);
+             } 
+            if ((float) $amount <= 0) 
+            { 
+                return response()->json([ 'success' => false, 'message' => 'Invalid order amount.', ], 422);
+            } 
+            Log::info('PayPal order request', [ 'order_id' => $order->id, 'currency' => $currency, 'amount' => $amount, 'base_url' => $baseUrl, ]); 
+            // Step 1: Generate PayPal access token
+            $tokenResponse = Http::asForm()->withBasicAuth($clientId, $clientSecret)->acceptJson() ->post($baseUrl . '/v1/oauth2/token', [ 'grant_type' => 'client_credentials', ]); 
+            if (!$tokenResponse->successful()) 
+            { 
+                Log::error('PayPal token request failed', [ 'status' => $tokenResponse->status(), 'response' => $tokenResponse->json(), ]); 
+                return response()->json([ 'success' => false, 'message' => 'Unable to connect to PayPal. Please try again.', ], 502); 
+            } 
+            $accessToken = $tokenResponse->json('access_token'); 
+            if (empty($accessToken)) 
+            { 
+                Log::error('PayPal access token missing', [ 'response' => $tokenResponse->json(), ]); 
+                return response()->json([ 'success' => false, 'message' => 'PayPal access token was not returned.', ], 502); 
+            } // Step 2: Create PayPal order 
 
-    //         if(!empty($inputData['paymentmethod']) && $inputData['paymentmethod'] == 'cod'){
-    //             // Process the order creation process
-    //             $this->createOrderAndInvoice([],$checkoutData,$checkoutItemData);
+            info("=======comes for payment=========="); 
+            $paypalResponse = Http::withToken($accessToken)->acceptJson()->post($baseUrl . '/v2/checkout/orders', 
+            [ 
+                'intent' => 'CAPTURE', 
+                'purchase_units' => [ 
+                    [ 
+                        'reference_id' => (string) $order->id, 
+                        'custom_id' => (string) $order->id, 
+                        'amount' => [ 
+                            'currency_code' => $currency, 
+                            'value' => $amount,
+                        ], 
+                    ], 
+                ], 
+                'payment_source' => 
+                [ 
+                    'paypal' => [ 
+                        'experience_context' => [ 
+                            'return_url' => route('front-paypal.success'),
+                            'cancel_url' => route('front-paypal.cancel'), 
+                            'user_action' => 'PAY_NOW', 
+                            'landing_page' => 'LOGIN', 
+                        ], 
+                    ], 
+                ], 
+            ]); 
+            $responseData = $paypalResponse->json(); 
+           info('PayPal order request', [
+                    'order_id' => $order->id,
+                    'currency' => $currency,
+                    'amount' => $amount,
+                    'environment' => $baseUrl,
+                ]);
+            info("============response==============",[$responseData]); 
+            if (!$paypalResponse->successful()) 
+            { 
+                Log::error('PayPal create order failed', [ 'status' => $paypalResponse->status(), 'response' => $responseData, 'order_id' => $order->id, ]); 
+                return response()->json([ 'success' => false, 'message' => data_get( $responseData, 'message', 'PayPal order creation failed. Please try again.' ), ], 422);
+            } 
+            // Step 3: Find approval URL
+             $approvalLink = collect($responseData['links'] ?? [])->first(function ($link) { 
+                return in_array( $link['rel'] ?? '', ['approve', 'payer-action'], true ) && !empty($link['href']); 
+            }); 
+            if (empty($approvalLink['href'])) { 
+                Log::error('PayPal approval URL missing', [ 'status' => $paypalResponse->status(), 'response' => $responseData, 'order_id' => $order->id, ]); 
+                return response()->json([ 'success' => false, 'message' => 'PayPal approval URL was not returned. Check Laravel log.', ], 422); 
+                } 
+                // Step 4: Save PayPal order ID 
+                $paypalOrderId = $responseData['id'] ?? null; 
+                if (empty($paypalOrderId)) { 
+                    Log::error('PayPal order ID missing', [ 'response' => $responseData, 'order_id' => $order->id, ]); 
+                    return response()->json([ 'success' => false, 'message' => 'PayPal order ID was not returned.', ], 502); 
+                } 
+                $order->paypal_order_id = $paypalOrderId; 
+                $order->save(); 
 
-    //             return redirect()->route('user.dashboard')->with('flash_notice','Order Placed Successfully');
-    //         }else{
-    //             $defaultPaymentGateway = PaymentMethod::where('is_active',1)->value('name');
-    //             if(strtolower($defaultPaymentGateway) == 'paypal'){
-    //                 // print_r($defaultPaymentGateway);die;
-    //                 $redirectUrl = $this->paypalProcessPayment($checkoutData);
-    //                 return redirect()->to($redirectUrl);
-    //             }else if(strtolower($defaultPaymentGateway) == 'ccavenue'){
-    //                 $this->ccProcessPayment($inputData);
-    //             }else if(strtolower($defaultPaymentGateway) == 'phonepe'){
-    //                 $this->phonepeProcessPayment($inputData);
-    //             }else{
-    //                 Log::error('No Default Payment Gateway');
-    //                 return redirect()->back()->with(['error' => 'Invalid Payment gateway selected']);
-    //             }
-    //         }
-    //     }else{
-    //         return redirect()->back()->with('error','Invalid Payment gateway selected');
-    //     }
+                info('PayPal order response', [
+                    'http_status' => $paypalResponse->status(),
+                    'order_id' => data_get($responseData, 'id'),
+                    'status' => data_get($responseData, 'status'),
+                    'links' => collect(data_get($responseData, 'links', []))
+                        ->map(fn ($link) => [
+                            'rel' => $link['rel'] ?? null,
+                            'href' => $link['href'] ?? null,
+                        ])->all(),
+                    'debug_id' => data_get($responseData, 'debug_id'),
+                ]);
+                info("========approval link=============",[$approvalLink]); 
+                return response()->json([ 'success' => true, 'order_id' => $order->id, 'paypal_order_id' => $paypalOrderId, 'approval_url' => $approvalLink['href'], ]); 
+        } 
+        catch (\Illuminate\Validation\ValidationException $e) { 
+            throw $e; 
+        } catch (\Throwable $e) { 
+            Log::error('PayPal create order exception', [ 'message' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine(), ]); 
+            return response()->json([ 'success' => false, 'message' => 'Something went wrong while connecting to PayPal. Check Laravel log.', ], 500);
+        } 
+    }
+    public function success(Request $request)
+    {   
+        info("success tak aa gya ha"); 
+        $paypalOrderId = $request->query('token');
+        if (!$paypalOrderId) {
+            info("=====invalid paypal response======="); 
+            return redirect()->route('front-product.checkoutBag')->with('error', 'Invalid PayPal response.');
+        }
+        info("======order success ho gya========="); 
+        $customer = Auth::guard('customer')->user();
+        if (!$customer) {
+            return redirect()->route('front-user.login')->with('error', 'Please login to continue.');
+        }
+        $order = Order::where('paypal_order_id', $paypalOrderId)
+            ->where('user_id', $customer->id)
+            ->where('payment_method', 'paypal')
+            ->where('payment_status', 'unpaid')
+            ->first();
+        if (!$order) {
+            info("order nhi mila"); 
+            return redirect()->route('front-product.checkoutBag')->with('error', 'Order not found or already processed.');
+        }
+        $baseUrl = rtrim(config('services.paypal.base_url', 'https://api-m.sandbox.paypal.com'), '/');
+        $tokenResponse = Http::asForm()->withBasicAuth(
+            config('services.paypal.client_id'),
+            config('services.paypal.client_secret')
+        )->post($baseUrl.'/v1/oauth2/token', [
+            'grant_type' => 'client_credentials',
+        ]);
+        if (!$tokenResponse->successful()) {
+            Log::error('PayPal token failed', ['status' => $tokenResponse->status()]);
+            return redirect()->route('front-product.checkoutBag')->with('error', 'Unable to verify PayPal payment.');
+        }
+        $accessToken = $tokenResponse->json('access_token');
+        $captureResponse = Http::withToken($accessToken)
+            ->withHeaders(['PayPal-Request-Id' => 'capture-order-'.$order->id])
+            ->post($baseUrl.'/v2/checkout/orders/'.$paypalOrderId.'/capture', (object)[]);
+        if (!$captureResponse->successful()) {
+            Log::error('PayPal capture failed', [
+                'order_id' => $order->id,
+                'status' => $captureResponse->status(),
+                'response' => $captureResponse->json(),
+            ]);
+            return redirect()->route('front-product.checkoutBag')->with('error', 'Payment capture failed. Please contact support before retrying.');
+        }
+        $captureData = $captureResponse->json();
+        $captureStatus = data_get($captureData, 'purchase_units.0.payments.captures.0.status');
+        $captureAmount = data_get($captureData, 'purchase_units.0.payments.captures.0.amount.value');
+        $captureCurrency = data_get($captureData, 'purchase_units.0.payments.captures.0.amount.currency_code');
+        if (($captureData['status'] ?? '') !== 'COMPLETED' || $captureStatus !== 'COMPLETED' || $captureCurrency !== config('services.paypal.currency', 'USD') || round((float) $captureAmount, 2) !== round((float) $order->total, 2)) {
+            Log::error('PayPal capture verification failed', [
+                'order_id' => $order->id,
+                'paypal_response' => $captureData,
+            ]);
+            return redirect()->route('front-product.checkoutBag')->with('error', 'Payment could not be verified. Please contact support.');
+        }
+        $order->payment_status = 'paid';
+        $order->save();
+        return view('front.paypal.success', [
+            'paypalOrderId' => $paypalOrderId,
+        ]);
+    }
 
-    // }
-    // public function ccProcessPayment($data = [])
-    // {
-    //     $input = [];
-    //     $input['amount'] = $data['total'];
-    //     $input['order_id'] = "123XSDDD456";
-    //     $input['currency'] = getCurrentCurrency();
-    //     $input['redirect_url'] = route('front-user.cc-response');
-    //     $input['cancel_url'] = route('front-user.cc-response');
-    //     $input['language'] = "EN";
-    //     $input['merchant_id'] = env('CC_MERCHANT_ID');
-
-    //     $merchant_data = "";
-
-    //     $working_key = env('CC_WORKING_KEY'); 
-    //     $access_code = env('CC_ACCESS_CODE'); 
-
-    //     // $input['address_id'] = "some-custom-inputs"; // optional parameter
-    //     // $input['sub_total'] = "some-custom-inputs"; // optional parameter
-    //     // $input['coupon_name'] = "some-custom-inputs"; // optional parameter
-    //     // $input['coupon_discount'] = "some-custom-inputs"; // optional parameter
-    //     // $input['delivery'] = "some-custom-inputs"; // optional parameter
-    //     foreach ($input as $key => $value) {
-    //         $merchant_data .= $key . '=' . $value . '&';
-    //     }
-
-    //     $encrypted_data = $this->encryptCC($merchant_data, $working_key);
-    //     $url = env('CC_URL') . '/transaction/transaction.do?command=initiateTransaction&encRequest=' . $encrypted_data . '&access_code=' . $access_code;
-
-    //     return redirect($url);
-    // }
-
-    // public function paypalProcessPayment($data = []){
-    //     // print_r('asdasd');die;  
-    //     $provider = new PayPalClient;
-    //     // $provider = PayPalClient::setProvider();
-    //     $provider->getAccessToken();
-
-    //     $provider->setCurrency('USD');
-       
-    //     $data = [
-    //         "intent"              => "CAPTURE",
-    //         "purchase_units"      => [
-    //             [
-    //                 "amount" => [
-    //                     "value"         => number_format(convertOneCurrencyToAnother(getCurrentCurrency(),'USD',$data['total']), 2, '.', ''),
-    //                     "currency_code" => 'USD',
-    //                 ],
-    //             ]
-    //         ],
-    //         "application_context" => [
-    //             "cancel_url" => route('front-user.paypalFailed'),
-    //             "return_url" => route('front-user.paypalSuccess'),
-    //         ],
-    //     ];
-    //     $order = $provider->createOrder($data);
-    //     // print_r($order);die;
-    //     $url = $order['links'][1]['href'];
-    //     return $url;
-    // }
-
-    // public function paypalFailed()
-    // {
-    //     dd('Your payment has been declend. The payment cancelation page goes here!');
-    // }
-
-    // public function paypalSuccess(Request $request)
-    // {
-    //     $provider = new PayPalClient();      // To use express checkout.
-    //     $provider->getAccessToken();
-    //     $token = $request->get('token');
-
-    //     $orderInfo = $provider->showOrderDetails($token);
-    //     $response = $provider->capturePaymentOrder($token);
-    //     $transactionId = $response['id'] ?? '';
-    //     $checkoutData = session()->get('checkoutData') ?? [];
-    //     // print_r($checkoutData);die;
-    //     $checkoutItemData = session()->get('checkoutItemData') ?? [];
-    //     //Creating order
-    //     $this->createOrderAndInvoice(['transaction_id' => $transactionId],$checkoutData,$checkoutItemData);
-    //     return redirect()->route('user.dashboard')->with('flash_notice','Order Placed Successfully');
-    // }
-    // public function phonepeProcessPayment($data = [])
-    // {
-    //     $data = array (
-    //         'merchantId' => 'M22CJRDZCESWK',
-    //         'merchantTransactionId' => uniqid(),
-    //         'merchantUserId' => 'MUID123',
-    //         'amount' => $data['total'],
-    //         'redirectUrl' => route('front-user.phonepeResponse'),
-    //         'redirectMode' => 'POST',
-    //         'callbackUrl' => route('front-user.phonepeResponse'),
-    //         'mobileNumber' => '9999999999',
-    //         'paymentInstrument' => 
-    //         array (
-    //         'type' => 'PAY_PAGE',
-    //         ),
-    //     );
-
-    //     $encode = base64_encode(json_encode($data));
-
-    //     $saltKey = '5bd76277-6683-4817-9443-952542a40ac3';
-    //     $saltIndex = 1;
-
-    //     $string = $encode.'/pg/v1/pay'.$saltKey;
-    //     $sha256 = hash('sha256',$string);
-
-    //     $finalXHeader = $sha256.'###'.$saltIndex;
-
-    //     $url = "https://api.phonepe.com/apis/hermes/pg/v1/pay";
-
-    //     $response = Curl::to($url)
-    //             ->withHeader('Content-Type:application/json')
-    //             ->withHeader('X-VERIFY:'.$finalXHeader)
-    //             ->withData(json_encode(['request' => $encode]))
-    //             ->post();
-
-    //     $rData = json_decode($response);
-
-    //     return redirect()->to($rData->data->instrumentResponse->redirectInfo->url);
-    // }
-
-    // public function phonepeResponse(Request $request)
-    // {
-    //     $input = $request->all();
-
-    //     $saltKey = '5bd76277-6683-4817-9443-952542a40ac3';
-    //     $saltIndex = 1;
-
-    //     $finalXHeader = hash('sha256','/pg/v1/status/'.$input['merchantId'].'/'.$input['transactionId'].$saltKey).'###'.$saltIndex;
-
-    //     $response = Curl::to('https://api.phonepe.com/apis/hermes/pg/v1/status/'.$input['merchantId'].'/'.$input['transactionId'])
-    //             ->withHeader('Content-Type:application/json')
-    //             ->withHeader('accept:application/json')
-    //             ->withHeader('X-VERIFY:'.$finalXHeader)
-    //             ->withHeader('X-MERCHANT-ID:'.$input['transactionId'])
-    //             ->get();
-
-    //     dd(json_decode($response));
-    // }
-
-
-    // public function ccResponse(Request $request)
-    // {
-    //     try {
-    //         $workingKey = config('cc-avenue.working_key'); //Working Key should be provided here.
-    //         $encResponse = $_POST["encResp"];
-
-    //         $rcvdString = $this->decryptCC($encResponse, $workingKey);        //Crypto Decryption used as per the specified working key.
-    //         $order_status = "";
-    //         $decryptValues = explode('&', $rcvdString);
-    //         $dataSize = sizeof($decryptValues);
-    //     } catch (Exception $e) {
-    //         Log::error($e);
-    //         return redirect()->back()->with(['error' => 'Something is wrong', 'error_msg' => $e->getMessage()]);
-    //     }
-    // }
-
-    // public function encryptCC($plainText, $key)
-    // {
-    //     $key = $this->hextobin(md5($key));
-    //     $initVector = pack("C*", 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f);
-    //     $openMode = openssl_encrypt($plainText, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $initVector);
-    //     $encryptedText = bin2hex($openMode);
-    //     return $encryptedText;
-    // }
-
-    // public function decryptCC($encryptedText, $key)
-    // {
-    //     $key = $this->hextobin(md5($key));
-    //     $initVector = pack("C*", 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f);
-    //     $encryptedText = $this->hextobin($encryptedText);
-    //     $decryptedText = openssl_decrypt($encryptedText, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $initVector);
-    //     return $decryptedText;
-    // }
-
-    // public function pkcs5_padCC($plainText, $blockSize)
-    // {
-    //     $pad = $blockSize - (strlen($plainText) % $blockSize);
-    //     return $plainText . str_repeat(chr($pad), $pad);
-    // }
-
-    // public function hextobin($hexString)
-    // {
-    //     $length = strlen($hexString);
-    //     $binString = "";
-    //     $count = 0;
-    //     while ($count < $length) {
-    //         $subString = substr($hexString, $count, 2);
-    //         $packedString = pack("H*", $subString);
-    //         if ($count == 0) {
-    //             $binString = $packedString;
-    //         } else {
-    //             $binString .= $packedString;
-    //         }
-
-    //         $count += 2;
-    //     }
-    //     return $binString;
-    // }
-
-
-
+    public function cancel()
+    {
+        return redirect()->route('front-product.checkoutBag')
+            ->with('error', 'PayPal payment was cancelled.');
+    }
 
 }
