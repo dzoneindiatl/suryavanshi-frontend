@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\Country;
+use App\Models\Faq;
 use App\Models\SizeChartManager;
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
@@ -30,6 +31,8 @@ use App\Models\State;
 use App\Models\City;
 use Illuminate\Support\Facades\Session;
 use App\Models\Blog;
+use App\Models\FooterCategory;
+use App\Models\FooterSubcategory;
 class HomeController extends Controller
 {
     public function index(){
@@ -1017,11 +1020,15 @@ class HomeController extends Controller
         return response()->stream($callback, 200, $headers);
     }
     
+    public function getFaqs(){
+
+        $faqs = Faq::where('is_active',1)->get(); 
+        return view('front.home.faq',compact('faqs')); 
+    }
     public function blogList(Request $request)
     {
         $blogs = Blog::where('is_active', 1)->orderBy('id', 'desc')->get();
-        return view("front.home.blogs", compact('blogs'));
-        
+        return view("front.home.blogs", compact('blogs'));  
     }
 
     public function blogDetails(Request $request, $slug)
@@ -1029,5 +1036,23 @@ class HomeController extends Controller
         $blogs = Blog::where('is_active', '1')->orderBy('id', 'desc')->paginate(6);
         $details = Blog::where('blog_slug', $slug)->firstOrFail();
         return view('front.home.blog-detail', compact('details','blogs'));
+    }
+
+    public function dynamicPages(Request $request, $slug)
+    {
+        $page = FooterSubcategory::where('slug', $slug)->firstOrFail();
+        $category = $page->footer_category_id;
+        $pcategory = FooterCategory::where('id', $category)->firstOrFail();
+
+        $relatedSubcategories = $pcategory->subcategories->sortBy('order_number');
+        if ($page->type == 'url' && !empty($page->url)) {
+            if ($slug == 'faq') {
+                $faqs = Faq::where('is_active', '1')->orderBy('id', 'asc')->get();
+                return view('front.modules.pages.faq', compact('faqs', 'relatedSubcategories', 'page'));
+            }
+            return redirect()->away($page->url);
+        }
+
+        return view('front.pages.index', compact('page', 'relatedSubcategories'));
     }
 }

@@ -71,6 +71,7 @@ Route::get('/search/view-all', [HomeController::class, 'viewAll'])->name('search
 Route::get('/page/{slug}', [HomeController::class, 'dynamicPages'])->name('page.details');
 Route::get('/blogs', [HomeController::class, 'blogList'])->name('blog.blog');
 Route::get('/blog-details/{slug}', [HomeController::class, 'blogDetails'])->name('blog.detail');
+Route::get('/faq',[HomeController::class,'getFaqs'])->name('faq'); 
 Route::match(['get', 'post'], '/check-delevery', [CartController::class, 'checkDelevery'])->name('check.delevery');
 
 Route::post('subscribers/create',[HomeController::class,'storeNewsletterRecord'])->name('create-subscriber'); 

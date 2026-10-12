@@ -1,45 +1,34 @@
 <div class="footer_main">
 	<div class="container">
 		<div class="row footer_main_inner">
-			<div class="col-md-3">
-				<h2>Our Collections</h2>
-				<ul>
-				<li><a href="#">Gold</a></li>
-				<li><a href="#">Silver </a></li>
-				<li><a href="#">Men's Wear </a></li>
-				<li><a href="#">Womens Wear</a></li>
-				</ul>
-			</div>
-			<div class="col-md-3">
-				<h2>Customer Service</h2>
-				<ul>
-				<li><a href="#">Return Policy</a></li>
-				<li><a href="#">Order Status</a></li>
-				<li><a href="#">Commitment</a></li>
-				</ul>
-			</div>
-			<div class="col-md-2">
-				<h2>About Us</h2>
-				<ul>
-				<li><a href="#">Our Story</a></li>
-				<li><a href="#">Terms &amp; Conditions</a></li>
-				<li><a href="#">Privacy Policy</a></li>
-				<li><a href="#">Contact Us</a></li>
-				<li><a href="#">Blog</a></li>
-				</ul>
-			</div>
-			<div class="col-md-4">
-				<div class="addrGrp">
-				<h2>Office Address</h2>
-				<p>SB-155 A, Gandhi Nagar Mode, Main Tonk Road, Jaipur-302015, Rajasthan, INDIA</p>
-				</div>
-				<div class="addrGrp">
-				<h2>Contact Us</h2>
-				<p>+918302581569, +919636714869</p>
-				<p>info@jaipurJewelleryhouse.net</p>
-				</div>
-			</div>
-  		</div>
+      @foreach($footer as $foot)
+        @if(empty($foot->description))
+          <div class="col-md-3">
+            
+              <h2>{{ $foot->name }}</h2>
+              <ul>  
+                @foreach($foot->subcategories as $sub) 
+                  @if($sub->footer_category_id == $foot->id)
+                    <li><a href="{{ route('page.details',$sub->slug) }}">{{ $sub->title }}</a> </li>
+                    {{-- <li><a href="#">Gold</a></li>
+                    <li><a href="#">Silver </a></li>
+                    <li><a href="#">Men's Wear </a></li>
+                    <li><a href="#">Womens Wear</a></li> --}}
+                  @endif  
+                @endforeach   
+              </ul>
+          </div>
+          @else     
+            <div class="col-md-3">
+                <div class="addrGrp">
+                  <h2>{{ $foot->name }}</h2>
+                  {!! $foot->description !!}
+                </div>
+            </div>   
+        @endif 
+      @endforeach   
+       
+  	</div>
 	</div>
 </div>
 
