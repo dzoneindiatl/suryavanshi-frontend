@@ -4718,3 +4718,12 @@ button.btn_drop_sorting {
         letter-spacing: 0.1em;
     }
 }
+
+/* Keep the lower navigation visible while the upper header row slides away. */
+@media (min-width: 768px) {
+    .header_fixed {
+        transition: transform 280ms ease;
+        will-change: transform;
+        backface-visibility: hidden;
+    }
+}
