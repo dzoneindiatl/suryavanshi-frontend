@@ -1,6 +1,6 @@
 @php
-    $fallbackImages = ['ring1.png', 'ring2.png', 'ring3.png', 'ring4.png', 'ring5.png', 'ring6.png', 'ring1.png', 'ring2.png', 'ring3.png', 'ring4.png'];
-    $targetCategoryCount = 10;
+    $fallbackImages = ['ring1.png', 'ring2.png', 'ring3.png', 'ring4.png', 'ring5.png', 'ring6.png', 'ring1.png', 'ring2.png', 'ring3.png', 'ring4.png', 'ring5.png', 'ring6.png', 'ring1.png', 'ring2.png'];
+    $targetCategoryCount = 14;
     $categoryItems = collect($homeCategories ?? []);
 
     if ($categoryItems->isEmpty()) {
@@ -28,6 +28,26 @@
             'name' => 'Bestsellers',
             'url' => url('/shop'),
             'image' => asset('assets/image/ring4.png'),
+        ],
+        [
+            'name' => 'Rings',
+            'url' => url('/shop'),
+            'image' => asset('assets/image/ring5.png'),
+        ],
+        [
+            'name' => 'Earrings',
+            'url' => url('/shop'),
+            'image' => asset('assets/image/ring6.png'),
+        ],
+        [
+            'name' => 'Pendants',
+            'url' => url('/shop'),
+            'image' => asset('assets/image/ring1.png'),
+        ],
+        [
+            'name' => 'Bracelets',
+            'url' => url('/shop'),
+            'image' => asset('assets/image/ring2.png'),
         ],
     ];
 
@@ -86,7 +106,7 @@
                         class="jewellery-category-card"
                         data-category-shuffle-card
                         data-category-order="{{ $categoryIndex }}"
-                        style="--category-delay: {{ min($categoryIndex, 7) * 70 }}ms"
+                        style="--category-delay: {{ min($categoryIndex, 13) * 70 }}ms"
                         role="listitem"
                     >
                         <a class="jewellery-category-card-link" href="{{ $categoryUrl }}" aria-label="Explore {{ $categoryName }}">
@@ -179,7 +199,7 @@
             const nextTopRow = [...topRowOrder];
             const nextBottomRow = [...bottomRowOrder];
 
-            // Exchange the row groups while keeping the balanced 4-card composition.
+            // Exchange the row groups while keeping the balanced composition.
             const sharedRow = Math.min(nextTopRow.length, nextBottomRow.length);
             const exchangedTopRow = nextBottomRow.slice(0, sharedRow);
             const exchangedBottomRow = nextTopRow.slice(0, sharedRow);
