@@ -1,5 +1,6 @@
 @php
-    $fallbackImages = ['ring1.png', 'ring2.png', 'ring3.png', 'ring4.png', 'ring5.png', 'ring6.png', 'ring1.png'];
+    $fallbackImages = ['ring1.png', 'ring2.png', 'ring3.png', 'ring4.png', 'ring5.png', 'ring6.png', 'ring1.png', 'ring2.png', 'ring3.png', 'ring4.png'];
+    $targetCategoryCount = 10;
     $categoryItems = collect($homeCategories ?? []);
 
     if ($categoryItems->isEmpty()) {
@@ -12,16 +13,33 @@
         });
     }
 
-    if ($categoryItems->count() < 8) {
-        $categoryItems->push([
+    $collectionShortcuts = [
+        [
             'name' => 'All Jewellery',
-            'slug' => null,
             'url' => url('/shop'),
             'image' => asset('assets/image/ring2.png'),
-        ]);
+        ],
+        [
+            'name' => 'New Arrivals',
+            'url' => url('/shop'),
+            'image' => asset('assets/image/ring3.png'),
+        ],
+        [
+            'name' => 'Bestsellers',
+            'url' => url('/shop'),
+            'image' => asset('assets/image/ring4.png'),
+        ],
+    ];
+
+    foreach ($collectionShortcuts as $shortcut) {
+        if ($categoryItems->count() >= $targetCategoryCount) {
+            break;
+        }
+
+        $categoryItems->push($shortcut);
     }
 
-    $categoryItems = $categoryItems->take(8)->values();
+    $categoryItems = $categoryItems->take($targetCategoryCount)->values();
     $categorySplitAt = (int) ceil($categoryItems->count() / 2);
     $categoryRows = [
         $categoryItems->slice(0, $categorySplitAt)->values(),
