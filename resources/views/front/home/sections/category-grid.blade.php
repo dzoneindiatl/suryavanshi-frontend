@@ -11,9 +11,25 @@
             ];
         });
     }
+
+    if ($categoryItems->count() < 8) {
+        $categoryItems->push([
+            'name' => 'All Jewellery',
+            'slug' => null,
+            'url' => url('/shop'),
+            'image' => asset('assets/image/ring2.png'),
+        ]);
+    }
+
+    $categoryItems = $categoryItems->take(8)->values();
+    $categorySplitAt = (int) ceil($categoryItems->count() / 2);
+    $categoryRows = [
+        $categoryItems->slice(0, $categorySplitAt)->values(),
+        $categoryItems->slice($categorySplitAt)->values(),
+    ];
 @endphp
 
-<section class="jewellery-categories-section" aria-labelledby="jewellery-categories-title">
+<section class="jewellery-categories-section" data-category-shuffle-section aria-labelledby="jewellery-categories-title">
     <div class="jewellery-categories-heading">
         <div class="jewellery-categories-heading-copy">
             <span class="jewellery-categories-eyebrow">Explore Our Collections</span>
@@ -21,39 +37,50 @@
             <span class="jewellery-categories-accent" aria-hidden="true"></span>
             <p>Discover timeless designs crafted to celebrate every style, moment, and memory.</p>
         </div>
+
+        <div class="jewellery-categories-heading-note" aria-hidden="true">
+            <span>{{ $categoryItems->count() }} collections</span>
+            <i></i>
+            <span>Curated for you</span>
+        </div>
     </div>
 
-    <div class="jewellery-category-carousel-shell">
-        <button class="jewellery-category-carousel-button jewellery-category-carousel-button-prev" type="button" data-category-carousel-prev aria-label="Previous categories" aria-controls="jewellery-category-carousel">
-            <span aria-hidden="true">&larr;</span>
-        </button>
-
-        <div class="jewellery-category-carousel" id="jewellery-category-carousel" role="region" aria-label="Jewellery categories" tabindex="0">
-            <div class="jewellery-category-track">
-                @foreach ($categoryItems as $index => $category)
+    <div class="jewellery-category-shuffle" role="list" aria-label="Jewellery categories">
+        @foreach ($categoryRows as $rowIndex => $row)
+            <div class="jewellery-category-shuffle-row {{ $rowIndex === 1 ? 'is-offset' : '' }}" data-category-shuffle-row>
+                @foreach ($row as $rowItemIndex => $category)
                     @php
+                        $categoryIndex = ($rowIndex * $categorySplitAt) + $rowItemIndex;
                         $categoryName = data_get($category, 'name', 'Jewellery Category');
                         $categorySlug = data_get($category, 'slug');
                         $categoryImage = data_get($category, 'thumbnail_image') ?: data_get($category, 'image');
 
                         if (!$categoryImage || !filter_var($categoryImage, FILTER_VALIDATE_URL)) {
-                            $categoryImage = asset('assets/image/' . $fallbackImages[$index % count($fallbackImages)]);
+                            $categoryImage = asset('assets/image/' . $fallbackImages[$categoryIndex % count($fallbackImages)]);
                         }
 
-                        $categoryUrl = $categorySlug
+                        $categoryUrl = data_get($category, 'url') ?: ($categorySlug
                             ? route('category.show', ['path' => $categorySlug])
-                            : '#';
+                            : '#');
                     @endphp
 
-                    <article class="jewellery-category-card" style="--category-delay: {{ min($index, 7) * 70 }}ms">
+                    <article
+                        class="jewellery-category-card"
+                        data-category-shuffle-card
+                        data-category-order="{{ $categoryIndex }}"
+                        style="--category-delay: {{ min($categoryIndex, 7) * 70 }}ms"
+                        role="listitem"
+                    >
                         <a class="jewellery-category-card-link" href="{{ $categoryUrl }}" aria-label="Explore {{ $categoryName }}">
                             <div class="jewellery-category-image-wrap">
+                                <span class="jewellery-category-card-index" aria-hidden="true">{{ str_pad($categoryIndex + 1, 2, '0', STR_PAD_LEFT) }}</span>
                                 <img
                                     src="{{ $categoryImage }}"
                                     alt="{{ $categoryName }}"
-                                    loading="{{ $index < 4 ? 'eager' : 'lazy' }}"
+                                    loading="{{ $categoryIndex < 4 ? 'eager' : 'lazy' }}"
                                     decoding="async"
                                 >
+                                <span class="jewellery-category-image-caption" aria-hidden="true">J.J.H. Collection</span>
                             </div>
                             <div class="jewellery-category-card-content">
                                 <h3>{{ $categoryName }}</h3>
@@ -66,52 +93,121 @@
                     </article>
                 @endforeach
             </div>
-        </div>
-
-        <button class="jewellery-category-carousel-button jewellery-category-carousel-button-next" type="button" data-category-carousel-next aria-label="Next categories" aria-controls="jewellery-category-carousel">
-            <span aria-hidden="true">&rarr;</span>
-        </button>
+        @endforeach
     </div>
 </section>
 
 <script>
     (() => {
-        const section = document.querySelector('.jewellery-categories-section');
-        const carousel = document.querySelector('#jewellery-category-carousel');
-        const previousButton = document.querySelector('[data-category-carousel-prev]');
-        const nextButton = document.querySelector('[data-category-carousel-next]');
+        const section = document.querySelector('[data-category-shuffle-section]');
+        const rows = section ? [...section.querySelectorAll('[data-category-shuffle-row]')] : [];
+        const cards = section ? [...section.querySelectorAll('[data-category-shuffle-card]')] : [];
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        if (!section || !carousel) return;
+        if (!section || rows.length !== 2 || cards.length < 2) return;
 
-        const scrollCategories = (direction) => {
-            carousel.scrollBy({
-                left: direction * carousel.clientWidth * 0.82,
-                behavior: 'smooth'
+        const cardByOrder = new Map(cards.map((card) => [card.dataset.categoryOrder, card]));
+        const splitAt = Math.ceil(cards.length / 2);
+        let topRowOrder = cards.slice(0, splitAt).map((card) => card.dataset.categoryOrder);
+        let bottomRowOrder = cards.slice(splitAt).map((card) => card.dataset.categoryOrder);
+        let isAnimating = false;
+        let hasShuffled = false;
+
+        const renderRows = (nextTopRow, nextBottomRow) => {
+            if (isAnimating) return;
+
+            const previousPositions = new Map(
+                cards.map((card) => [card.dataset.categoryOrder, card.getBoundingClientRect()])
+            );
+
+            rows[0].replaceChildren(...nextTopRow.map((key) => cardByOrder.get(key)));
+            rows[1].replaceChildren(...nextBottomRow.map((key) => cardByOrder.get(key)));
+
+            cards.forEach((card) => {
+                const previous = previousPositions.get(card.dataset.categoryOrder);
+                const current = card.getBoundingClientRect();
+                const offsetX = previous.left - current.left;
+                const offsetY = previous.top - current.top;
+
+                if (Math.abs(offsetX) < 1 && Math.abs(offsetY) < 1) return;
+
+                card.style.transition = 'none';
+                card.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
             });
+
+            isAnimating = true;
+            section.classList.add('is-shuffling');
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    cards.forEach((card) => {
+                        card.style.transition = 'transform 700ms cubic-bezier(.22, .75, .2, 1)';
+                        card.style.transform = '';
+                    });
+                });
+            });
+
+            window.setTimeout(() => {
+                cards.forEach((card) => {
+                    card.style.transition = '';
+                    card.style.transform = '';
+                });
+                section.classList.remove('is-shuffling');
+                isAnimating = false;
+            }, 760);
         };
 
-        previousButton?.addEventListener('click', () => scrollCategories(-1));
-        nextButton?.addEventListener('click', () => scrollCategories(1));
+        const shuffleRows = () => {
+            const nextTopRow = [...topRowOrder];
+            const nextBottomRow = [...bottomRowOrder];
 
-        carousel.addEventListener('keydown', (event) => {
-            if (event.key === 'ArrowLeft') scrollCategories(-1);
-            if (event.key === 'ArrowRight') scrollCategories(1);
-        });
+            // Exchange the row groups while keeping the balanced 4-card composition.
+            const sharedRow = Math.min(nextTopRow.length, nextBottomRow.length);
+            const exchangedTopRow = nextBottomRow.slice(0, sharedRow);
+            const exchangedBottomRow = nextTopRow.slice(0, sharedRow);
 
-        if (!('IntersectionObserver' in window)) {
+            exchangedTopRow.push(...nextTopRow.slice(sharedRow));
+
+            topRowOrder = exchangedTopRow;
+            bottomRowOrder = exchangedBottomRow;
+            renderRows(exchangedTopRow, exchangedBottomRow);
+        };
+
+        const revealSection = () => {
             section.classList.add('is-visible');
-            return;
-        }
+        };
 
-        const observer = new IntersectionObserver((entries, currentObserver) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                    currentObserver.unobserve(entry.target);
+        const triggerAtViewportCenter = () => {
+            if (hasShuffled) return;
+
+            const sectionBounds = section.getBoundingClientRect();
+            const viewportCenter = window.innerHeight / 2;
+
+            if (sectionBounds.top <= viewportCenter && sectionBounds.bottom >= viewportCenter) {
+                hasShuffled = true;
+                revealSection();
+                window.removeEventListener('scroll', triggerAtViewportCenter);
+
+                if (!reducedMotion) {
+                    window.setTimeout(shuffleRows, 350);
                 }
-            });
-        }, { threshold: 0.12 });
+            }
+        };
 
-        observer.observe(section);
+        window.addEventListener('scroll', triggerAtViewportCenter, { passive: true });
+        triggerAtViewportCenter();
+
+        if ('IntersectionObserver' in window) {
+            const revealObserver = new IntersectionObserver(([entry], observer) => {
+                if (entry.isIntersecting) {
+                    revealSection();
+                    observer.unobserve(section);
+                }
+            }, { threshold: 0.12 });
+
+            revealObserver.observe(section);
+        } else {
+            revealSection();
+        }
     })();
 </script>
