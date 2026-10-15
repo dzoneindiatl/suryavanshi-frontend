@@ -41,7 +41,7 @@
                         <div class="influencers_img2"><img src="{{ asset('assets/image/image-with-text.webp') }}" alt=""></div>
                         <div class="influencers_img3"><img src="{{ asset('assets/image/image-with-text_small.webp') }}" alt=""></div>
                     </div>
-                    <a href="#" class="insta_sec_txt"><h3>Take me to instagram</h3><span class="insta_arrow"><i class="fa fa-instagram"></i></span></a>
+                    <a href="#" class="insta_sec_txt" aria-label="Take me to Instagram"><h3>Take me to Instagram</h3><span class="insta_arrow" aria-hidden="true"><i class="fa fa-instagram"></i></span></a>
                 </div>
             </div>
             <div class="col-md-4">
