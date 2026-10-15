@@ -180,20 +180,6 @@
                                     </a>
                                     <div class="header_mega_menu">
                                         <div class="header_mega_menu_inner">
-                                            <ul>
-                                                @foreach ($subCats as $subKey => $subCategory)
-                                                    @php
-                                                        $subCategoryId = data_get($subCategory, 'id');
-                                                        $subCategoryName = data_get($subCategory, 'name');
-                                                        $subCategorySlug = data_get($subCategory, 'slug');
-                                                    @endphp
-                                                    <li class="megamenu_lists {{ $subKey === 0 ? 'active' : '' }}"
-                                                        data-sub-id="{{ $subCategoryId }}">
-                                                        <a href="{{ route('category.show', ['path' => $categorySlug . '/' . $subCategorySlug]) }}"
-                                                            class="inner_menu_sub"> {{ $subCategoryName }} </a>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
                                             <div class="inner_submenu_vertical">
                                                 @foreach ($subCats as $subKey => $subCategory)
                                                     @php
