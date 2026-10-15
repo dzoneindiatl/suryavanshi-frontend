@@ -6448,3 +6448,102 @@ body:has(.sub_menu_main:hover) {
         transition: none;
     }
 }
+
+/* Full-width occasion cards without the former gift-finder panel */
+.middle_section_img {
+    padding: clamp(24px, 3vw, 44px) 0;
+}
+
+.middle_section_img_inner {
+    display: block;
+    padding: 0 clamp(18px, 4vw, 68px);
+}
+
+.middle_section_img_inner::before,
+.middle_section_img_inner::after {
+    width: calc(100% - clamp(36px, 8vw, 136px));
+}
+
+.occasion-cards-grid {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: grid;
+    gap: clamp(16px, 2vw, 28px);
+    grid-auto-rows: 300px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0 auto;
+    max-width: 1320px;
+}
+
+.occasion-card {
+    height: 300px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 12px;
+    transition: box-shadow 350ms ease, transform 350ms ease, background-color 350ms ease;
+}
+
+.occasion-card:hover {
+    background-color: #d6c6b2;
+    box-shadow: 0 16px 30px rgba(87, 59, 32, .13);
+    transform: translateY(-3px);
+}
+
+.occasion-card a {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.occasion-card img {
+    height: calc(100% - 38px);
+    object-fit: cover;
+    object-position: center;
+    transition: filter 350ms ease, transform 450ms cubic-bezier(.2, .65, .25, 1);
+}
+
+.occasion-card h2 {
+    flex: 0 0 auto;
+    font-size: clamp(15px, 1.25vw, 19px);
+    line-height: 1.2;
+    margin: 9px 0 0;
+    transition: color 350ms ease;
+}
+
+.occasion-card:hover img {
+    filter: saturate(1.06);
+    transform: scale(1.035);
+}
+
+.occasion-card:hover h2 {
+    color: #805b2f;
+}
+
+@media (max-width: 991px) {
+    .occasion-cards-grid {
+        grid-auto-rows: 270px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .occasion-card {
+        height: 270px;
+    }
+}
+
+@media (max-width: 575px) {
+    .middle_section_img_inner {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .occasion-cards-grid {
+        gap: 12px;
+        grid-auto-rows: 250px;
+        grid-template-columns: 1fr;
+    }
+
+    .occasion-card {
+        height: 250px;
+        padding: 9px;
+    }
+}
