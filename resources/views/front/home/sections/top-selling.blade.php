@@ -2,7 +2,7 @@
     $topSellingLabels = ['Best Seller', 'Treding', 'Best Seller', 'Treding', 'Best Seller', 'Best Seller'];
 @endphp
 
-<section class="top-selling-section caratlane_collection_main" aria-labelledby="top-selling-title">
+<section class="top-selling-section" aria-labelledby="top-selling-title">
     <div class="top-selling-heading">
         <span class="top-selling-eyebrow">Curated Favourites</span>
         <h2 id="top-selling-title">Top Selling Products</h2>
