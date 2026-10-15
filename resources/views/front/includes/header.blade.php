@@ -213,18 +213,8 @@
                                                                             $childCategory,
                                                                             'slug',
                                                                         );
-                                                                        $childCategoryImage = data_get(
-                                                                            $childCategory,
-                                                                            'thumbnail_image',
-                                                                        );
                                                                     @endphp
                                                                     <li>
-                                                                        <div class="mega_menu_img">
-                                                                            @if (!empty($childCategoryImage))
-                                                                                <img src="{{ asset($childCategoryImage) }}"
-                                                                                    alt="{{ $childCategoryName }}">
-                                                                            @endif
-                                                                        </div>
                                                                         <h4>
                                                                             <a
                                                                                 href="{{ route('category.show', ['path' => $categorySlug . '/' . $subCategorySlug . '/' . $childCategorySlug]) }}">
