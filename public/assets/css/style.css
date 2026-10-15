@@ -65,8 +65,14 @@ body {
     box-sizing: content-box;
     width: 100%;
 }
-.header_fixed .head_logo a .logo-icon-holder {
-    top: 0px;
+.header_fixed .head_logo a .logo-icon {
+    /* Center the reduced logo inside the visible lower navigation bar. */
+    transform: translateY(42px) scale(0.58, 0.58);
+    -webkit-transform: translateY(42px) scale(0.58, 0.58);
+    -ms-transform: translateY(42px) scale(0.58, 0.58);
+    transform-origin: center center;
+    left: -16px;
+    top: -15.5px;
 }
 .main_header_top {
     height: 118px;
