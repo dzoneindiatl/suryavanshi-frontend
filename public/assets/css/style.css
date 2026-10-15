@@ -5691,10 +5691,9 @@ body:has(.sub_menu_main:hover) {
 /* New Arrivals uses a native horizontal row so shared Slick styles cannot
    expand one product into a full-width slide. */
 .new-arrivals-carousel {
-    display: grid !important;
-    grid-auto-flow: column;
-    grid-auto-columns: calc((100% - 5 * 20px) / 6);
-    grid-template-rows: 1fr;
+    align-items: stretch;
+    display: flex !important;
+    flex-wrap: nowrap;
     gap: 20px;
     overflow-x: auto;
     overflow-y: visible;
@@ -5707,20 +5706,296 @@ body:has(.sub_menu_main:hover) {
 }
 
 .new-arrivals-carousel .new-arrival-card {
-    flex: none !important;
+    flex: 0 0 calc((100% - 5 * 20px) / 6) !important;
     min-width: 0;
-    width: 100% !important;
+    width: calc((100% - 5 * 20px) / 6) !important;
 }
 
 @media (max-width: 1199px) {
     .new-arrivals-carousel {
-        grid-auto-columns: calc((100% - 3 * 20px) / 4);
+        flex-wrap: nowrap;
+    }
+
+    .new-arrivals-carousel .new-arrival-card {
+        flex-basis: calc((100% - 3 * 20px) / 4) !important;
+        width: calc((100% - 3 * 20px) / 4) !important;
     }
 }
 
 @media (max-width: 767px) {
     .new-arrivals-carousel {
-        grid-auto-columns: calc((100% - 12px) / 2);
         gap: 12px;
+    }
+
+    .new-arrivals-carousel .new-arrival-card {
+        flex-basis: calc((100% - 12px) / 2) !important;
+        width: calc((100% - 12px) / 2) !important;
+    }
+}
+
+/* Top Selling stays independent from the shared Slick carousel styles. */
+.top-selling-section {
+    background: var(--arrivals-ivory, #faf8f4);
+    padding: 72px 0 76px;
+}
+
+.top-selling-heading {
+    margin: 0 auto 36px;
+    max-width: 1600px;
+    padding: 0 30px;
+}
+
+.top-selling-eyebrow {
+    color: var(--arrivals-gold, #c6a15b);
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .24em;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+}
+
+.top-selling-heading h2 {
+    color: var(--arrivals-charcoal, #252321);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(30px, 3.2vw, 48px);
+    font-weight: 400;
+    line-height: 1.12;
+    margin: 0 0 16px;
+}
+
+.top-selling-accent {
+    background: var(--arrivals-gold, #c6a15b);
+    display: block;
+    height: 1px;
+    margin-bottom: 17px;
+    position: relative;
+    width: 48px;
+}
+
+.top-selling-accent::after {
+    background: var(--arrivals-gold, #c6a15b);
+    border-radius: 50%;
+    content: '';
+    height: 5px;
+    left: 50%;
+    position: absolute;
+    top: -2px;
+    transform: translateX(-50%);
+    width: 5px;
+}
+
+.top-selling-heading p {
+    color: #716b65;
+    font-size: 14px;
+    letter-spacing: .015em;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 560px;
+}
+
+.top-selling-carousel {
+    align-items: stretch;
+    box-sizing: border-box;
+    display: flex !important;
+    flex-wrap: nowrap;
+    gap: 20px;
+    margin: 0 auto;
+    max-width: 1600px;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding: 0 30px 8px;
+    scrollbar-width: none;
+}
+
+.top-selling-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.top-selling-card {
+    background: #fff;
+    border: 1px solid rgba(198, 161, 91, .24);
+    flex: 0 0 calc((100% - 5 * 20px) / 6) !important;
+    min-width: 0;
+    overflow: hidden;
+    transition: border-color 350ms ease, box-shadow 350ms ease, transform 350ms ease;
+    width: calc((100% - 5 * 20px) / 6) !important;
+}
+
+.top-selling-card:hover,
+.top-selling-card:focus-within {
+    border-color: rgba(198, 161, 91, .78);
+    box-shadow: 0 18px 32px rgba(37, 35, 33, .1);
+    transform: translateY(-4px);
+}
+
+.top-selling-card-media {
+    aspect-ratio: 1 / 1;
+    background: var(--arrivals-champagne, #f2eadf);
+    overflow: hidden;
+    position: relative;
+}
+
+.top-selling-card-media::after {
+    border: 1px solid rgba(255, 255, 255, .74);
+    content: '';
+    inset: 8px;
+    pointer-events: none;
+    position: absolute;
+    transition: border-color 350ms ease, inset 350ms ease;
+}
+
+.top-selling-card-media img {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 500ms cubic-bezier(.2, .65, .25, 1);
+    width: 100%;
+}
+
+.top-selling-card:hover .top-selling-card-media::after,
+.top-selling-card:focus-within .top-selling-card-media::after {
+    border-color: rgba(198, 161, 91, .8);
+    inset: 6px;
+}
+
+.top-selling-card:hover .top-selling-card-media img,
+.top-selling-card:focus-within .top-selling-card-media img {
+    transform: scale(1.045);
+}
+
+.top-selling-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    position: absolute;
+    right: 14px;
+    top: 14px;
+    z-index: 1;
+}
+
+.top-selling-card-actions a {
+    align-items: center;
+    background: rgba(255, 255, 255, .94);
+    border: 1px solid rgba(198, 161, 91, .35);
+    border-radius: 50%;
+    color: var(--arrivals-charcoal, #252321);
+    display: inline-flex;
+    font-size: 13px;
+    height: 32px;
+    justify-content: center;
+    text-decoration: none;
+    transition: background-color 250ms ease, border-color 250ms ease, color 250ms ease;
+    width: 32px;
+}
+
+.top-selling-card-actions a:hover,
+.top-selling-card-actions a:focus-visible {
+    background: var(--arrivals-gold, #c6a15b);
+    border-color: var(--arrivals-gold, #c6a15b);
+    color: #fff;
+}
+
+.top-selling-badge {
+    bottom: 14px;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 600;
+    left: 14px;
+    letter-spacing: .13em;
+    line-height: 1;
+    padding: 9px 10px;
+    position: absolute;
+    text-transform: uppercase;
+    z-index: 1;
+}
+
+.top-selling-badge.is-best-seller {
+    background: var(--arrivals-charcoal, #252321);
+}
+
+.top-selling-badge.is-trending {
+    background: var(--arrivals-gold, #c6a15b);
+}
+
+.top-selling-card-content {
+    padding: 16px 16px 18px;
+}
+
+.top-selling-card-content .price {
+    margin-bottom: 10px;
+}
+
+.top-selling-card-content .price span {
+    color: var(--arrivals-charcoal, #252321);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .03em;
+}
+
+.top-selling-card-content h3 {
+    color: var(--arrivals-charcoal, #252321);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(16px, 1.25vw, 20px);
+    font-weight: 400;
+    line-height: 1.3;
+    margin: 0;
+    transition: color 250ms ease;
+}
+
+.top-selling-card:hover .top-selling-card-content h3,
+.top-selling-card:focus-within .top-selling-card-content h3 {
+    color: var(--arrivals-gold, #c6a15b);
+}
+
+@media (max-width: 1199px) {
+    .top-selling-carousel {
+        flex-wrap: nowrap;
+    }
+
+    .top-selling-card {
+        flex-basis: calc((100% - 3 * 20px) / 4) !important;
+        width: calc((100% - 3 * 20px) / 4) !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .top-selling-section {
+        padding: 54px 0 58px;
+    }
+
+    .top-selling-heading {
+        margin-bottom: 28px;
+        padding: 0 18px;
+    }
+
+    .top-selling-heading p {
+        font-size: 13px;
+    }
+
+    .top-selling-carousel {
+        gap: 12px;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .top-selling-card {
+        flex-basis: calc((100% - 12px) / 2) !important;
+        width: calc((100% - 12px) / 2) !important;
+    }
+
+    .top-selling-card-actions {
+        right: 10px;
+        top: 10px;
+    }
+
+    .top-selling-badge {
+        bottom: 10px;
+        left: 10px;
+        padding: 8px;
+    }
+
+    .top-selling-card-content {
+        padding: 14px 12px 16px;
     }
 }
