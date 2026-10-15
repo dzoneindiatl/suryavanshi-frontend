@@ -4611,3 +4611,110 @@ button.btn_drop_sorting {
         gap: 22px 16px;
     }
 }
+
+/* Minimal product grid */
+.grid_pattren_img {
+    margin: 0;
+    padding: clamp(34px, 5vw, 72px) 0 clamp(52px, 7vw, 88px);
+    background: #fff;
+}
+
+.grid_pattren_img_inner {
+    width: min(100%, 1920px);
+    margin: 0 auto;
+    padding: 0 clamp(18px, 3vw, 56px);
+    gap: clamp(18px, 2vw, 34px) clamp(12px, 1.55vw, 30px);
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.grid_pattren_img_inner_box {
+    display: contents;
+}
+
+.grid_img_item,
+.grid_pattren_img_inner_box .grid_img_item:nth-child(odd),
+.grid_pattren_img_inner_box .grid_img_item:nth-child(even),
+.grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(odd),
+.grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(even) {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    transform: none;
+}
+
+.grid_img_item a {
+    display: block;
+    width: 100%;
+    color: inherit;
+}
+
+.grid_image_box,
+.grid_pattren_img_inner_box .grid_img_item:nth-child(even) .grid_image_box {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border: 1px solid #e8e1d8;
+    border-radius: 3px;
+    background: #f7f5f1;
+    box-shadow: none;
+    transition: border-color 220ms ease, background-color 220ms ease,
+        transform 220ms ease;
+}
+
+.grid_image_box img {
+    width: 86%;
+    max-width: 180px;
+    height: 86%;
+    object-fit: contain;
+    transition: transform 220ms ease;
+}
+
+.grid_img_item:hover .grid_image_box {
+    border-color: #c9b49c;
+    background: #faf9f7;
+    transform: translateY(-4px);
+}
+
+.grid_img_item:hover .grid_image_box img {
+    transform: scale(1.03);
+}
+
+.grid_img_item h3 {
+    margin: 13px 0 0;
+    color: #53483e;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    line-height: 1.4;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.grid_image_box h3 {
+    display: none;
+}
+
+@media (max-width: 1199px) {
+    .grid_pattren_img_inner {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .grid_pattren_img {
+        padding: 30px 0 52px;
+    }
+
+    .grid_pattren_img_inner {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 28px 12px;
+        padding: 0 16px;
+    }
+
+    .grid_img_item h3 {
+        margin-top: 10px;
+        font-size: 10px;
+        letter-spacing: 0.1em;
+    }
+}
