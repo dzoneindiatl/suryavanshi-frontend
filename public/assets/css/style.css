@@ -2931,21 +2931,7 @@ ul.footer_social_links li.icon_twitter svg {
     border: none;
     display: inline-block;
     border-radius: 100px;
-    animation: up-down linear 4s;
-    animation-iteration-count: infinite;
-    transform-origin: 50% 50%;
-    -webkit-animation: up-down linear 4s;
-    -webkit-animation-iteration-count: infinite;
-    -webkit-transform-origin: 50% 50%;
-    -moz-animation: up-down linear 4s;
-    -moz-animation-iteration-count: infinite;
-    -moz-transform-origin: 50% 50%;
-    -o-animation: up-down linear 4s;
-    -o-animation-iteration-count: infinite;
-    -o-transform-origin: 50% 50%;
-    -ms-animation: up-down linear 4s;
-    -ms-animation-iteration-count: infinite;
-    -ms-transform-origin: 50% 50%;
+
 }
 .back_to_top_btn:hover {
     background-color: #9b6322;
@@ -6218,5 +6204,43 @@ body:has(.sub_menu_main:hover) {
     .bottom_sec_last {
         padding-top: 58px;
         padding-bottom: 58px;
+    }
+}
+
+/* Subtle motion for the floating Back to Top control. */
+.back_to_top_btn {
+    animation: backToTopBreath 4.5s ease-in-out infinite;
+    box-shadow: 0 6px 16px rgba(186, 131, 66, .18);
+    transition: background-color 300ms ease, box-shadow 300ms ease, transform 300ms ease;
+}
+
+.back_to_top_btn:hover,
+.back_to_top_btn:focus-visible {
+    animation-play-state: paused;
+    background-color: #9b6322;
+    box-shadow: 0 10px 22px rgba(186, 131, 66, .28);
+    transform: translateY(-3px);
+}
+
+.back_to_top_btn:focus-visible {
+    outline: 2px solid #c6a15b;
+    outline-offset: 4px;
+}
+
+@keyframes backToTopBreath {
+    0%,
+    100% {
+        box-shadow: 0 6px 16px rgba(186, 131, 66, .18);
+    }
+
+    50% {
+        box-shadow: 0 8px 20px rgba(186, 131, 66, .28);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .back_to_top_btn {
+        animation: none;
+        transition: none;
     }
 }
