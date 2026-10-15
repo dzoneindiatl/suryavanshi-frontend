@@ -5358,3 +5358,369 @@ body:has(.sub_menu_main:hover) {
         transition: none;
     }
 }
+
+/* Premium new arrivals */
+.new-arrivals-section {
+    --arrivals-ivory: #faf8f4;
+    --arrivals-champagne: #f2eadf;
+    --arrivals-gold: #c6a15b;
+    --arrivals-charcoal: #252321;
+    --arrivals-muted: #82786d;
+    background: var(--arrivals-ivory);
+    color: var(--arrivals-charcoal);
+    padding: clamp(48px, 5vw, 78px) clamp(18px, 4vw, 68px) clamp(54px, 6vw, 88px);
+}
+
+.new-arrivals-heading {
+    margin: 0 auto clamp(28px, 3.5vw, 46px);
+    max-width: 1600px;
+}
+
+.new-arrivals-eyebrow {
+    color: var(--arrivals-gold);
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .23em;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.new-arrivals-heading h2 {
+    color: var(--arrivals-charcoal);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(30px, 3.4vw, 50px);
+    font-weight: 400;
+    letter-spacing: -.025em;
+    line-height: 1.1;
+    margin: 0;
+}
+
+.new-arrivals-accent {
+    background: var(--arrivals-gold);
+    display: block;
+    height: 1px;
+    margin: 20px 0 18px;
+    position: relative;
+    width: 52px;
+}
+
+.new-arrivals-accent::after {
+    background: var(--arrivals-gold);
+    border-radius: 50%;
+    content: '';
+    height: 5px;
+    left: 50%;
+    position: absolute;
+    top: -2px;
+    transform: translateX(-50%);
+    width: 5px;
+}
+
+.new-arrivals-heading p {
+    color: #716b65;
+    font-size: 14px;
+    letter-spacing: .015em;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 560px;
+}
+
+.new-arrivals-carousel {
+    margin: 0 auto;
+    max-width: 1600px;
+    padding: 0 0 8px;
+}
+
+.new-arrivals-carousel .slick-list {
+    margin: 0 -10px;
+    overflow: hidden;
+}
+
+.new-arrivals-carousel .slick-track {
+    display: flex;
+}
+
+.new-arrivals-carousel .slick-slide {
+    height: auto;
+    padding: 0 10px;
+}
+
+.new-arrival-card {
+    background: transparent;
+    box-shadow: none;
+    height: 100%;
+    margin: 0;
+    transition: transform 350ms ease;
+}
+
+.new-arrival-card-media {
+    aspect-ratio: 1 / 1;
+    background: var(--arrivals-champagne);
+    border: 1px solid rgba(198, 161, 91, .25);
+    overflow: hidden;
+    position: relative;
+}
+
+.new-arrival-card-media::after {
+    border: 1px solid rgba(255, 255, 255, .72);
+    content: '';
+    inset: 8px;
+    pointer-events: none;
+    position: absolute;
+    transition: border-color 350ms ease, inset 350ms ease;
+}
+
+.new-arrival-card-media img {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 500ms cubic-bezier(.2, .65, .25, 1);
+    width: 100%;
+}
+
+.new-arrival-badge {
+    background: var(--arrivals-charcoal);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 600;
+    left: 14px;
+    letter-spacing: .13em;
+    line-height: 1;
+    padding: 9px 10px;
+    position: absolute;
+    text-transform: uppercase;
+    top: 14px;
+    z-index: 1;
+}
+
+.new-arrival-actions {
+    display: flex;
+    gap: 7px;
+    position: absolute;
+    right: 14px;
+    top: 14px;
+    z-index: 1;
+}
+
+.new-arrival-actions a {
+    align-items: center;
+    background: rgba(255, 255, 255, .94);
+    border: 1px solid rgba(198, 161, 91, .35);
+    border-radius: 50%;
+    color: var(--arrivals-charcoal);
+    display: inline-flex;
+    font-size: 13px;
+    height: 32px;
+    justify-content: center;
+    text-decoration: none;
+    transition: background-color 250ms ease, border-color 250ms ease, color 250ms ease;
+    width: 32px;
+}
+
+.new-arrival-actions a:hover,
+.new-arrival-actions a:focus-visible {
+    background: var(--arrivals-gold);
+    border-color: var(--arrivals-gold);
+    color: #fff;
+}
+
+.new-arrival-card-content {
+    border-bottom: 1px solid rgba(198, 161, 91, .3);
+    padding: 17px 2px 19px;
+}
+
+.new-arrival-card-category {
+    color: var(--arrivals-gold);
+    display: block;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .16em;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.new-arrival-card-content h3 {
+    color: var(--arrivals-charcoal);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(16px, 1.25vw, 20px);
+    font-weight: 400;
+    line-height: 1.3;
+    margin: 0 0 13px;
+}
+
+.new-arrival-card-footer {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.new-arrival-price {
+    color: var(--arrivals-charcoal);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .03em;
+}
+
+.new-arrival-arrow {
+    color: var(--arrivals-gold);
+    font-size: 18px;
+    line-height: 1;
+    transition: transform 300ms ease;
+}
+
+.new-arrival-card:hover,
+.new-arrival-card:focus-within {
+    transform: translateY(-4px);
+}
+
+.new-arrival-card:hover .new-arrival-card-media::after,
+.new-arrival-card:focus-within .new-arrival-card-media::after {
+    border-color: rgba(198, 161, 91, .75);
+    inset: 6px;
+}
+
+.new-arrival-card:hover .new-arrival-card-media img,
+.new-arrival-card:focus-within .new-arrival-card-media img {
+    transform: scale(1.045);
+}
+
+.new-arrival-card:hover .new-arrival-arrow,
+.new-arrival-card:focus-within .new-arrival-arrow {
+    transform: translateX(5px);
+}
+
+@media (max-width: 767px) {
+    .new-arrivals-heading p {
+        font-size: 13px;
+    }
+
+    .new-arrivals-carousel .slick-list {
+        margin: 0 -6px;
+    }
+
+    .new-arrivals-carousel .slick-slide {
+        padding: 0 6px;
+    }
+
+    .new-arrival-card-content {
+        padding-top: 14px;
+    }
+
+    .new-arrival-badge {
+        font-size: 8px;
+        left: 10px;
+        padding: 8px;
+        top: 10px;
+    }
+
+    .new-arrival-actions {
+        right: 10px;
+        top: 10px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .new-arrival-card,
+    .new-arrival-card-media img,
+    .new-arrival-card-media::after,
+    .new-arrival-arrow {
+        transition: none;
+    }
+}
+
+/* Keep New Arrivals in one horizontal row before and after Slick initializes. */
+.new-arrivals-carousel:not(.slick-initialized) {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.new-arrivals-carousel:not(.slick-initialized)::-webkit-scrollbar {
+    display: none;
+}
+
+.new-arrivals-carousel:not(.slick-initialized) .new-arrival-card {
+    flex: 0 0 calc((100% - 5 * 20px) / 6);
+    min-width: 0;
+    width: calc((100% - 5 * 20px) / 6);
+}
+
+.new-arrivals-carousel.slick-initialized {
+    display: block;
+    overflow: hidden;
+}
+
+.new-arrivals-carousel.slick-initialized .slick-slide {
+    box-sizing: border-box;
+    flex: 0 0 20% !important;
+    width: 20% !important;
+}
+
+@media (max-width: 1199px) {
+    .new-arrivals-carousel:not(.slick-initialized) .new-arrival-card {
+        flex-basis: calc((100% - 3 * 20px) / 4);
+        width: calc((100% - 3 * 20px) / 4);
+    }
+
+    .new-arrivals-carousel.slick-initialized .slick-slide {
+        flex-basis: 33.333333% !important;
+        width: 33.333333% !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .new-arrivals-carousel:not(.slick-initialized) {
+        gap: 12px;
+    }
+
+    .new-arrivals-carousel:not(.slick-initialized) .new-arrival-card {
+        flex-basis: calc((100% - 12px) / 2);
+        width: calc((100% - 12px) / 2);
+    }
+
+    .new-arrivals-carousel.slick-initialized .slick-slide {
+        flex-basis: 100% !important;
+        width: 100% !important;
+    }
+}
+
+/* New Arrivals uses a native horizontal row so shared Slick styles cannot
+   expand one product into a full-width slide. */
+.new-arrivals-carousel {
+    display: grid !important;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 5 * 20px) / 6);
+    grid-template-rows: 1fr;
+    gap: 20px;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+}
+
+.new-arrivals-carousel::-webkit-scrollbar {
+    display: none;
+}
+
+.new-arrivals-carousel .new-arrival-card {
+    flex: none !important;
+    min-width: 0;
+    width: 100% !important;
+}
+
+@media (max-width: 1199px) {
+    .new-arrivals-carousel {
+        grid-auto-columns: calc((100% - 3 * 20px) / 4);
+    }
+}
+
+@media (max-width: 767px) {
+    .new-arrivals-carousel {
+        grid-auto-columns: calc((100% - 12px) / 2);
+        gap: 12px;
+    }
+}

@@ -1,29 +1,45 @@
 @php
     $newArrivalProducts = array_fill(0, 6, [
         'image' => 'collection_img1.webp',
-        'price' => '₹75,317',
+        'price' => '75,317',
         'name' => 'Modern Gleam Diamond Bangle',
+        'category' => 'Diamond Bangles',
     ]);
 @endphp
 
-<div class="new_collection_main">
-    <h2>New Arrival Products</h2>
-    <div class="new_collection_main_inner">
+<section class="new-arrivals-section new_collection_main" aria-labelledby="new-arrivals-title">
+    <div class="new-arrivals-heading">
+        <span class="new-arrivals-eyebrow">New Arrivals</span>
+        <h2 id="new-arrivals-title">Meet Your Next Favourite</h2>
+        <span class="new-arrivals-accent" aria-hidden="true"></span>
+        <p>Fresh silhouettes and timeless sparkle, selected for the moments you are about to make memorable.</p>
+    </div>
+
+        <div class="new-arrivals-carousel">
         @foreach ($newArrivalProducts as $product)
-            <div class="collection_inner_box">
-                <div class="collection_inner_box_img">
-                    <img src="{{ asset('assets/image/' . $product['image']) }}" alt="img">
-                    <div class="collection_inner_box_icon">
-                        <a href="#"><i class="fa fa-heart-o"></i></a>
-                        <a href="#"><i class="fa fa-eye"></i></a>
+            <article class="new-arrival-card">
+                <div class="new-arrival-card-media">
+                    <img
+                        src="{{ asset('assets/image/' . $product['image']) }}"
+                        alt="{{ $product['name'] }}"
+                        loading="lazy"
+                        decoding="async"
+                    >
+                    {{-- <span class="new-arrival-badge">New Arrival</span> --}}
+                    <div class="new-arrival-actions">
+                        <a href="#" aria-label="Add {{ $product['name'] }} to wishlist"><i class="fa fa-heart-o" aria-hidden="true"></i></a>
+                        <a href="#" aria-label="View {{ $product['name'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
                     </div>
-                    <div class="collection_arrival_seller"><a href="#">New Arrival</a></div>
                 </div>
-                <div class="collection_inner_box_txt">
-                    <div class="price"><span>{{ $product['price'] }}</span></div>
-                    <h5>{{ $product['name'] }}</h5>
+                <div class="new-arrival-card-content">
+                    <span class="new-arrival-card-category">{{ $product['category'] }}</span>
+                    <h3>{{ $product['name'] }}</h3>
+                    <div class="new-arrival-card-footer">
+                        <span class="new-arrival-price">&#8377;{{ $product['price'] }}</span>
+                        <span class="new-arrival-arrow" aria-hidden="true">&rarr;</span>
+                    </div>
                 </div>
-            </div>
+            </article>
         @endforeach
     </div>
-</div>
+</section>
