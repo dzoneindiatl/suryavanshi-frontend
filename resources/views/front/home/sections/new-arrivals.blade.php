@@ -15,7 +15,12 @@
         <p>Fresh silhouettes and timeless sparkle, selected for the moments you are about to make memorable.</p>
     </div>
 
-        <div class="new-arrivals-carousel">
+    <div class="product-carousel-shell new-arrivals-carousel-shell">
+        <button class="product-carousel-button product-carousel-button-prev" type="button" data-carousel-prev="new-arrivals-carousel" aria-label="Show previous new arrivals" onclick="this.nextElementSibling.scrollBy({ left: -(this.nextElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.nextElementSibling).gap) || 0)), behavior: 'auto' })">
+            <span aria-hidden="true">&larr;</span>
+        </button>
+
+        <div id="new-arrivals-carousel" class="new-arrivals-carousel" data-product-carousel>
         @foreach ($newArrivalProducts as $product)
             <article class="new-arrival-card">
                 <div class="new-arrival-card-media">
@@ -41,5 +46,10 @@
                 </div>
             </article>
         @endforeach
+        </div>
+
+        <button class="product-carousel-button product-carousel-button-next" type="button" data-carousel-next="new-arrivals-carousel" aria-label="Show next new arrivals" onclick="this.previousElementSibling.scrollBy({ left: this.previousElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.previousElementSibling).gap) || 0), behavior: 'auto' })">
+            <span aria-hidden="true">&rarr;</span>
+        </button>
     </div>
 </section>

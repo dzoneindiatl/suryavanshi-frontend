@@ -4206,6 +4206,67 @@ button.btn_drop_sorting {
     }
 }
 
+/* Arrow controls for the native horizontal product carousels. */
+.product-carousel-shell {
+    align-items: center;
+    display: flex;
+    gap: clamp(10px, 1.5vw, 24px);
+    margin: 0 auto;
+    max-width: var(--homepage-content-max, 1600px);
+}
+
+.product-carousel-shell .new-arrivals-carousel,
+.product-carousel-shell .top-selling-carousel {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+}
+
+.product-carousel-button {
+    align-items: center;
+    background: #fff;
+    border: 1px solid rgba(198, 161, 91, .55);
+    border-radius: 50%;
+    color: #252321;
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 40px;
+    font-size: 20px;
+    height: 40px;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, transform 300ms ease;
+    width: 40px;
+}
+
+.product-carousel-button:hover,
+.product-carousel-button:focus-visible {
+    background: #c6a15b;
+    border-color: #c6a15b;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.product-carousel-button:focus-visible {
+    outline: 2px solid #c6a15b;
+    outline-offset: 4px;
+}
+
+@media (max-width: 767px) {
+    .product-carousel-shell {
+        gap: 8px;
+    }
+
+    .product-carousel-button {
+        flex-basis: 32px;
+        font-size: 16px;
+        height: 32px;
+        width: 32px;
+    }
+}
+
 @media (min-width: 768px) and (max-width: 991px) {
     .carousel-item img {
         height: 400px;
@@ -6005,13 +6066,7 @@ body:has(.sub_menu_main:hover) {
     --homepage-content-max: 1600px;
 }
 
-.jewellery-categories-section,
-.featured-collections-section,
-.new-arrivals-section,
-.top-selling-section {
-    padding-left: var(--homepage-gutter);
-    padding-right: var(--homepage-gutter);
-}
+
 
 .jewellery-categories-heading,
 .jewellery-category-carousel-shell,
@@ -6024,21 +6079,7 @@ body:has(.sub_menu_main:hover) {
     max-width: var(--homepage-content-max);
 }
 
-.middle_sell_item_img {
-    padding-left: var(--homepage-gutter);
-    padding-right: var(--homepage-gutter);
-}
 
-.wrap_inner_sec {
-    padding-left: var(--homepage-gutter);
-    padding-right: var(--homepage-gutter);
-}
-
-.middle_section_img_inner,
-.best_seller_product_inner {
-    padding-left: var(--homepage-gutter);
-    padding-right: var(--homepage-gutter);
-}
 
 .shop_by_budget_main_inner,
 .shop_look_inner {
@@ -6048,16 +6089,12 @@ body:has(.sub_menu_main:hover) {
     width: min(var(--homepage-content-max), calc(100% - (2 * var(--homepage-gutter))));
 }
 
-.custom_testimonial_main {
-    padding-left: var(--homepage-gutter);
-    padding-right: var(--homepage-gutter);
-}
+
 
 .love_main {
     box-sizing: border-box;
     max-width: none;
-    padding-left: var(--homepage-gutter);
-    padding-right: var(--homepage-gutter);
+
 }
 
 .influencers_main > .container,

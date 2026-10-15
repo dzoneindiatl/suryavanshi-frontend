@@ -10,7 +10,12 @@
         <p>Discover the pieces customers are choosing to wear, gift, and treasure.</p>
     </div>
 
-    <div class="top-selling-carousel">
+    <div class="product-carousel-shell top-selling-carousel-shell">
+        <button class="product-carousel-button product-carousel-button-prev" type="button" data-carousel-prev="top-selling-carousel" aria-label="Show previous top selling products" onclick="this.nextElementSibling.scrollBy({ left: -(this.nextElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.nextElementSibling).gap) || 0)), behavior: 'auto' })">
+            <span aria-hidden="true">&larr;</span>
+        </button>
+
+        <div id="top-selling-carousel" class="top-selling-carousel" data-product-carousel>
         @foreach ($topSellingLabels as $index => $label)
             <article class="top-selling-card collection_inner_box">
                 <div class="top-selling-card-media collection_inner_box_img">
@@ -27,5 +32,10 @@
                 </div>
             </article>
         @endforeach
+        </div>
+
+        <button class="product-carousel-button product-carousel-button-next" type="button" data-carousel-next="top-selling-carousel" aria-label="Show next top selling products" onclick="this.previousElementSibling.scrollBy({ left: this.previousElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.previousElementSibling).gap) || 0), behavior: 'auto' })">
+            <span aria-hidden="true">&rarr;</span>
+        </button>
     </div>
 </section>
