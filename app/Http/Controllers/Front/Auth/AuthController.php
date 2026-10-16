@@ -139,6 +139,10 @@ class AuthController extends Controller
                 $this->cartItems($cartItems);
             }
         }
+        if (session()->has('buy_now')) {
+            return redirect()->route('front-product.checkoutBag')
+                ->with('success', trans('Login successfully'));
+        }
         return Redirect::route('user.dashboard')->with('success', trans('Login successfully'));
     }
 

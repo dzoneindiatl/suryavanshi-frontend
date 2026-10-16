@@ -599,21 +599,9 @@ class DashboardController extends Controller
     public function wishlist(Request $request)
     {
         try {
-            if ($request->ajax()) {
-                $count = Wishlist::where('user_id', auth()->guard('customer')->user()->id)->count();
-                $wishlistData = Wishlist::where('user_id', auth()->guard('customer')->user()->id)
-                    ->get();
-                $html = view('front.modules.dashboard.wishlist', compact('wishlistData'))->render();
-                return response()->json([
-                    'status' => true,
-                    'wishlistData' => $html,
-                    'data' => $count
-                ]);
-            } else {
-                  $wishlistData = Wishlist::where('user_id', auth()->guard('customer')->user()->id)
-                    ->get();
-                 return view('front.modules.dashboard.wishlist', compact('wishlistData'));
-            }
+            $user = User::where('id', Auth::guard('customer')->user()->id)->first();
+           $wishlistData = Wishlist::with('getProduct')->where('user_id', auth()->guard('customer')->user()->id)->get();
+            return view('front.dashboard.wishlist', compact('wishlistData','user'));
         } catch (Exception $e) {
             Log::error($e);
             return redirect()->back()->with(['error' => 'Somethig went wrong', 'error_msg' => $e->getMessage()]);

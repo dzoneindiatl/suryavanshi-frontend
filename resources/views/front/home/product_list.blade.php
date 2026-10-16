@@ -13,7 +13,7 @@
 		</div>
 	</div>
 </div>
-
+<div id="flash-msg" class="alert alert-info d-none"></div>
 <div class="banner_top_main">
 	<div class="container">
 		<div class="banner_top_inner">
@@ -132,50 +132,52 @@
 			<div class="col-md-9">
 				<div class="row">
                     @if(count($results) > 0)
-                        @foreach($results as $result)    
-                            <div class="col-md-4">
-                                <div class="collection_inner_box">
-                                    <div class="collection_inner_box_img">
-                                        <div class="shop_img_hover">
-                                            <img class="normal_img_shop" src="{{ $result->images['first'] }}" alt="img">
-                                            <img class="hover_img_shop" src="{{ $result->images['second'] }}" alt="img">
-                                        </div>
-                                        <div class="collection_inner_box_icon addtoWishList">
-                                            <a href="#">
-                                                <i class="fa fa-heart-o"></i>
-                                            </a>
-                                        </div>
+                        @foreach($results as $result)
+							<div class="col-md-4">
+								<div class="collection_inner_box">
+									<div class="collection_inner_box_img">
+										<div class="shop_img_hover">
+											<img class="normal_img_shop" src="{{ $result->images['first'] }}" alt="img">
+											<img class="hover_img_shop" src="{{ $result->images['second'] }}" alt="img">
+										</div>
+										<div class="collection_inner_box_icon addtoWishList" data-product-id="{{ $result->id }}">
+											<a href="#"><i class="fa fa-heart-o"></i></a>
+										</div>
 										@if($result->best_seller == 1)
 											<div class="collection_best_seller">
-												<a href="@if(!empty($result->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $result->slug . '.html', 'sku' => $result->sku]) }}@endif">  Best Seller  </a>
+												<a href="@if(!empty($result->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $result->slug . '.html', 'sku' => $result->sku]) }}@endif">Best Seller</a>
 											</div>
 										@endif
-                                        	<a href="@if(!empty($result->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $result->slug . '.html', 'sku' => $result->sku]) }}@endif" class="btn_cart_add">Add To Cart</a>
-                                    </div>
-                                    <div class="collection_inner_box_txt">
-                                        <div class="price">
-                                            <span class="price_new">₹ {{ $result->buying_price }}</span>
-                                            <span class="price_new_cut">₹ {{ $result->selling_price }}</span>
-                                            <div class="offer_txt1">
-                                            @php 
-                                                $discount ="";
-                                                if(!empty($result->discount) && !empty($result->discount_type)){
-                                                    if($result->discount_type == 'percentage'){
-                                                        $discount = $result->discount.'% OFF'; 
-                                                    }
-                                                    else{
-                                                        $discount ='₹'.$result->discount. ' OFF'; 
-                                                    }
-                                                    
-                                                }
-                                            @endphp    
-                                                {{ $discount }}</div>
-                                        </div>
-                                        <h5>{{ $result->name }}</h5>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach  
+										@if($result->qty >= 1)
+											<a href="@if(!empty($result->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $result->slug . '.html', 'sku' => $result->sku]) }}@endif" class="btn_cart_add">Add To Cart</a>
+										@endif	
+									</div>
+									<div class="collection_inner_box_txt">
+										@if($result->qty < 1)
+											<p class="text-danger fw-bold" style="padding-top:10px; ">  Sorry This Product is Out Of Stock !</p>
+										@endif 
+										<div class="price">
+											<span class="price_new currency-price" data-price-inr="{{ $result->selling_price }}">₹ {{ number_format($result->selling_price,  2) }}</span>
+											<span class="price_new_cut currency-price" data-price-inr="{{ $result->buying_price }}">₹ {{ number_format($result->buying_price, 2) }}</span>
+											<div class="offer_txt1">
+												@php
+													$discount = "";
+													if (!empty($result->discount) && !empty($result->discount_type)) {
+														if ($result->discount_type == 'percentage') {
+															$discount = $result->discount . '% OFF';
+														} else {
+															$discount = '₹' . $result->discount . ' OFF';
+														}
+													}
+												@endphp
+												{{ $discount }}
+											</div>
+										</div>
+										<h5>{{ $result->name }}</h5>
+									</div>
+								</div>
+							</div>
+						@endforeach  
 					@else  
                         <div class="col-md-4">
                             <h4>NO Product Found</h4>    
@@ -191,5 +193,48 @@
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/8.4.5/swiper-bundle.min.js"></script>
+@include('front.includes.script')
+{{-- <script>
+	isLoggedIn = "{{ Auth::guard('customer')->check() ? true : false }}";
+</script> --}}
+{{-- <script>
+	$(document).off('click', '.addtoWishList').on('click', '.addtoWishList', function () {
+        const productId = this.getAttribute('data-product-id');
+        const heartIcon = this.querySelector('i');
+        if (!isLoggedIn) {
+            window.location.href = '/login';
+            return;
+        }
+        
+        fetch(addToWish, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ product_id: productId })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Something went wrong");
+            return response.json();
+        })
+        .then(data => { 
+            if (data.status === 'added') {
+                showFlashMessage("Product added in wishlist");
+                heartIcon.classList.remove('fa-regular');
+                heartIcon.classList.add('fa-solid');
+            } else if (data.status === 'removed') {
+                showFlashMessage("Product remove in wishlist", "warning");
+                heartIcon.classList.remove('fa-solid');
+                heartIcon.classList.add('fa-regular');
+            }
+            localStorage.setItem('wishlistCount', JSON.stringify(data.wishlistCount));
+            displayWishlistItem();
+        })
+        .catch(error => {
+            console.error("Wishlist error:", error);
+        });
+    });
+</script> --}}
 </body>
 </html>

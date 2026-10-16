@@ -37,6 +37,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
 use App\Models\ProductVariantCombination;
 use App\Models\ProductVariantCombinationImage;
+use App\Models\VariantValue;
 use App\Models\{OrderNotifications, OrderAddress, CouponUse};
 use App\Service\MailService;
 use Illuminate\Support\Facades\Validator;
@@ -184,14 +185,17 @@ class CheckoutController extends Controller
 
         $codMaxLimit = 12000;
         $invoiceSetting = InvoiceSetting::where('prefix', 'site')->first();
+        
         if(!empty($invoiceSetting)){
             $codMaxLimit = $invoiceSetting->cash_on_limit;
         }
 
         $validation_error = '';
+        
         if(count($request->cartItems)==0){
             $validation_error .= " </br> You should be alteast add 1 item in cart";
         } 
+        
         if($request->sub_total < 1 && $request->payment_mode != 'wallet'){
             $validation_error .= " </br>Your order amount should be greater than zero";
         }
@@ -199,9 +203,16 @@ class CheckoutController extends Controller
         if($request->wallet_amount > $userAvailableWalletAmount){
             $validation_error .= " </br> You dont have exact amount in wallet";
         } 
+
         if($request->payment_mode =='cod' && $request->sub_total > $codMaxLimit){
             $validation_error .= " </br> You have reached maximum amount for COD order.";
         } 
+
+        $currencySymbol = $request->currencySymbol; 
+        $countryCode = $request->countryCode; 
+        $countryName = $request->countryName; 
+        $countryId = $request->countryId; 
+        $currencyRate = $request->currencyRate; 
 
         if(!empty($request->cartItems)){
             foreach($request->cartItems as $cart){
@@ -214,23 +225,22 @@ class CheckoutController extends Controller
                         $validation_error .= ' </br> You have some out of stock product into order items';
                     }
 
-                    $product_valient_sku = '';
-                    if(!empty($product_sku = $product->sku)){
-                        $product_valient_sku .= strtolower($product_sku = $product->sku);
-                    }
-                    if(!empty($request->cartItems['selectedVariants']) && !empty($request->cartItems['selectedVariants']['colour'])){
-                        $product_valient_sku .= '_'. strtolower($request->cartItems['selectedVariants']['colour']);
-                    }
-                    if(!empty($request->cartItems['selectedVariants']) && !empty($request->cartItems['selectedVariants']['size'])){
-                        $product_valient_sku .= '_'. strtolower($request->cartItems['selectedVariants']['size']);
-                    }
-                    $qtyVarient = ProductVariantCombination::where('product_id', $productId)->where('sku', $product_valient_sku)->select('qty')->first();
-                    if(!empty($qtyVarient)){
-                        if($qtyVarient->qty==0){
-                            $validation_error .= ' </br> You have some out of stock product varient into order items';
-                        } else if($qtyVarient->qty < $quantity){
-                            $validation_error .= ' </br> Product does not have suffcient quantity.';
+                    $variantCombinationId = $cart['product_variant_combination_id'] ?? null;
+                    $hasVariants = ProductVariantCombination::where('product_id', $productId)
+                        ->where('status', '1')
+                        ->exists();
+                    if ($variantCombinationId) {
+                        $qtyVariant = ProductVariantCombination::where('id', $variantCombinationId)
+                            ->where('product_id', $productId)
+                            ->where('status', '1')
+                            ->first();
+                        if (!$qtyVariant || (int) $qtyVariant->is_out_of_stock === 1 || (int) $qtyVariant->qty < $quantity) {
+                            $validation_error .= ' </br> The selected product option is unavailable or out of stock.';
                         }
+                    } elseif ($hasVariants) {
+                        $validation_error .= ' </br> Please select all product options.';
+                    } elseif ((int) $product->qty < $quantity) {
+                        $validation_error .= ' </br> Product does not have sufficient quantity.';
                     }
                     if(!empty($product->max_selling_units) && $product->max_selling_units!=0 &&  $quantity > $product->max_selling_units){
                         $validation_error .= ' </br> You have reached maximum quantity for product.';
@@ -241,18 +251,57 @@ class CheckoutController extends Controller
                 }
             }
         }
+        
+        $buyNowData = session('buy_now');
+        $cartItems = $request->input('cartItems', []);
+        $isBuyNowCheckout = is_array($buyNowData)
+            && count($cartItems) === 1
+            && (int) ($cartItems[0]['product_id'] ?? 0) === (int) ($buyNowData['product_id'] ?? 0);
+        if ($isBuyNowCheckout) {
+            $request->merge([
+                'coupon_id' => null,
+                'coupon_discount' => 0,
+            ]);
+        }
 
-        // Apply Coupon VAlidation 
-        if(!empty($request->coupon_id)){
+        if (!$isBuyNowCheckout && !empty($request->coupon_id)) {
             $couponDetail = Coupon::where('id', $request->coupon_id)->where('is_active', 1)->first();
             if(empty($couponDetail)){
                     $validation_error .= ' </br> Your coupon does not activated';
             } else {
-                $couponStatus = $this->applyCoupon($couponDetail->coupon_code, $request->sub_total, $request->cart_items);
-                if($couponStatus->original['status']==false){
-                    $validation_error .=   " </br> " . $couponStatus->original['message'];
+                $couponCartItems = $request->input('cartItems', []);
+                $couponCartSubtotal = collect($couponCartItems)->sum(function ($item) {
+                    return (float) ($item['sellingPrice'] ?? 0) * (int) ($item['quantity'] ?? 0);
+                });
+                $couponStatus = $this->applyCoupon(
+                    $couponDetail->coupon_code,
+                    $couponCartSubtotal,
+                    $couponCartItems
+                );
+                $couponResult = $couponStatus->getData(true);
+
+                if (empty($couponResult['status'])) {
+                    $validation_error .= ' </br> ' . ($couponResult['message'] ?? 'Your coupon is not valid.');
+                } else {
+                    $validatedCouponDiscount = (float) ($couponResult['discount'] ?? 0);
+                    $baseTotalPayable = (float) $request->input(
+                        'base_total_payable',
+                        (float) $request->sub_total + (float) $request->coupon_discount
+                    );
+                    $discountedTotalPayable = max(0, $baseTotalPayable - $validatedCouponDiscount);
+                    $request->merge([
+                        'coupon_discount' => $validatedCouponDiscount,
+                        'sub_total' => $discountedTotalPayable,
+                        'total_payable' => $discountedTotalPayable,
+                    ]);
+
+                    if ($discountedTotalPayable < 1 && $request->payment_mode !== 'wallet') {
+                        $validation_error .= ' </br>Your order amount should be greater than zero';
+                    }
+                    if ($request->payment_mode === 'cod' && $discountedTotalPayable > $codMaxLimit) {
+                        $validation_error .= ' </br> You have reached maximum amount for COD order.';
+                    }
                 }
-                // Apply Coupon VAlidation 
             }
         }
 
@@ -263,8 +312,9 @@ class CheckoutController extends Controller
             $responseError['message'] = $validation_error;
             return response()->json($responseError);
         }
-        // Backend Order validation 
+
         $ip_address = $request->ip(); 
+
         if ($request->payment_mode == 'cod') {
             $order_id = $this->createOrder(
                 $ip_address,
@@ -277,52 +327,52 @@ class CheckoutController extends Controller
                 $request->shippingcharge ?? 0,
                 $request->billing_id,
                 $request->shipping_id,
-                $request->cartItems
+                $request->cartItems,
+                $currencySymbol,
+                $countryCode,
+                $countryName,
+                $countryId,
+                $currencyRate
             );
             $resp['success'] = true;
             $resp['message'] = "Success";
             $resp['url'] = route('front-order.success', ['order_id' => encrypt($order_id)]);
             return response()->json($resp);
         } 
+        
         elseif ($request->payment_mode == 'ccavenue') {
 
-            $cartNotes = $request->cartItems;
-
-            session()->put('cart_items', $cartNotes);
-
-            session()->put('ccavenue_checkout_data', [
-                'coupon_id' => $request->coupon_id,
-                'coupon_discount' => $request->coupon_discount ?? 0,
-                'shippingcharge' => $request->shippingcharge ?? 0,
-                'billing_id' => $request->billing_id,
-                'shipping_id' => $request->shipping_id,
-                'wallet_amount' => $request->wallet_amount ?? 0,
-                'sub_total' => $request->sub_total,
-            ]);
-
-            $address = UserAddress::find($request->billing_id);
-            $customer = Auth::guard('customer')->user();
-
+            $order_id = $this->createOrder(
+                $ip_address,
+                'ccavenue',
+                $request->sub_total,
+                'unpaid',
+                $request->coupon_id,
+                $request->coupon_discount ?? 0,
+                $request->wallet_amount ?? 0,
+                $request->shippingcharge ?? 0,
+                $request->billing_id,
+                $request->shipping_id,
+                $request->cartItems,
+                $currencySymbol,
+                $countryCode,
+                $countryName,
+                $countryId,
+                $currencyRate
+            );
+            $order = Order::findOrFail($order_id);
             $postData = [
-                'amount' => $request->sub_total,
-                'billing_name' => $address->name ?? $customer->name ?? '',
-                'billing_address' => $address->address ?? '',
-                'billing_city' => $address->city ?? '',
-                'billing_state' => $address->state ?? '',
-                'billing_zip' => $address->pincode ?? '',
-                'billing_tel' => $address->phone ?? $customer->phone ?? '',
-                'billing_email' => $customer->email ?? '',
+                'order_id' => $order->order_number,
             ];
-
-            session()->put('ccavenue_payment_order_id', 'ORD' . time() . $login_user_id);
 
             $resp['success'] = true;
             $resp['payment_mode'] = 'ccavenue';
             $resp['data'] = $postData;
-            $resp['message'] = 'CCAvenue payment initiated successfully.';
+            $resp['message'] = 'Order created. Redirecting to CCAvenue.';
 
             return response()->json($resp);
         }
+        
         elseif($request->payment_mode == 'paypal'){
             $paypalCurrency = config('services.paypal.currency', 'USD');
             $amount = round((float) $request->sub_total, 2);
@@ -350,7 +400,12 @@ class CheckoutController extends Controller
                 $request->shippingcharge ?? 0,
                 $request->billing_id,
                 $request->shipping_id,
-                $request->cartItems
+                $request->cartItems,
+                $currencySymbol,
+                $countryCode,
+                $countryName,
+                $countryId,
+                $currencyRate
             );
             $resp['success'] = true;
             $resp['payment_mode'] = 'paypal';
@@ -359,6 +414,7 @@ class CheckoutController extends Controller
 
             return response()->json($resp);
         } 
+        
         elseif ($request->payment_mode == 'wallet') {
             $order_number = $this->random_strings(8);
 
@@ -461,10 +517,14 @@ class CheckoutController extends Controller
         return redirect()->back();
     }
 
-    public function createOrder($ip_address,$payment_method,$amount,$order_status,$coupon_id,$coupon_discount,$wallet_amount,$shippingcharge,$billingId,$shippingId,$checkout_data)
+    public function createOrder($ip_address,$payment_method,$amount,$order_status,$coupon_id,$coupon_discount,$wallet_amount,$shippingcharge,$billingId,$shippingId,$checkout_data,  $currencySymbol, $countryCode, $countryName, $countryId, $currencyRate)
     {
         $debitFromWallet = 0;
         $user_id =  Auth::guard('customer')->user()->id;
+        $buyNowData = session('buy_now');
+        $isBuyNowOrder = is_array($buyNowData)
+            && count($checkout_data) === 1
+            && (int) ($checkout_data[0]['product_id'] ?? 0) === (int) ($buyNowData['product_id'] ?? 0);
         $customerName = Auth::guard('customer')->user()->name ?? 'Customer';
         $customerEmail = Auth::guard('customer')->user()->email ?? 'Customer';
 
@@ -510,13 +570,18 @@ class CheckoutController extends Controller
         $order->user_id = $user_id;
         $order->billing_address = json_encode($billAddress);
         $order->shipping_address = json_encode($shipAddress);
-        $order->shippingcharge = floor($shippingcharge ?? 0);
+        $order->shippingcharge = round((float) ($shippingcharge ?? 0), 2);
         //$order->sub_total = floor($amount + $discount - ($taxPrice + $coupon_discount)); 
-        $order->sub_total = floor($amount + $discount);
+        $order->sub_total = round((float) $amount + $discount, 2);
 
-        $order->total = floor($amount);
+        $order->total = round((float) $amount, 2);
         $order->payment_method = $payment_method;
         $order->payment_status = $order_status;
+        $order->currency_symbol = $currencySymbol; 
+        $order->country_code = $countryCode; 
+        $order->country_name = $countryName ; 
+        $order->country_id = $countryId; 
+        $order->currency_rate = $currencyRate; 
         // $order->payment_status = 'pending';
         $order->ip_address = $ip_address;
         $order->save();
@@ -641,7 +706,16 @@ class CheckoutController extends Controller
             $combinations = json_encode($valueIds);
 
             $productids = $order_items->product_id;
-            $productcomb = ProductVariantCombination::where('combination_id', $combinations)->where('product_id', $productids)->first();
+            $productcomb = !empty($item['product_variant_combination_id'])
+                ? ProductVariantCombination::where('id', $item['product_variant_combination_id'])
+                    ->where('product_id', $productids)
+                    ->first()
+                : null;
+            if (!$productcomb && !empty($valueIds)) {
+                $productcomb = ProductVariantCombination::where('combination_id', $combinations)
+                    ->where('product_id', $productids)
+                    ->first();
+            }
             if ($productcomb) {
                 $productcomb->qty = $productcomb->qty - $order_items->qty;
                 $productcomb->save();
@@ -675,7 +749,10 @@ class CheckoutController extends Controller
         $orderNotifications->message = 'A new order has been placed with Order ID: ' . $order_id;
         $orderNotifications->save();
 
-        Cart::where('user_id', $user_id)->delete();
+        if (!$isBuyNowOrder) {
+            Cart::where('user_id', $user_id)->delete();
+        }
+        session()->forget('buy_now');
 
         //Generating Invoice
         $invoicePath = $this->generateInvoiceAmit($checkout_data, $order_id);
@@ -865,6 +942,7 @@ class CheckoutController extends Controller
         }
         $checkCategory = $coupon->category_id;
         $checkSubCat   = !empty($coupon->sub_categories) ? array_filter(json_decode($coupon->sub_categories, true)) : null;
+        $discountCartTotal = (float) $cart_total;
         if ($checkCategory || $checkSubCat) {
             $productIds = collect($cart_items)
                 ->pluck('productId')
@@ -881,26 +959,30 @@ class CheckoutController extends Controller
                 return response()->json(['status' => false, 'message' => 'Cart contains no valid public products.']);
             }
 
-            $productCategoryIds    = $products->pluck('main_category_id')->unique()->toArray();
-            $productSubCategoryIds = $products->pluck('main_sub_category_id')->unique()->toArray();
+            $allowedSubCats = array_map('strval', $checkSubCat ?: []);
+            $eligibleProductIds = $products
+                ->filter(function ($product) use ($checkCategory, $allowedSubCats) {
+                    if ($checkCategory && (int) $product->main_category_id !== (int) $checkCategory) {
+                        return false;
+                    }
 
-            // Category check
-            if ($checkCategory && !in_array($coupon->category_id, $productCategoryIds)) {
-                return response()->json(['status' => false, 'message' => 'Coupon is not valid for the selected product category.']);
+                    return empty($allowedSubCats)
+                        || in_array((string) $product->main_sub_category_id, $allowedSubCats, true);
+                })
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            if (empty($eligibleProductIds)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Coupon is not valid for the selected products.'
+                ]);
             }
 
-            // Subcategory check           
-            if ($checkSubCat) {
-                $allowedSubCats = is_array($coupon->sub_categories)
-                    ? $coupon->sub_categories
-                    : array_filter(json_decode($coupon->sub_categories, true));
-
-                $intersect = array_intersect($allowedSubCats, $productSubCategoryIds);
-
-                if (empty($intersect)) {
-                    return response()->json(['status' => false, 'message' => 'Coupon is not valid for the selected subcategories.']);
-                }
-            }
+            $discountCartTotal = collect($cart_items)
+                ->filter(fn ($item) => in_array((int) ($item['productId'] ?? 0), $eligibleProductIds, true))
+                ->sum(fn ($item) => (float) ($item['sellingPrice'] ?? 0) * (int) ($item['quantity'] ?? 0));
         }
 
         if ($coupon->user_type && $coupon->user_type !== 'all' && $userId) {
@@ -960,12 +1042,14 @@ class CheckoutController extends Controller
         if ($coupon->min_cart_value && $cart_total < $coupon->min_cart_value) {
             return response()->json(['status' => false, 'message' => 'Cart total is below the minimum required for this coupon.']);
         }
+        if ($discountCartTotal < (float) $coupon->min_cart_value) {
+            return response()->json(['status' => false, 'message' => 'Eligible cart total is below the minimum required for this coupon.']);
+        }
 
         // Discount calculation
-        $discount = 0;
         $discount = $coupon->discount_type === 'flat'
             ? $coupon->discount_value
-            : ($cart_total * $coupon->discount_value) / 100;
+            : ($discountCartTotal * $coupon->discount_value) / 100;
 
         // Apply min and max caps (if set)
         if ($coupon->max_discount) {
@@ -974,6 +1058,7 @@ class CheckoutController extends Controller
         if ($coupon->min_discount) {
             $discount = max($discount, $coupon->min_discount);
         }
+        $discount = min($discount, $discountCartTotal);
 
         return response()->json([
             'status'   => true,
@@ -1051,16 +1136,106 @@ class CheckoutController extends Controller
     }
 
 
-    public function buyNow(Request $request){
-        $product = Product::findOrFail($request->product_id);
+    public function buyNow(Request $request)
+    {
+        $validated = $request->validate([
+            'product_id' => ['required', 'integer', 'exists:products,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'selectedVariant' => ['sometimes', 'array'],
+            'selectedVariant.*' => ['required', 'string', 'max:255'],
+        ]);
+
+        $product = Product::find($validated['product_id']);
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This product could not be found. Please refresh the page and try again.',
+            ], 404);
+        }
+        if ((int) $product->is_active !== 1 || (int) $product->is_deleted !== 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This product is no longer available for purchase.',
+            ], 422);
+        }
+        if ((int) $product->in_stock !== 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This product is currently unavailable.',
+            ], 422);
+        }
+
+        $combinations = ProductVariantCombination::where('product_id', $product->id)
+            ->where('status', '1')
+            ->get(['id', 'combination_id', 'qty', 'is_out_of_stock']);
+        $hasCombinations = ProductVariantCombination::where('product_id', $product->id)->exists();
+        $selectedVariants = $validated['selectedVariant'] ?? [];
+        $combination = null;
+
+        if ($hasCombinations) {
+            if (!$combinations->isNotEmpty() || !$selectedVariants) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please select all product options before buying.',
+                ], 422);
+            }
+
+            $selectedOptions = [];
+            foreach ($selectedVariants as $variantName => $variantValue) {
+                $selectedOptions[strtolower(trim((string) $variantName))] = strtolower(trim($variantValue));
+            }
+            ksort($selectedOptions);
+
+            foreach ($combinations as $candidate) {
+                $valueIds = json_decode($candidate->combination_id, true) ?: [];
+                $candidateOptions = VariantValue::with('variant')
+                    ->whereIn('id', $valueIds)
+                    ->get()
+                    ->mapWithKeys(function ($value) {
+                        return [
+                            strtolower(trim((string) ($value->variant->name ?? ''))) =>
+                                strtolower(trim((string) $value->name)),
+                        ];
+                    })
+                    ->all();
+                ksort($candidateOptions);
+
+                if ($candidateOptions === $selectedOptions) {
+                    $combination = $candidate;
+                    break;
+                }
+            }
+
+            if (!$combination) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected product options are unavailable. Please choose again.',
+                ], 422);
+            }
+        } elseif ($selectedVariants) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The selected product options are invalid. Please choose again.',
+            ], 422);
+        }
+
+        $availableQuantity = $combination
+            ? ((int) $combination->is_out_of_stock === 1 ? 0 : (int) $combination->qty)
+            : (int) $product->qty;
+        if ($availableQuantity < 1 || $validated['quantity'] > $availableQuantity) {
+            return response()->json([
+                'success' => false,
+                'message' => $availableQuantity < 1
+                    ? 'This product is out of stock.'
+                    : 'Only ' . $availableQuantity . ' item(s) are available.',
+            ], 422);
+        }
+
         session()->put('buy_now', [
             'product_id' => $product->id,
-            'product_type' => $product->product_type,
-            'sku' => $product->sku,
-            'quantity' => $request->quantity ?? 1,
-            'price' => $request->price,
-            'sale_price' => $request->sale_price,
-            'selectedVariant'=>$request->selectedVariant
+            'product_variant_combination_id' => $combination->id ?? null,
+            'quantity' => $validated['quantity'],
+            'selectedVariant' => $selectedVariants,
         ]);
 
         return response()->json([

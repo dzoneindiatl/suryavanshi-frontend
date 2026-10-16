@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Services\InstagramFeedService;
 use App\Models\Country;
 use App\Models\Faq;
 use App\Models\SizeChartManager;
+use App\Models\Slider;
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use App\Models\Product;
@@ -33,6 +35,8 @@ use Illuminate\Support\Facades\Session;
 use App\Models\Blog;
 use App\Models\FooterCategory;
 use App\Models\FooterSubcategory;
+use App\Models\CouponUser; 
+use App\Models\Order;
 class HomeController extends Controller
 {
     public function index(){
@@ -76,7 +80,7 @@ class HomeController extends Controller
         $today = now()->toDateString();
         $priceDrop = PriceDrop::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->where('is_deleted',0)->latest()->first();
         
-        $DB = Product::select('id','name','slug','buying_price','selling_price','discount','discount_type','sku','best_seller')->where('is_deleted', 0)
+        $DB = Product::select('id','name','slug','buying_price','selling_price','discount','discount_type','sku','best_seller','qty')->where('is_deleted', 0)
             ->where('is_active', "1")->orderBy('id','DESC'); 
 
         $hasCategoryFilter = $request->filled('category_id') || $request->filled('sub_category_id') ||  $request->filled('sub_child_category_id');
@@ -309,7 +313,7 @@ class HomeController extends Controller
         $productChildCat = Category::where('id', $product->main_child_category_id)->first();
         $productreview = Product::with(['reviews.user'])->where('sku', $sku)->where('is_active', "1")->first();
         $reviews = $productreview->reviews()->latest()->get();
-       $productvariants = ProductVariant::with([
+        $productvariants = ProductVariant::with([
             'variant:id,name,type',
             'variantValues.variant_value:id,name,color_code',
             'variantValues.first_image' => function ($q) use ($product) {
@@ -346,7 +350,34 @@ class HomeController extends Controller
             ];
 
         })->toArray();
+        $productCartVariantIds = [];
+        $customerId = Auth::guard('customer')->id();
+        if ($customerId) {
+            $cartCombinationIds = Cart::where('user_id', $customerId)
+                ->where('product_id', $product->id)
+                ->pluck('product_variant_combination_id');
+            $combinationsById = ProductVariantCombination::whereIn(
+                'id',
+                $cartCombinationIds->filter()->unique()
+            )->pluck('combination_id', 'id');
+
+            $productCartVariantIds = $cartCombinationIds
+                ->map(function ($combinationId) use ($combinationsById) {
+                    if (!$combinationId) {
+                        return [];
+                    }
+
+                    return json_decode($combinationsById[$combinationId] ?? '[]', true) ?: [];
+                })
+                ->values()
+                ->all();
+        }
         $productVarientCom = ProductVariantCombination::where('product_id', $product->id)->get();
+        $hasAvailableVariant = $productVarientCom->contains(function ($combination) {
+            return (string) $combination->status === '1'
+                && (int) $combination->qty > 0
+                && (int) $combination->is_out_of_stock !== 1;
+        });
         $bestproduct = Product::where('best_seller', 1)->where('is_active', "1")->where("is_deleted",  0)->where(['best_seller' => true, 'draf' => false])->orderBy('id', 'desc')->get();
         $returnexchangeProduct = Setting::where('id', 28)->first();
         $contactDetails = Setting::whereIn('key', ['Contact.contact_email', 'Contact.contact_number', 'Contact.whatsapp_number'])->get();
@@ -406,7 +437,7 @@ class HomeController extends Controller
                     }
                 })->get();
 
-        return view('front.home.product_detail', compact('product','productChildCat', 'productcat', 'productSubCat', 'productvariants', 'bestproduct', 'returnexchangeProduct', 'contactDetails', 'productVarientCom', 'isWishlisted', 'isWishlisteddata', 'categoryTaxes',  'recentlyViewedProducts','facebook','instagram','pinterst','youtube','twitter','productDetailManager', 'best_seller_products','priceDrop','couponOnDetail','sizeChartData','relatedProducts','similarProducts'));
+        return view('front.home.product_detail', compact('product','productChildCat', 'productcat', 'productSubCat', 'productvariants', 'productCartVariantIds', 'hasAvailableVariant', 'bestproduct', 'returnexchangeProduct', 'contactDetails', 'productVarientCom', 'isWishlisted', 'isWishlisteddata', 'categoryTaxes',  'recentlyViewedProducts','facebook','instagram','pinterst','youtube','twitter','productDetailManager', 'best_seller_products','priceDrop','couponOnDetail','sizeChartData','relatedProducts','similarProducts'));
 
     }
 
@@ -437,11 +468,18 @@ class HomeController extends Controller
         $taxTo = 0;
         $categoryTaxes = [];
         $carts->each(function ($cartItem) use ($priceDrop,&$totalMRP,&$totalDiscount,&$subtotal,&$taxRate,&$taxOption,&$taxType,&$taxId,&$taxFrom,&$taxTo,&$categoryTaxes) {
-            $combination = ProductVariantCombination::find($cartItem->product_variant_combination_id);
-            if (!$combination || !$cartItem->product) {
+            if (!$cartItem->product) {
                 return;
             }
-            $originalSellingPrice = (float) $combination->selling_price;
+            $combination = $cartItem->product_variant_combination_id
+                ? ProductVariantCombination::where('product_id', $cartItem->product_id)
+                    ->find($cartItem->product_variant_combination_id)
+                : null;
+            $originalSellingPrice = (float) (
+                $combination->selling_price
+                ?? $cartItem->product->selling_price
+                ?? 0
+            );
             $mainPrice = $originalSellingPrice;
             if ($priceDrop) {
                 $productId = $priceDrop->product_id;
@@ -483,7 +521,12 @@ class HomeController extends Controller
                 $quantity = 1;
             }
 
-            $price = (float) ($combination->price ?? 0);
+            $price = (float) (
+                $combination->price
+                ?? $cartItem->product->price
+                ?? $cartItem->product->mrp
+                ?? $originalSellingPrice
+            );
             $sellingPrice = max(0,(float) $mainPrice);
             $itemMRP = $price * $quantity;
             $itemSellingTotal = $sellingPrice * $quantity;
@@ -492,7 +535,7 @@ class HomeController extends Controller
             $totalDiscount += $itemDiscount;
             $subtotal += $itemSellingTotal;
             $selectedVariants = [];
-            if ($combination->combination_id) {
+            if ($combination && $combination->combination_id) {
                 $combinationIds = json_decode($combination->combination_id,true);
                 foreach ($combinationIds ?? [] as $variantValueId) {
                     $variantValue = VariantValue::with('variant')->find($variantValueId);
@@ -528,12 +571,12 @@ class HomeController extends Controller
                 }
             }
             $cartItem->selectedVariants = $selectedVariants;
-            $cartItem->sku = $combination->sku;
+            $cartItem->sku = $combination->sku ?? $cartItem->product->sku;
             $cartItem->image = $cartItem->product->images['first'] ?? '';
             $cartItem->productType = $cartItem->product->product_type;
             $cartItem->sellingPrice = $sellingPrice;
-            $cartItem->discountAmount = $combination->discount ?? 0;
-            $cartItem->discountType = $combination->discount_type ?? '';
+            $cartItem->discountAmount = $combination->discount ?? $cartItem->product->discount ?? 0;
+            $cartItem->discountType = $combination->discount_type ?? $cartItem->product->discount_type ?? '';
             $cartItem->quantity =$quantity;
             $cartItem->price =$price;
             $cartItem->name =$cartItem->product->name;
@@ -572,8 +615,33 @@ class HomeController extends Controller
         }
 
         $totalPayable = $grandTotal;
-        return view('front.home.cart',compact('carts','totalMRP','totalDiscount','subtotal','couponDiscount','grandTotal','taxableAmount','totalGst','totalPayable')
-        );
+        $hasOrdered = Order::where('user_id', $user->id)->exists();
+
+        $allCoupons = CouponUser::with('coupon')
+            ->where(function ($query) use ($user, $hasOrdered) {
+                $query->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                    ->whereHas('coupon', function ($coupon) {
+                        $coupon->where('coupon_type', 'private');
+                    });
+                })->orWhereHas('coupon', function ($coupon) {
+                    $coupon->where('coupon_type', 'public');
+                });
+            })
+            ->whereHas('coupon', function ($query) use ($today, $hasOrdered) {
+                $query->where('end_date', '>=', $today)
+                    ->where(function ($q) use ($hasOrdered) {
+                        $q->where('user_type', 'all');
+
+                        if ($hasOrdered) {
+                            $q->orWhere('user_type', 'existing');
+                        } else {
+                            $q->orWhere('user_type', 'new');
+                        }
+                    });
+            })
+            ->get();   
+        return view('front.home.cart',compact('carts','totalMRP','totalDiscount','subtotal','couponDiscount','grandTotal','taxableAmount','totalGst','totalPayable','allCoupons'));
     }
 
     public function checkoutBag(Request $request) 
@@ -584,44 +652,58 @@ class HomeController extends Controller
         { 
             return redirect()->route('front-user.login'); 
         }
-        session()->forget('buy_now');
-        $isBuyNow = session()->has('buy_now'); 
-        $buyNow = session('buy_now'); 
+        $buyNow = session('buy_now');
+        $isBuyNow = is_array($buyNow) && !empty($buyNow['product_id']);
         if ($isBuyNow) 
         { 
             $productId = $buyNow['product_id'] ?? null; 
-            $productType = $buyNow['product_type'] ?? null; 
-            $sku = $buyNow['sku'] ?? null; 
             $quantity = (int) ($buyNow['quantity'] ?? 1); 
-            $price = (float) ($buyNow['price'] ?? 0); 
-            $salePrice = (float) ($buyNow['sale_price'] ?? 0); 
-            $selectedVariant = $buyNow['selectedVariant'] ?? []; 
-            $variantIds = []; 
-            foreach ($selectedVariant as $variantName => $variantValue)
-            { 
-                $variant = Variant::whereRaw( 'LOWER(name) = ?', [strtolower($variantName)] )->first(); 
-                if (!$variant) 
-                { 
-                    continue; 
-                } 
-                $variantValueData = VariantValue::where('variant_id', $variant->id)->whereRaw( 'LOWER(name) = ?', [strtolower($variantValue)] ) ->first(); 
-                if ($variantValueData) 
-                { 
-                    $variantIds[] = $variantValueData->id; 
+            $product = Product::where('id', $productId)
+                ->first();
+            if (!$product || (int) $product->is_active !== 1 || (int) $product->is_deleted !== 0
+                || (int) $product->in_stock !== 1 || $quantity < 1 || (int) $product->qty < $quantity) {
+                session()->forget('buy_now');
+                if ($product) {
+                    return redirect()->route('front-product.detail', [
+                        'product' => 'product',
+                        'title' => $product->slug . '.html',
+                        'sku' => $product->sku,
+                    ])->with('error', 'This product is no longer available in the selected quantity.');
                 }
+
+                return redirect()->route('front-home.index')
+                    ->with('error', 'This product is no longer available.');
             } 
-            $combinationIds = json_encode($variantIds); 
-            $variantCombination = ProductVariantCombination::where( 'combination_id', $combinationIds )->first(); $product = Product::find($productId); 
-            if (!$product) 
-            { 
-                return redirect()->route('front-user.cart')->with('error', 'Product not found.'); 
-            } 
+            $variantCombinationId = $buyNow['product_variant_combination_id'] ?? null;
+            $hasVariants = ProductVariantCombination::where('product_id', $product->id)
+                ->where('status', '1')
+                ->exists();
+            $variantCombination = null;
+            if ($hasVariants && $variantCombinationId) {
+                $variantCombination = ProductVariantCombination::where('id', $variantCombinationId)
+                    ->where('product_id', $product->id)
+                    ->where('status', '1')
+                    ->where(function ($query) {
+                        $query->where('is_out_of_stock', 0)->orWhereNull('is_out_of_stock');
+                    })
+                    ->where('qty', '>=', $quantity)
+                    ->first();
+            }
+
+            if (($hasVariants && !$variantCombination) || (!$hasVariants && (int) $product->qty < $quantity)) {
+                session()->forget('buy_now');
+                return redirect()->route('front-product.detail', [
+                    'product' => 'product',
+                    'title' => $product->slug . '.html',
+                    'sku' => $product->sku,
+                ])->with('error', 'The selected product option is unavailable or out of stock.');
+            }
             $cartItem = new Cart(); 
             $cartItem->product = $product; 
-            $cartItem->product_id = $productId; 
+            $cartItem->product_id = $product->id;
             $cartItem->product_variant_combination_id = $variantCombination->id ?? null; 
             $cartItem->quantity = $quantity;
-            $cartItem->selectedVariants = $selectedVariant; 
+            $cartItem->selectedVariants = $buyNow['selectedVariant'] ?? [];
             $carts = collect([$cartItem]); 
         } 
         else { 
@@ -771,8 +853,9 @@ class HomeController extends Controller
             $priceDrop = PriceDrop::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->where('is_deleted',0)->latest()->first();
 
             
-            $combination = ProductVariantCombination::select('price', 'selling_price', 'sku', 'discount', 'discount_type','qty')
+            $combination = ProductVariantCombination::select('price', 'selling_price', 'sku', 'discount', 'discount_type','qty','is_out_of_stock')
                 ->where('product_id', $productId)
+                ->where('status', '1')
                 ->where('combination_id', json_encode($skuIds))
                 ->first();
 
@@ -852,11 +935,25 @@ class HomeController extends Controller
 
     public function variantStockCheck(Request $request)
     {
-        $stock = ProductVariantCombination::where('product_id', $request->product_id)
-            ->whereJsonContains('combination_id',  (int) $request->variant_value_id)->where('is_out_of_stock', 1)
-            ->count();
+        $validated = $request->validate([
+            'product_id' => 'required|integer',
+            'selected_variant_ids' => 'required|array|min:1',
+            'selected_variant_ids.*' => 'integer|min:1',
+        ]);
+        $variantIds = array_values(array_map('intval', $validated['selected_variant_ids']));
+        $productInStock = Product::where('id', $validated['product_id'])
+            ->where('in_stock', 1)
+            ->exists();
+        $combination = ProductVariantCombination::where('product_id', $validated['product_id'])
+            ->where('status', '1')
+            ->where('combination_id', json_encode($variantIds))
+            ->first();
+
         return response()->json([
-            'out_of_stock' => $stock > 0
+            'out_of_stock' => !$productInStock
+                || !$combination
+                || (int) $combination->qty < 1
+                || (int) $combination->is_out_of_stock === 1
         ]);
     }
 
