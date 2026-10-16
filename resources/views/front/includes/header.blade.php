@@ -9,6 +9,33 @@
 .country-option:hover{background:#f5f1e8}
 .country-option span{color:#222}
 </style>
+
+<style>
+/* ── Subcategory text-reveal animation ───────────────────────── */
+@keyframes subcat-reveal {
+    0% {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Base hidden state — items are invisible until menu opens */
+.inner_submenu_vertical .inner_submenu_vertical_inner {
+    opacity: 0;
+    transform: translateY(14px);
+    will-change: opacity, transform;
+}
+
+/* When menu opens (.menu-open added on hover), reveal every option sequentially */
+.sub_menu_main.menu-open .inner_submenu_vertical .inner_submenu_vertical_inner {
+    animation: subcat-reveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: min(calc(var(--sub-i, 0) * 0.055s + 0.08s), 2.4s);
+}
+</style>
 <div class="main_header_top">
 	<div class="header_main">
 		<div class="container">
@@ -17,7 +44,7 @@
 					<div class="head_logo">
 						<a href="{{ url('/') }}" title="Jaipur Jewellery House">
 							<span class="logo-icon">
-								<img class="logo-icon-holder" src="{{ asset('assets/logos/image.png') }}" alt="logo">
+								<img class="logo-icon-holder" src="{{ asset('assets/logos/jjh-logo.png') }}" alt="logo">
 							</span>
 						</a>
 					</div>
@@ -198,7 +225,7 @@
 															return data_get($childCategory, 'parent_id') == $subCategoryId;
 														}); 
 													@endphp 
-													<div class="inner_submenu_vertical_inner {{ $subKey === 0 ? 'active' : '' }}" data-sub-content="{{ $subCategoryId }}"> 
+													<div class="inner_submenu_vertical_inner {{ $loop->first ? 'active' : '' }}" data-sub-content="{{ $subCategoryId }}" style="--sub-i: {{ $loop->index }};"> 
 														<a href="{{ route('category.show',['path'=>$categorySlug.'/'.$subCategorySlug]) }}" class="inner_sub_title"> {{ $subCategoryName }} </a> 
 														@if($childCats->isNotEmpty()) 
 															<ul> 
@@ -210,11 +237,6 @@
 																		$childCategoryImage = data_get($childCategory, 'thumbnail_image'); 
 																	@endphp 
 																	<li> 
-																		<div class="mega_menu_img"> 
-																			@if(!empty($childCategoryImage)) 
-																				<img src="{{ asset($childCategoryImage) }}" alt="{{ $childCategoryName }}">
-																			@endif 
-																		</div> 
 																		<h4> 
 																			<a href="{{ route('category.show',['path'=>$categorySlug . '/' . $subCategorySlug . '/' . $childCategorySlug]) }}"> {{ $childCategoryName }} </a> 
 																		</h4> 
@@ -381,6 +403,17 @@
 
 		if (india) applySelectedCountry(india);
 
+	});
+	// ── Subcategory reveal: toggle .menu-open to cleanly trigger animation ──
+	document.querySelectorAll('.sub_menu_main').forEach(function (menuItem) {
+		menuItem.addEventListener('mouseenter', function () {
+			menuItem.classList.remove('menu-open');
+			void menuItem.offsetWidth;
+			menuItem.classList.add('menu-open');
+		});
+		menuItem.addEventListener('mouseleave', function () {
+			menuItem.classList.remove('menu-open');
+		});
 	});
 
 </script>
