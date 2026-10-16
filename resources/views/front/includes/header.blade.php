@@ -188,7 +188,7 @@
                                                     <div class="inner_submenu_vertical_inner {{ $subKey === 0 ? 'active' : '' }}"
                                                         data-sub-content="{{ $subCategoryId }}">
                                                         <a href="{{ route('category.show', ['path' => $categorySlug . '/' . $subCategorySlug]) }}"
-                                                            class="inner_sub_title reveal-text"> {{ $subCategoryName }} </a>
+                                                            class="inner_sub_title"> {{ $subCategoryName }} </a>
                                                         @if ($childCats->isNotEmpty())
                                                             <ul>
                                                                 @foreach ($childCats as $childCategory)
@@ -208,7 +208,7 @@
                                                                     @endphp
                                                                     <li>
                                                                         <h4>
-                                                                            <a class="reveal-text"
+                                                                            <a
                                                                                 href="{{ route('category.show', ['path' => $categorySlug . '/' . $subCategorySlug . '/' . $childCategorySlug]) }}">
                                                                                 {{ $childCategoryName }} </a>
                                                                         </h4>
@@ -231,74 +231,7 @@
     </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-<style>
-/* ── Mega-menu text reveal animation ── */
-@keyframes menuCharReveal {
-    0%   { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-
-.reveal-text .char {
-    display: inline-block;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: none;
-}
-
-.sub_menu_main:hover .reveal-text .char {
-    animation: menuCharReveal 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-/* Sub-category titles get a slightly bolder reveal */
-.inner_sub_title.reveal-text .char {
-    animation-duration: 0.4s;
-}
-
-/* Reset when menu closes (no hover) */
-.reveal-text .char {
-    will-change: opacity, transform;
-}
-</style>
-
 <script>
     const carts = JSON.parse(localStorage.getItem('cartItems') || '[]');
     $('.cartTotal').text(carts.length);
-
-    /* ── Mega-menu letter-by-letter reveal ── */
-    (function () {
-        // Wrap each character in a .char span with a staggered delay
-        function wrapChars(el) {
-            if (el.dataset.charsWrapped) return;
-            el.dataset.charsWrapped = '1';
-            const text = el.textContent.trim();
-            el.textContent = '';
-            text.split('').forEach(function (char, i) {
-                var span = document.createElement('span');
-                span.className = 'char';
-                span.textContent = char === ' ' ? '\u00A0' : char; // preserve spaces
-                // Stagger: 25 ms per character, max 400 ms total
-                span.style.animationDelay = Math.min(i * 25, 400) + 'ms';
-                el.appendChild(span);
-            });
-        }
-
-        // Re-trigger animation by removing & re-adding the class
-        function resetReveal(container) {
-            container.querySelectorAll('.reveal-text .char').forEach(function (span) {
-                span.style.animation = 'none';
-                // Force reflow
-                void span.offsetWidth;
-                span.style.animation = '';
-            });
-        }
-
-        document.querySelectorAll('.sub_menu_main').forEach(function (menuItem) {
-            // Wrap on first hover so Blade template text stays clean
-            menuItem.addEventListener('mouseenter', function () {
-                menuItem.querySelectorAll('.reveal-text').forEach(wrapChars);
-                resetReveal(menuItem);
-            });
-        });
-    })();
 </script>
