@@ -1,3 +1,14 @@
+<style>
+	.country-selector{position:relative;display:inline-block}
+.country-toggle{display:flex;align-items:center;gap:8px;border:0;background:transparent;cursor:pointer;padding:8px}
+.country-flag{width:30px;height:22px;object-fit:cover;flex-shrink:0}
+.country-chevron{font-size:18px}
+.country-dropdown{display:none;position:absolute;top:100%;right:0;width:280px;max-height:350px;overflow-y:auto;background:#fff;border:1px solid #ddd;box-shadow:0 4px 12px #0002;z-index:9999}
+.country-selector.open .country-dropdown{display:block}
+.country-option{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:0;background:#fff;text-align:left;cursor:pointer;font-size:13px}
+.country-option:hover{background:#f5f1e8}
+.country-option span{color:#222}
+</style>
 <div class="main_header_top">
     <div class="header_main">
         <div class="container">

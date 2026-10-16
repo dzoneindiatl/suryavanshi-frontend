@@ -464,23 +464,23 @@
 			<div class="col-md-7">
 				<div class="app-figure" id="zoom-fig">
 					@php
-					$primaryVariantId = \App\Models\ProductVariantValue::where('product_id', $product->id)
-						->where('is_main', 1)
-						->value('variant_value_id');
+                        $primaryVariantId = \App\Models\ProductVariantValue::where('product_id', $product->id)
+                            ->where('is_main', 1)
+                            ->value('variant_value_id');
 
-					$allProductImages = $product->product_main_images
-						->where('variant_id', $primaryVariantId)
-						->values();
+                        $allProductImages = $product->product_main_images
+                            ->where('variant_id', $primaryVariantId)
+                            ->values();
 
-					$sortedProductImages = $allProductImages->sortByDesc(function ($img) {
-						return (int) $img->is_front;
-					})->values();
+                        $sortedProductImages = $allProductImages->sortByDesc(function ($img) {
+                            return (int) $img->is_front;
+                        })->values();
 
-					$firstImage = $sortedProductImages->first();
-					$firstImageUrl = $firstImage
-						? asset('uploads/products/' . $firstImage->graphic)
-						: $product->images['first'];
-				@endphp
+                        $firstImage = $sortedProductImages->first();
+                        $firstImageUrl = $firstImage
+                            ? asset('uploads/products/' . $firstImage->graphic)
+                            : $product->images['first'];
+				    @endphp
 
 				<a id="Zoom-1"
 				class="MagicZoom"
@@ -513,12 +513,16 @@
 				<div class="product_detail_right">
 					<h1>{{ $product->name }}</h1>
 					<div class="product_top_box">
-						<span class="single_product_price">₹{{ $product->selling_price }}</span>
+						<span class="single_product_price" id="productPrice" data-base-price="{{ $product->selling_price }}">₹{{ $product->selling_price }}</span>
 						<div class="product_share">
 							<ul>
 								<li>
-									<a href="#"><span class="heart_icon addtoWishList"></span></a>
-								</li>
+                                    <a href="javascript:void(0)">
+                                        <span class="heart_icon addtoWishList" data-product-id="{{ $product->id }}">
+                                            {{-- <i class="fa-regular fa-heart"></i> --}}
+                                        </span>
+                                    </a>
+                                </li>
 								<li>
 									<a href="#"><span class="share_icon"></span></a>
 								</li>
@@ -575,8 +579,6 @@
                                         <div class="option-title">
                                             <h5>{{ $variant['variant_name'] }}</h5>
                                         </div>
-
-                                        {{-- TYPE 1 : ONLY ROUND --}}
                                         @if ($displayType === 1)
                                             <div class="colors variant-round">
                                                 @foreach ($variantValues as $k => $variantValue)
@@ -893,44 +895,69 @@
                             @endforeach
                         @endif
 					</div>
-                    <div class="product-option quantity-option">
-                        <h5 class="mb-10">
-                            Quantity
-                        </h5>
+                    @if($product->qty <= 5)
+                        @if($product->qty != 0)
+                            <div class="product-option quantity-option">
+                                <h5 class="mb-10">
+                                    Quantity
+                                </h5>
 
-                        <div class="quantity" data-max-quantity="{{ $product->qty }}">
-                            <button class="minus">-</button>
-                            <input type="text" value="1" id="quantity">
-                            <button class="plus">+</button>
-                        </div>
-                    </div>
-					
+                                <div class="quantity" data-max-quantity="{{ $product->qty }}">
+                                    <button class="minus">-</button>
+                                    <input type="text" value="1" id="quantity">
+                                    <button class="plus">+</button>
+                                </div>
+                            </div>
+                        
+                            <div class="main-product__block main-product__block-custom_liquid">
+                                <div class="m-product-text">
+                                    <div id="stock-notice" style="margin-top: 1px;">
+                                        <p id="stock-text" style="font-size: 12px; font-weight: bold; color: #000; margin-bottom: 8px;">🔔 HURRY UP! ONLY {{ $product->qty }} LEFT IN STOCK!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif 
+                    @endif  
+
                     <div class="product_box_cart">
-						<button class="btn_add_to_cart addToCartBtn addToCartBtnText"
-							data-id="{{ $product->id }}"
-							data-name="{{ $product->name }}"
-							data-producttype="{{ $product->product_type }}"
-							data-sku="{{ $product->sku }}"
-							data-slug="{{ $product->slug }}"
-							data-price="{{ $buying_price }}"
-							data-salePrice="{{ $selling_price }}"
-							data-discountType="{{ $product->discount_type }}"
-							data-discount="{{ $discount_product }}"
-							data-tax-arr="{{ e(json_encode($categoryTaxes)) }}"><span>ADD TO CART</span>
-						</button>
+                        @if((int) $product->in_stock === 1 && ((int) $product->qty > 0 || $hasAvailableVariant))
+                            <button type="button" class="btn_add_to_cart addToCartBtn addToCartBtnText add-to-cart"
+                                {{ count($productvariants) > 0 ? 'disabled' : '' }}
+                                data-id="{{ $product->id }}"
+                                data-name="{{ $product->name }}"
+                                data-producttype="{{ $product->product_type }}"
+                                data-sku="{{ $product->sku }}"
+                                data-slug="{{ $product->slug }}"
+                                data-price="{{ $buying_price }}"
+                                data-salePrice="{{ $selling_price }}"
+                                data-stock="{{ $product->qty }}"
+                                data-product-in-stock="{{ (int) $product->in_stock }}"
+                                data-variant-required="{{ count($productvariants) > 0 ? 'true' : 'false' }}"
+                                data-variant-count="{{ count($productvariants) }}"
+                                data-cart-state="add"
+                                data-discountType="{{ $product->discount_type }}"
+                                data-discount="{{ $discount_product }}"
+                                data-tax-arr="{{ e(json_encode($categoryTaxes)) }}"><span>ADD TO CART</span>
+                            </button>
 
-						<button class="btn_buy_now buyNowBtn" 
-							data-id="{{ $product->id }}"
-							data-name="{{ $product->name }}"
-							data-producttype="{{ $product->product_type }}"
-							data-sku="{{ $product->sku }}"
-							data-slug="{{ $product->slug }}"
-							data-price="{{ $buying_price }}"
-							data-salePrice="{{ $selling_price }}"
-							data-discountType="{{ $product->discount_type }}"
-							data-discount="{{ $discount_product }}"
-							data-tax-arr="{{ e(json_encode($categoryTaxes)) }}"><span>BUY NOW</span>
-						</button>
+                            <button type="button" class="btn_buy_now buyNowBtn"
+                                data-id="{{ $product->id }}"
+                                data-name="{{ $product->name }}"
+                                data-producttype="{{ $product->product_type }}"
+                                data-sku="{{ $product->sku }}"
+                                data-slug="{{ $product->slug }}"
+                                data-price="{{ $buying_price }}"
+                                data-salePrice="{{ $selling_price }}"
+                                data-discountType="{{ $product->discount_type }}"
+                                data-discount="{{ $discount_product }}"
+                                data-tax-arr="{{ e(json_encode($categoryTaxes)) }}"><span>BUY NOW</span>
+                            </button>
+                            @else 
+                            <div class="border">
+                                <p class="text-danger fw-bold" style="padding-top:10px; ">Sorry This Product is Out Of Stock !</p>
+                            </div>
+                            
+                        @endif 
 					</div>
 
 					<div class="price_breakup_modal" id="price_breakup_modal">
@@ -1224,8 +1251,8 @@
 						</div>
 						<div class="collection_inner_box_txt">
 							<div class="price">
-								<span class="price_new">₹ {{ $similar->buying_price }}</span>
-								<span class="price_new_cut">₹ {{ $similar->selling_price }}</span>
+								<span class="price_new cart-country-price" data-base-amount="{{ $similar->buying_price }}">₹ {{ $similar->buying_price }}</span>
+								<span class="price_new_cut cart-country-price" data-base-amount="{{ $similar->selling_price }}">₹ {{ $similar->selling_price }}</span>
 								@php 
 									if(!empty($similar->discount) && !empty($similar->discount_type)){
 										if($similar->discount_type == 'percentage'){
@@ -1262,10 +1289,8 @@
 								<img class="normal_img_shop" src="{{ $related->images['first'] }}" alt="img">
 								<img class="hover_img_shop" src="{{ $related->images['second'] }}" alt="img">
 							</div>
-							<div class="collection_inner_box_icon">
-								<a href="#">
-									<i class="fa fa-heart-o addtoWishList"></i>
-								</a>
+							<div class="collection_inner_box_icon addtoWishList" data-product-id="{{ $related->id }}">
+								<i class="fa fa-heart-o"></i>
 							</div>
 							@if($related->best_seller == 1)
 								<div class="collection_best_seller">
@@ -1276,8 +1301,8 @@
 						</div>
 						<div class="collection_inner_box_txt">
 							<div class="price">
-								<span class="price_new">₹{{ $related->buying_price }}</span>
-								<span class="price_new_cut">₹{{ $related->selling_price }}</span>
+								<span class="price_new cart-country-price" data-base-amount="{{ $related->buying_price }}">₹{{ $related->buying_price }}</span>
+								<span class="price_new_cut cart-country-price" data-base-amount="{{ $related->selling_price }}">₹{{ $related->selling_price }}</span>
 								@php 
 									if(!empty($related->discount) && !empty($related->discount_type)){
 										if($related->discount_type == 'percentage'){
@@ -1302,7 +1327,6 @@
 	</div>
 @endif 	
 
-
 @if(count($recentlyViewedProducts) > 0)	
 	<div class="related_products">
 		<div class="container">
@@ -1313,27 +1337,52 @@
 				@foreach($recentlyViewedProducts as $recent)
 					<div class="collection_inner_box">
 						<div class="collection_inner_box_img">
-							<div class="shop_img_hover">
-								{{-- <img class="normal_img_shop" src="{{ $recent->images['first'] }}" alt="img">
-								<img class="hover_img_shop" src="{{ $recent->images['second'] }}" alt="img"> --}}
-							</div>
-							<div class="collection_inner_box_icon">
-								<a href="#">
-									<i class="fa fa-heart-o addtoWishList"></i>
-								</a>
-							</div>
-							@if($recent->best_seller == 1)
-								<div class="collection_best_seller">
-									<a href="@if(!empty($recent->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $recent->slug . '.html', 'sku' => $recent->sku]) }}@endif">Best Seller</a>
-								</div>
+                            @if (Auth::guard('customer')->check())                        
+                                <div class="shop_img_hover">
+                                    <img class="normal_img_shop" src="{{ $recent->product->images['first'] }}" alt="img">
+                                    <img class="hover_img_shop" src="{{ $recent->product->images['second'] }}" alt="img">
+                                </div>
+                            @else
+                                <div class="shop_img_hover">
+                                    <img class="normal_img_shop" src="{{ $recent->images['first'] }}" alt="img">
+                                    <img class="hover_img_shop" src="{{ $recent->images['second'] }}" alt="img">
+							    </div>
 							@endif 
-							<a href="@if(!empty($recent->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $recent->slug . '.html', 'sku' => $recent->sku]) }}@endif" class="btn_cart_add">Add To Cart</a>
-						</div>
+                            <div class="collection_inner_box_icon addtoWishList">
+                                <a href="#" class="addtoWishList" data-product-id="{{ $recent->id }}">
+                                    <i class="fa fa-heart-o"></i>
+                                </a>
+									
+							</div>
+                            @if (Auth::guard('customer')->check()) 
+                                @if($recent->product->best_seller == 1)
+                                    <div class="collection_best_seller">
+                                        <a href="@if(!empty($recent->product->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $recent->product->slug . '.html', 'sku' => $recent->product->sku]) }}@endif">Best Seller</a>
+                                    </div>
+                                @endif 
+							
+                                <a href="@if(!empty($recent->product->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $recent->product->slug . '.html', 'sku' => $recent->product->sku]) }}@endif" class="btn_cart_add">Add To Cart</a>
+                            @else   
+                                @if($recent->best_seller == 1)
+                                    <div class="collection_best_seller">
+                                        <a href="@if(!empty($recent->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $recent->slug . '.html', 'sku' => $recent->sku]) }}@endif">Best Seller</a>
+                                    </div>
+                                @endif 
+							
+                                <a href="@if(!empty($recent->sku)){{ route('front-product.detail', ['product' => 'product', 'title' => $recent->slug . '.html', 'sku' => $recent->sku]) }}@endif" class="btn_cart_add">Add To Cart</a>  
+                            @endif         
+                        </div>
+
 						<div class="collection_inner_box_txt">
 							<div class="price">
-								<span class="price_new">₹{{ $recent->buying_price }}</span>
-								<span class="price_new_cut">₹{{ $recent->selling_price }}</span>
-								@php 
+                                @if (Auth::guard('customer')->check()) 
+							    	<span class="price_new cart-country-price" data-base-amount="{{ $recent->product->buying_price }}">₹{{ $recent->product->buying_price }}</span>
+								    <span class="price_new_cut cart-country-price" data-base-amount="{{ $recent->product->selling_price }}">₹{{ $recent->product->selling_price }}</span>
+								@else
+                                    <span class="price_new cart-country-price" data-base-amount="{{ $recent->buying_price }}">₹{{ $recent->buying_price }}</span>
+								    <span class="price_new_cut cart-country-price" data-base-amount="{{ $recent->selling_price }}">₹{{ $recent->selling_price }}</span>  
+                                @endif 
+                                @php 
 									if(!empty($recent->discount) && !empty($recent->discount_type)){
 										if($recent->discount_type == 'percentage'){
 											$discountText = $recent->discount." % OFF"; 
@@ -1341,7 +1390,7 @@
 											$discountText = '₹ '.$recent->discount.' OFF'; 
 										}
 									}	
-									@endphp
+								@endphp
 								@if(!empty($discountText))		
 									<div class="offer_txt1">
 									{{ $discountText }}
@@ -1514,7 +1563,8 @@
 <script>
 	window.csrfToken = "{{ csrf_token() }}";
     var addToWish = "{{ route('front-addwish') }}";
-    const isLoggedIn = "{{ Auth::guard('customer')->check() ? true : false }}";
+    window.isLoggedIn = @json(Auth::guard('customer')->check());
+    window.productCartVariantIds = @json($productCartVariantIds ?? []);
    	var addToCart = "{{ route('user.addToCart') }}";
     var getCouponUrl = "{{ route('get.coupon') }}";
     var wishlistUrl = "{{ route('front-user.wishlist') }}";
@@ -1563,31 +1613,35 @@
 	$('.buyNowBtn').on('click', function(){
 		let button = $(this);
 		let productId = button.data('id');
-		let price = button.data('price');
-		let salePrice = button.data('saleprice');
         let selectedVariant = getSelectedVariantsForBuyNow();  
+        let quantity = parseInt($('#quantity').val()) || 1;
+		button.prop('disabled', true);
 		$.ajax({
 			url:newBuyNowUrl,
 			type:"POST",
 			data: {
                 _token: $('meta[name="csrf-token"]').attr('content'),
 				product_id: productId,
-				price: price,
-				sale_price: salePrice,
-				quantity: 1,
+				quantity: quantity,
                 selectedVariant:selectedVariant
 			},
 			success: function(response){
 				if(response.success){
-					if(isLoggedIn){
+					if(window.isLoggedIn){
 						window.location.href = response.redirect_url;
 					}else{
 						window.location.href = "{{ route('front-user.login') }}";
 					}
+				} else {
+					const message = response.message || 'Unable to start checkout. Please try again.';
+					showFlashMessage($('<div>').text(message).html(), 'error');
+					button.prop('disabled', false);
 				}
 			},
 			error: function(xhr){
-				console.log(xhr.responseText);
+				const message = xhr.responseJSON?.message || 'Unable to start checkout. Please try again.';
+				showFlashMessage($('<div>').text(message).html(), 'error');
+				button.prop('disabled', false);
 			}
 		});
 	});
@@ -1625,16 +1679,13 @@
     var minSellingQty = '{{ $minSellingQty }}';
     var maxSellingQty = '{{ $maxSellingQty }}';
     var getVarient = "{{ route('variant.combination.prices') }}";
-		console.log("=======getVariant===========",getVarient); 
     $(document).on('click', '.customise_title', function(e) {
         e.preventDefault();
 
         let $title = $(this);
         let $dropdown = $title.next('.dropdown_text_customise');
         let $icon = $title.find('i');
-
         $dropdown.stop(true, true).slideToggle(300);
-
         $icon.toggleClass('fa-plus fa-minus');
     });
     $('.plus').on('click', function () {
@@ -1642,7 +1693,6 @@
         let input = quantityBox.find('input');
         let maxQuantity = parseInt(quantityBox.data('max-quantity')) || 1;
         let value = parseInt(input.val()) || 1;
-
         if (value < maxQuantity) {
             input.val(value + 1);
         }
@@ -1651,39 +1701,131 @@
     $('.minus').on('click', function () {
         let input = $(this).siblings('input');
         let value = parseInt(input.val()) || 1;
-
         if (value > 1) {
             input.val(value - 1);
         }
     });
 
     function checkItemInCart() {
-		const productId = String($('#product_id').val() || '');
-		const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+		const $button = $('.addToCartBtn').first();
+		const productId = String($button.data('id') || '');
 		const selected = getSelectedVariants([], false);
-		const exists = cartItems.some(function(item) {
+		const selectedIds = getSelectedVariantIds();
+		let exists = false;
+		if (window.isLoggedIn) {
+			const selectedKey = selectedIds.slice().sort().join(',');
+			exists = (window.productCartVariantIds || []).some(function(ids) {
+				return ids.slice().sort().join(',') === selectedKey;
+			});
+		} else {
+			let cartItems = [];
+			try {
+				cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+				if (!Array.isArray(cartItems)) {
+					cartItems = [];
+				}
+			} catch (error) {
+				console.error('Unable to read guest cart.', error);
+			}
+			exists = cartItems.some(function(item) {
 			if (String(item.productId) !== productId) {
 				return false;
 			}
 
 			const variant = item.selectedVariants || {};
-			const selectedKeys = Object.keys(selected);
-			const variantKeys = Object.keys(variant);
-
-			if (selectedKeys.length !== variantKeys.length) {
-				return false;
+			const existingIds = item.selectedVariantIds || [];
+			if (selectedIds.length && existingIds.length) {
+				return selectedIds.slice().sort().join(',') === existingIds.slice().sort().join(',');
 			}
 
-			return selectedKeys.every(function(key) {
-				return String(variant[key]) === String(selected[key]);
+			return sameVariantSelection(variant, selected);
 			});
-		});
+		}
 
-		$('.addToCartText').html(exists ? 'Go To Cart' : 'Add To Cart');
+		setAddToCartButtonState($button, exists);
 
 		return exists;
 	}
-        
+   
+    function formatCountryPrice(inrPrice) {
+        const currency = getSelectedCurrency();
+        const convertedPrice = Number(inrPrice || 0) * currency.rate;
+        return currency.symbol + convertedPrice.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function updateVariantPrice(sellingPrice, buyingPrice) {
+  
+        const currency = getSelectedCurrency();
+        if (!currency.rate || currency.rate <= 0) {
+            console.error('Exchange rate not found for currency:', currency.code);
+            return;
+        }
+        $('#productPrice').text(formatCountryPrice(sellingPrice));
+        // $('#pdpStrikedMrp').text(formatCountryPrice(buyingPrice));
+        // const discount = Math.max(Number(buyingPrice) - Number(sellingPrice), 0);
+        // $('#discountShow').text(formatCountryPrice(discount) + ' OFF');
+    }
+    
+    function updateCartCountryPrices() {
+        const currency = getSelectedCurrency();
+        if (!currency.rate || currency.rate <= 0) {
+            console.error('Exchange rate not found:', currency.code);
+            return;
+        }
+        $('.cart-country-price').each(function () {
+            const baseAmount = Number($(this).attr('data-base-amount')) || 0;
+            const convertedAmount = baseAmount * currency.rate;
+            $(this).text(
+                currency.symbol + convertedAmount.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })
+            );
+        });
+    }
+
+    function getSelectedCurrency() {
+		let country = {};
+		try {
+			country = JSON.parse($('#countryData').val() || '{}'); 
+		} catch (e) {
+			country = {};
+		}
+		const currencyCode = country.currency_code || 'INR';
+		const currencySymbol = country.currency_symbol || '₹';
+        const rate = country.exchange_rates || 0; 
+		return {
+			code: currencyCode,
+			symbol: currencySymbol,
+			rate: currencyCode === 'INR' ? 1 : rate
+		};
+	}
+	
+    window.currentSellingPriceINR = Number(@json($product->selling_price));
+    window.currentBuyingPriceINR = Number(@json($product->price));
+    window.variantRequestVersion = 0;
+    window.variantStockRequestVersion = 0;
+
+    $(document).ready(function () {
+        updateVariantPrice(
+            window.currentSellingPriceINR,
+            window.currentBuyingPriceINR
+        );
+        updateCartCountryPrices(); 
+    });
+    $(document).on('click', '.country-option', function () {
+        updateVariantPrice(
+            window.currentSellingPriceINR,
+            window.currentBuyingPriceINR
+        );
+         updateCartCountryPrices();
+    });
+
+    
+
     function selectVariant(el) {
             const productId = el.dataset.productId;
             const variantId = el.dataset.variantId;
@@ -1691,15 +1833,6 @@
             const value = el.dataset.value;
             const valueId = el.dataset.id;
             const type = (el.dataset.type || '').toLowerCase();
-
-            console.log('Selected variant:', {
-                productId,
-                variantId,
-                variantValueId,
-                valueId,
-                type,
-                value
-            });
 
             $('.s-variant[data-variant-id="' + variantId + '"]').removeClass('active');
             $(el).addClass('active');
@@ -1716,11 +1849,10 @@
             const selectedVariantIds = $('.s-variant.active').map(function() {
                 return $(this).data('vid');
             }).get();
-
-            console.log('Selected Variant IDs:', selectedVariantIds);
+            const requestVersion = ++window.variantRequestVersion;
 
             checkItemInCart();
-
+            $('.addToCartBtn').prop('disabled', true);
             $.ajax({
                 url: getVarient,
                 type: 'POST',
@@ -1732,30 +1864,26 @@
                 }),
                 contentType: 'application/json',
                 success: function(response) {
+                    if (requestVersion !== window.variantRequestVersion) {
+                        return;
+                    }
                     const combination = response?.combination;
                     if (!combination) return;
-
-                    const {
-                        selling_price,
-                        price,
-                        sku,
-                        discount,
-                        discount_type,
-                        qty
-                    } = combination;
+                    const { selling_price,price,sku,discount,discount_type,qty,is_out_of_stock } = combination;
 
                     const buyingPrice = Number(price) || 0;
                     const sellingPrice = Number(selling_price) || 0;
+                    window.currentSellingPriceINR = sellingPrice;
+                    window.currentBuyingPriceINR = buyingPrice;
+                    // $('#productSku').html(sku || '');
+                    // $('#productPrice').text(`₹${Math.floor(sellingPrice)}`);
+                    // $('#pdpStrikedMrp').text(`₹${Math.floor(buyingPrice)}`);
+                    updateVariantPrice(sellingPrice, buyingPrice);
+                    // const discountProduct = buyingPrice - sellingPrice;
 
-                    $('#productSku').html(sku || '');
-                    $('#productPrice').text(`₹${Math.floor(sellingPrice)}`);
-                    $('#pdpStrikedMrp').text(`₹${Math.floor(buyingPrice)}`);
-
-                    const discountProduct = buyingPrice - sellingPrice;
-
-                    $('#discountShow').text(
-                        `₹ ${Math.max(Math.floor(discountProduct), 0)} OFF`
-                    );
+                    // $('#discountShow').text(
+                    //     `₹ ${Math.max(Math.floor(discountProduct), 0)} OFF`
+                    // );
 
                     const $addToCartBtn = $('.addToCartBtn');
 
@@ -1764,22 +1892,35 @@
                     $addToCartBtn.attr('data-discounttype', discount_type);
                     $addToCartBtn.attr('data-discount', discount);
 
-                    const stockQty = parseInt(qty || 0);
+                    const stockQty = Number(is_out_of_stock) === 1 ? 0 : parseInt(qty || 0);
+                    $addToCartBtn.attr('data-stock', stockQty);
+                    $('#quantity').attr('max', stockQty);
+                    $('.quantity[data-max-quantity]').attr('data-max-quantity', stockQty);
+                    if (stockQty > 0 && (parseInt($('#quantity').val(), 10) || 1) > stockQty) {
+                        $('#quantity').val(stockQty);
+                    }
                     const minimumQty = parseInt(minSellingQty || 1);
 
-                    if (stockQty <= 0) {
+                    const productOut = Number($addToCartBtn.attr('data-product-in-stock')) !== 1;
+                    if (stockQty <= 0 || productOut) {
                         $('.varient_less_than_min_qty_notice').html('Out Of Stock');
                         $('.add-to-cart').addClass('d-none disabled-action');
+                        $('.addToCartBtn').prop('disabled', true);
                     } else if (minimumQty > stockQty) {
                         $('.varient_less_than_min_qty_notice')
                             .html('<b>Only ' + stockQty + ' items are left</b>');
                         $('.add-to-cart').removeClass('d-none disabled-action');
+                        $('.addToCartBtn').prop('disabled', false);
                     } else {
                         $('.varient_less_than_min_qty_notice').html('');
                         $('.add-to-cart').removeClass('d-none');
+                        $('.addToCartBtn').prop('disabled', false);
                     }
                 },
                 error: function(xhr) {
+                    if (requestVersion === window.variantRequestVersion) {
+                        $('.addToCartBtn').prop('disabled', true);
+                    }
                     console.error('Variant fetch error:', xhr.responseText);
                 }
             });
@@ -1790,9 +1931,10 @@
         }
     
 	$(document).ready(function () {
+	    checkItemInCart();
 		const $activeVariant = $('.s-variant.active').first();
-			console.log("===========active variant=================",$activeVariant); 
 		if ($activeVariant.length) {
+			selectVariant($activeVariant.get(0));
 			const type = ($activeVariant.data('type') || '').toLowerCase();
 			const productId = $activeVariant.data('product-id'); 
 			const variantValueId = $activeVariant.data('vid');
@@ -1822,28 +1964,14 @@
                 variant_value_id: variantValueId
             },
             success: function(response) {
-    
-                console.log('Variant Images Response:', response);
-    
                 if (!response.images || response.images.length === 0) {
                     console.log('No images found for this variant');
                     return;
                 }
     
                 const firstImage = response.images[0];
-    
-                console.log('First Variant Image:', firstImage);
-    
-                /*
-                |--------------------------------------------------------------------------
-                | MAIN IMAGE
-                |--------------------------------------------------------------------------
-                */
-    
                 const zoomLink = document.getElementById('Zoom-1');
-    
                 if (zoomLink) {
-    
                     zoomLink.setAttribute('href', firstImage);
                     zoomLink.setAttribute('data-zoom-image-2x', firstImage);
                     zoomLink.setAttribute('data-image-2x', firstImage);
@@ -1855,15 +1983,7 @@
                         zoomImg.removeAttribute('srcset');
                     }
                 }
-    
-                /*
-                |--------------------------------------------------------------------------
-                | THUMBNAILS
-                |--------------------------------------------------------------------------
-                */
-    
                 let html = '';
-    
                 response.images.forEach(function(image, index) {
     
                     html += `
@@ -1881,9 +2001,7 @@
                 });
     
                 $('#productImageSelectors').html(html);
-    
                 if (typeof MagicZoom !== 'undefined') {
-    
                     try {
                         MagicZoom.refresh('Zoom-1');
                     } catch (e) {
@@ -1906,7 +2024,6 @@
                     zoomLinkAfterRefresh.setAttribute('data-image', firstImage);
                     zoomLinkAfterRefresh.setAttribute('data-zoom-image-2x', firstImage);
                     zoomLinkAfterRefresh.setAttribute('data-image-2x', firstImage);
-    
                     const imgAfterRefresh =
                         zoomLinkAfterRefresh.querySelector('img');
     
@@ -1914,11 +2031,7 @@
                         imgAfterRefresh.setAttribute('src', firstImage);
                         imgAfterRefresh.removeAttribute('srcset');
                     }
-    
-                    console.log('Main image forced:', firstImage);
-    
                 }, 100);
-    
             },
     
             error: function(xhr) {
@@ -1929,35 +2042,21 @@
 	
     function checkVariantStock(el) {
 		const productId = el.dataset.productId || $('#product_id').val();
-		const variantId = el.dataset.variantId;
-		const variantValueId = el.dataset.variantValueId;
-
-		console.log('Checking variant stock:', {
-			productId: productId,
-			variantId: variantId,
-			variantValueId: variantValueId
-		});
-
+		const selectedVariantIds = $('.s-variant.active').map(function() {
+			return $(this).data('vid');
+		}).get();
+		const requestVersion = ++window.variantStockRequestVersion;
 		$.ajax({
-
 			url: "{{ route('variant.stock.check') }}",
-
 			type: "POST",
-
 			data: {
 				_token: "{{ csrf_token() }}",
 				product_id: productId,
-				variant_id: variantId,
-				variant_value_id: variantValueId
+				selected_variant_ids: selectedVariantIds
 			},
 
 			success: function(res) {
-				console.log('Variant stock response:', res);
-				const productOut = $('#variantOutOfStock').data('product-out');
-
-				if (productOut == 1) {
-					$('#variantOutOfStock').removeClass('d-none');
-					$('.add-to-cart').addClass('disabled-action');
+				if (requestVersion !== window.variantStockRequestVersion) {
 					return;
 				}
 				$('.s-variant').removeClass('out-of-stock');
@@ -1965,6 +2064,7 @@
 					$(el).addClass('out-of-stock');
 					$('#variantOutOfStock').removeClass('d-none');
 					$('.add-to-cart').addClass('disabled-action');
+					$('.addToCartBtn').prop('disabled', true);
 				} else {
 					$('#variantOutOfStock').addClass('d-none');
 					$('.add-to-cart').removeClass('disabled-action');
@@ -2009,11 +2109,8 @@
         );
 
         flash.classList.add(alertClass);
-
         flash.innerHTML = `${icon} <span>${msg}</span>`;
-
         clearTimeout(window.flashMessageTimer);
-
         window.flashMessageTimer = setTimeout(function() {
             flash.classList.add('d-none');
         }, 3000);
@@ -2023,7 +2120,7 @@
         const productId = this.getAttribute('data-product-id');
         const heartIcon = this.querySelector('i');
     
-        if (!isLoggedIn) {
+        if (!window.isLoggedIn) {
             window.location.href = '/login';
             return;
         }
@@ -2057,74 +2154,20 @@
             console.error("Wishlist error:", error);
         });
     });
+    
+    function displayWishlistItem() {
+        let wishlistCount = (localStorage.getItem('wishlistCount') && localStorage.getItem('wishlistCount') != "undefined") ? JSON.parse(localStorage.getItem('wishlistCount')) : 0;
+        $(".wishlist-count").html(wishlistCount);
+    }
+
 </script>
-<script>
+{{-- <script>
   jQuery(document).on('ready', function () {
     AOS.init({
 		  duration: 1200,
 		})
   });
-</script>
-
-
-<script>
-	$(document).ready(function(){
-	  	$('.search-label-animation').slick({
-			slidesToShow: 1,
-			autoplay: true,
-			speed: 1000,
-			arrows: false,
-			dots: false,
-			// vertical: true,
-				// verticalSwiping: true
-	  	});
-	});
-</script>
-
-<script>
-	$(document).ready(function(){
-	  	$('.influencers_slide_inner').slick({
-			slidesToShow: 1,
-			autoplay: true,
-			arrows: false,
-			dots: true,
-			speed: 1000,
-	  	});
-	});
-</script>
-
-<script>
-	$(document).ready(function(){
-	  $('.best_seller_item').slick({
-			slidesToShow: 3,
-			slidesToScroll: 1,
-			centerMode: true,
-			arrows: false,
-			dots: false,
-			speed: 300,
-			centerPadding: '15px',
-			infinite: true,
-			autoplaySpeed: 5000,
-			autoplay: true
-		});
-	});
-</script>
-
-<script>
-	$(document).ready(function(){
-	  	$('.middle_sell_item_img').slick({
-			slidesToShow: 1,
-			slidesToScroll: 1,
-			arrows: true,
-			dots: true,
-			speed: 300,
-			infinite: true,
-			autoplaySpeed: 5000,
-			autoplay: true
-	  	});
-	});
-</script>
-
+</script> --}}
 <script>
 	$(document).ready(function(){
 	  $('.related_product_inner').slick({
@@ -2156,18 +2199,6 @@
 </script>
 
 <script>
-	$(window).scroll(function(){
-  		var sticky = $('.main_header_top'),
-    	scroll = $(window).scrollTop();
-
-  		if (scroll >= 50) sticky.addClass('header_fixed');
-  		else sticky.removeClass('header_fixed');
-	});
-</script>
-
-<script>
-
-
 $.getDocHeight = function(){
   return Math.max(
       $(document).height(),
@@ -2182,9 +2213,7 @@ $.getScrollPercentage = function(){
     $(window).scrollTop()
     );
 };
-
 </script>
-
 
 <script>
 $(function() {
@@ -2212,8 +2241,6 @@ $(function() {
   	if (navigator.userAgent.indexOf("Safari") != -1 && navigator.userAgent.indexOf("Chrome") == -1) {
     	html.addClass("isSafari");
   	}
-
-  // On Screen
 
   $.fn.isOnScreen = function() {
     	var elementTop = $(this).offset().top,
@@ -2271,58 +2298,6 @@ $(function() {
 
 </script>
 
-
-<script>
- 	var swiper = new Swiper('.swiper-container', {
-   		slidesPerView: 3,
-		loop: true,
-		spaceBetween: 0,
-		navigation: {
-			nextEl: '.swiper-button-next',
-			prevEl: '.swiper-button-prev',
-		},
- 	});
-</script>
-
-<script>
-   var swiper = new Swiper(".swiper", {
-		effect: "coverflow",
-		grabCursor: true,
-		centeredSlides: true,
-		coverflowEffect: {
-			rotate: 0,
-			stretch: 0,
-			depth: 100,
-			modifier: 3,
-			slideShadows: true
-		},
-     	loop: true,
-     	autoplay: true, // Enable auto-slide
-    	autoplayTimeout: 3000, // Set slide interval (in milliseconds)
-        autoplayHoverPause: true, // Pause on hover
-
-        navigation: {
-			nextEl: '.swiper-button-next',
-			prevEl: '.swiper-button-prev',
-		},
-		breakpoints: {
-			640: {
-				slidesPerView: 2
-			},
-			768: {
-				slidesPerView: 2
-			},
-			1024: {
-				slidesPerView: 3
-			},
-			1560: {
-				slidesPerView: 4
-			}
-		}
-   });
-   
-</script>
-
 <script>
 	$(document).ready(function(){
 		var element_to_animate = $('.grid_pattren_img_inner_box');
@@ -2358,7 +2333,7 @@ $(function() {
             console.log('onReady', arguments[0]);
         },
         onUpdate: function() {
-            console.log('onUpdated', arguments[0], arguments[1], arguments[2]);
+            // console.log('onUpdated', arguments[0], arguments[1], arguments[2]);
         },
         onZoomIn: function() {
             console.log('onZoomIn', arguments[0]);
