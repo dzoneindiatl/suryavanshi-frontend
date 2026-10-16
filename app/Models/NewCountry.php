@@ -13,6 +13,7 @@ class NewCountry extends Model
         'iso2',
         'iso3',
         'phone_code',
+        'exchange_rates',
         'currency_symbol_name',
         'currency_code',
         'currency_symbol',
