@@ -137,7 +137,7 @@
 	</div>
 </div>
 
-<button class="back_to_top_btn">Top</button>
+<button type="button" class="back_to_top_btn" aria-label="Back to top">Top</button>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.3.15/slick.min.js"></script>
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
@@ -325,13 +325,33 @@
 
 
 <script>
-	$(window).scroll(function(){
-    var sticky = $('.main_header_top'),
-      scroll = $(window).scrollTop();
+    (() => {
+        const header = document.querySelector('.main_header_top');
+        if (!header) return;
 
-    if (scroll >= 50) sticky.addClass('header_fixed');
-    else sticky.removeClass('header_fixed');
-  });
+        let isFixed = false;
+        let frameRequested = false;
+
+        const updateHeaderState = () => {
+            const shouldFix = window.scrollY >= 50;
+
+            if (shouldFix !== isFixed) {
+                isFixed = shouldFix;
+                header.classList.toggle('header_fixed', shouldFix);
+            }
+
+            frameRequested = false;
+        };
+
+        window.addEventListener('scroll', () => {
+            if (frameRequested) return;
+
+            frameRequested = true;
+            window.requestAnimationFrame(updateHeaderState);
+        }, { passive: true });
+
+        updateHeaderState();
+    })();
 </script>
 
 <script>

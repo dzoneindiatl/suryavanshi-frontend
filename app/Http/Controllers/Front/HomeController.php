@@ -36,7 +36,15 @@ use App\Models\FooterSubcategory;
 class HomeController extends Controller
 {
     public function index(){
-        return view('front.home.index'); 
+        $homeCategories = Category::whereNull('parent_id')
+            ->where('is_active', 1)
+            ->where('is_deleted', 0)
+            ->where('show_on_menu', 1)
+            ->select('id', 'name', 'slug', 'image', 'thumbnail_image', 'category_order')
+            ->orderBy('category_order', 'ASC')
+            ->get();
+
+        return view('front.home.index', compact('homeCategories'));
     }
 
     public function productListing(Request $request, $path)
