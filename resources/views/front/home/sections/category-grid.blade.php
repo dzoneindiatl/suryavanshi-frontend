@@ -122,10 +122,7 @@
                             </div>
                             <div class="jewellery-category-card-content">
                                 <h3>{{ $categoryName }}</h3>
-                                <span class="jewellery-category-explore">
-                                    <span>Explore Collection</span>
-                                    <span class="jewellery-category-explore-arrow" aria-hidden="true">&rarr;</span>
-                                </span>
+                               
                             </div>
                         </a>
                     </article>
@@ -181,7 +178,7 @@
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     movingCards.forEach((card) => {
-                        card.style.transition = 'transform 200ms linear';
+                        card.style.transition = 'transform 900ms linear';
                         card.style.transform = '';
                     });
                 });
@@ -194,7 +191,7 @@
                     card.classList.remove('is-moving');
                 });
                 resolve();
-            }, 230);
+            }, 600);
         });
 
         const revealSection = () => {

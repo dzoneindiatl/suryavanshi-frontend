@@ -16,39 +16,41 @@
     </div>
 
     <div class="product-carousel-shell new-arrivals-carousel-shell">
-        <button class="product-carousel-button product-carousel-button-prev" type="button" data-carousel-prev="new-arrivals-carousel" aria-label="Show previous new arrivals" onclick="this.nextElementSibling.scrollBy({ left: -(this.nextElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.nextElementSibling).gap) || 0)), behavior: 'auto' })">
+        <button class="product-carousel-button product-carousel-button-prev" type="button"
+            data-carousel-prev="new-arrivals-carousel" aria-label="Show previous new arrivals"
+            onclick="this.nextElementSibling.scrollBy({ left: -(this.nextElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.nextElementSibling).gap) || 0)), behavior: 'auto' })">
             <span aria-hidden="true">&larr;</span>
         </button>
 
         <div id="new-arrivals-carousel" class="new-arrivals-carousel" data-product-carousel>
-        @foreach ($newArrivalProducts as $product)
-            <article class="new-arrival-card">
-                <div class="new-arrival-card-media">
-                    <img
-                        src="{{ asset('assets/image/' . $product['image']) }}"
-                        alt="{{ $product['name'] }}"
-                        loading="lazy"
-                        decoding="async"
-                    >
-                    {{-- <span class="new-arrival-badge">New Arrival</span> --}}
-                    <div class="new-arrival-actions">
-                        <a href="#" aria-label="Add {{ $product['name'] }} to wishlist"><i class="fa fa-heart-o" aria-hidden="true"></i></a>
-                        <a href="#" aria-label="View {{ $product['name'] }}"><i class="fa fa-eye" aria-hidden="true"></i></a>
+            @foreach ($newArrivalProducts as $product)
+                <article class="new-arrival-card">
+                    <div class="new-arrival-card-media">
+                        <img src="{{ asset('assets/image/' . $product['image']) }}" alt="{{ $product['name'] }}"
+                            loading="lazy" decoding="async">
+                        {{-- <span class="new-arrival-badge">New Arrival</span> --}}
+                        <div class="new-arrival-actions">
+                            <a href="#" aria-label="Add {{ $product['name'] }} to wishlist"><i
+                                    class="fa fa-heart-o" aria-hidden="true"></i></a>
+                            <a href="#" aria-label="View {{ $product['name'] }}"><i class="fa fa-eye"
+                                    aria-hidden="true"></i></a>
+                        </div>
                     </div>
-                </div>
-                <div class="new-arrival-card-content">
-                    <span class="new-arrival-card-category">{{ $product['category'] }}</span>
-                    <h3>{{ $product['name'] }}</h3>
-                    <div class="new-arrival-card-footer">
-                        <span class="new-arrival-price">&#8377;{{ $product['price'] }}</span>
-                        <span class="new-arrival-arrow" aria-hidden="true">&rarr;</span>
+                    <div class="new-arrival-card-content">
+                        <span class="new-arrival-card-category">{{ $product['category'] }}</span>
+                        <h3>{{ $product['name'] }}</h3>
+                        <div class="new-arrival-card-footer">
+                            <span class="new-arrival-price">&#8377;{{ $product['price'] }}</span>
+                            <span class="new-arrival-arrow" aria-hidden="true">&rarr;</span>
+                        </div>
                     </div>
-                </div>
-            </article>
-        @endforeach
+                </article>
+            @endforeach
         </div>
 
-        <button class="product-carousel-button product-carousel-button-next" type="button" data-carousel-next="new-arrivals-carousel" aria-label="Show next new arrivals" onclick="this.previousElementSibling.scrollBy({ left: this.previousElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.previousElementSibling).gap) || 0), behavior: 'auto' })">
+        <button class="product-carousel-button product-carousel-button-next" type="button"
+            data-carousel-next="new-arrivals-carousel" aria-label="Show next new arrivals"
+            onclick="this.previousElementSibling.scrollBy({ left: this.previousElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.previousElementSibling).gap) || 0), behavior: 'auto' })">
             <span aria-hidden="true">&rarr;</span>
         </button>
     </div>

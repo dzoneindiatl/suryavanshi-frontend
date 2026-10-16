@@ -1,7 +1,7 @@
 <div class="bottom_sec_last">
     <div class="container">
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-7" >
                 <div class="l-band">
                     <div class="swiper">
                         <div class="swiper-wrapper">
@@ -17,7 +17,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-5">
                 <div class="bottom_sec_last_right">
                     <h3>Stay in Touch & Get Latest <b>Updates and Offers</b></h3>
                     <form method="post" id="banner_subscribe">
