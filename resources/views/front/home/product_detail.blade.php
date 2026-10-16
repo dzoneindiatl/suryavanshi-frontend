@@ -1436,7 +1436,7 @@
 				<li><a href="#">Blog</a></li>
 				</ul>
 			</div>
-			<div class="col-md-4">
+			<div class="col-md-4 address-section" >
 				<div class="addrGrp">
 				<h2>Office Address</h2>
 				<p>SB-155 A, Gandhi Nagar Mode, Main Tonk Road, Jaipur-302015, Rajasthan, INDIA</p>

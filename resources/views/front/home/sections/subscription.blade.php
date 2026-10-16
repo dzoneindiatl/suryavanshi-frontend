@@ -30,7 +30,7 @@
                                 <a target="_blank" href="#">
                                     <div class="whatsapp-in">
                                         <img alt="whatsapp" width="40" height="40" src="{{ asset('assets/image/whatsapp.webp') }}">
-                                        <div class="con"><p>Chat with us in</p><h3>WhatsApp</h3></div>
+                                        <div class="con"><h3>WhatsApp</h3></div>
                                     </div>
                                 </a>
                             </div>
@@ -38,7 +38,7 @@
                         <div class="inner_stay_connected">
                             <h5>Stay Connected</h5>
                             <ul class="footer_social_links">
-                                @foreach (['facebook', 'twitter', 'youtube', 'instagram', 'whatsapp'] as $social)
+                                @foreach (['facebook', 'twitter', 'youtube', 'instagram'] as $social)
                                     <li class="{{ $social === 'twitter' ? 'icon_twitter' : '' }}">
                                         <a target="_blank" href="#">@include('front.home.partials.svg-icon', ['name' => $social])</a>
                                     </li>

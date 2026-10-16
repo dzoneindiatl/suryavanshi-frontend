@@ -1537,6 +1537,7 @@ a.login-menu:hover .login-text {
     box-shadow: 4px 4px 5px rgba(124, 104, 104, 0.25);
     text-align: center;
     overflow: hidden;
+    border:1px solid black;
 }
 .best_details_section .best_img_wrap img {
     width: 100%;
@@ -1627,7 +1628,7 @@ a.login-menu:hover .login-text {
     background: radial-gradient(
         50% 50% at 50% 50%,
         rgba(209, 74, 97, 0.4) 0%,
-        rgba(255, 209, 217, 0.4) 100%
+        rgba(255, 209, 217, 0.4) 100% 
     );
     padding: 80px 0px;
 }
@@ -2564,12 +2565,15 @@ img.shop_img1 {
     color: #e1ad21;
 }
 .footer_main {
-    background: #f0f0f0;
+    background: rgba(0, 0, 0, 0.897);
     padding: 80px 0px;
-    background-image: url(../image/lines.png);
+    /* background-image: url(../image/lines.png); */
+}
+.footer_main_inner{
+    color: #BB8442;
 }
 .footer_main_inner h2 {
-    color: #222;
+    color: #BB8442;
     font-weight: 600;
     font-size: 24px;
     letter-spacing: 0.3px;
@@ -2584,7 +2588,7 @@ img.shop_img1 {
     margin-bottom: 10px;
 }
 .footer_main_inner ul li a {
-    color: #222;
+    color: #BB8442;
     font-size: 18px;
     text-decoration: none;
 }
@@ -2771,7 +2775,7 @@ ul.footer_social_links li.icon_twitter svg {
 .whatsapp-main .whatsapp .whatsapp-in h3 {
     color: #25d366;
     margin: 0;
-    font-size: 1.4rem;
+    font-size: 1rem;
     line-height: 1.1;
 }
 .whatsapp-main .whatsapp:hover {
@@ -4630,7 +4634,11 @@ button.btn_drop_sorting {
         font-size: 14px;
     }
     .addrGrp p {
+        
         font-size: 14px;
+    }
+    .address-section{
+        color: #BB8442;
     }
     .footer_main {
         padding: 70px 0px 60px;
@@ -5202,6 +5210,7 @@ body:has(.sub_menu_main:hover) {
 }
 
 .jewellery-category-card-content {
+    
     padding: 16px 2px 0;
 }
 
