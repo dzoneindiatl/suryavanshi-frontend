@@ -1,6 +1,6 @@
 @php
     $fallbackImages = ['ring1.png', 'ring2.png', 'ring3.png', 'ring4.png', 'ring5.png', 'ring6.png', 'ring1.png', 'ring2.png', 'ring3.png', 'ring4.png', 'ring5.png', 'ring6.png', 'ring1.png', 'ring2.png'];
-    $targetCategoryCount = 14;
+    $targetCategoryCount = 12;
     $categoryItems = collect($homeCategories ?? []);
 
     if ($categoryItems->isEmpty()) {
@@ -148,104 +148,81 @@
         const splitAt = Math.ceil(cards.length / 2);
         let topRowOrder = cards.slice(0, splitAt).map((card) => card.dataset.categoryOrder);
         let bottomRowOrder = cards.slice(splitAt).map((card) => card.dataset.categoryOrder);
-        let isAnimating = false;
         let hasShuffled = false;
 
-        const renderRows = (nextTopRow, nextBottomRow) => {
-            if (isAnimating) return;
-
+        const swapColumn = (columnIndex) => new Promise((resolve) => {
             const previousPositions = new Map(
                 cards.map((card) => [card.dataset.categoryOrder, card.getBoundingClientRect()])
             );
+            const movingKeys = [topRowOrder[columnIndex], bottomRowOrder[columnIndex]];
+            const movingCards = movingKeys.map((key) => cardByOrder.get(key));
 
-            rows[0].replaceChildren(...nextTopRow.map((key) => cardByOrder.get(key)));
-            rows[1].replaceChildren(...nextBottomRow.map((key) => cardByOrder.get(key)));
+            [topRowOrder[columnIndex], bottomRowOrder[columnIndex]] = [
+                bottomRowOrder[columnIndex],
+                topRowOrder[columnIndex],
+            ];
 
-            cards.forEach((card) => {
+            rows[0].replaceChildren(...topRowOrder.map((key) => cardByOrder.get(key)));
+            rows[1].replaceChildren(...bottomRowOrder.map((key) => cardByOrder.get(key)));
+
+            movingCards.forEach((card) => {
                 const previous = previousPositions.get(card.dataset.categoryOrder);
                 const current = card.getBoundingClientRect();
                 const offsetX = previous.left - current.left;
                 const offsetY = previous.top - current.top;
 
-                if (Math.abs(offsetX) < 1 && Math.abs(offsetY) < 1) return;
-
                 card.style.transition = 'none';
                 card.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                card.classList.add('is-moving');
             });
 
-            isAnimating = true;
             section.classList.add('is-shuffling');
 
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    cards.forEach((card) => {
-                        card.style.transition = 'transform 700ms cubic-bezier(.22, .75, .2, 1)';
+                    movingCards.forEach((card) => {
+                        card.style.transition = 'transform 200ms linear';
                         card.style.transform = '';
                     });
                 });
             });
 
             window.setTimeout(() => {
-                cards.forEach((card) => {
+                movingCards.forEach((card) => {
                     card.style.transition = '';
                     card.style.transform = '';
+                    card.classList.remove('is-moving');
                 });
-                section.classList.remove('is-shuffling');
-                isAnimating = false;
-            }, 760);
-        };
-
-        const shuffleRows = () => {
-            const nextTopRow = [...topRowOrder];
-            const nextBottomRow = [...bottomRowOrder];
-
-            // Exchange the row groups while keeping the balanced composition.
-            const sharedRow = Math.min(nextTopRow.length, nextBottomRow.length);
-            const exchangedTopRow = nextBottomRow.slice(0, sharedRow);
-            const exchangedBottomRow = nextTopRow.slice(0, sharedRow);
-
-            exchangedTopRow.push(...nextTopRow.slice(sharedRow));
-
-            topRowOrder = exchangedTopRow;
-            bottomRowOrder = exchangedBottomRow;
-            renderRows(exchangedTopRow, exchangedBottomRow);
-        };
+                resolve();
+            }, 230);
+        });
 
         const revealSection = () => {
             section.classList.add('is-visible');
         };
 
-        const triggerAtViewportCenter = () => {
+        const runInitialShuffle = async () => {
             if (hasShuffled) return;
 
-            const sectionBounds = section.getBoundingClientRect();
-            const viewportCenter = window.innerHeight / 2;
+            hasShuffled = true;
+            revealSection();
 
-            if (sectionBounds.top <= viewportCenter && sectionBounds.bottom >= viewportCenter) {
-                hasShuffled = true;
-                revealSection();
-                window.removeEventListener('scroll', triggerAtViewportCenter);
+            if (reducedMotion) return;
 
-                if (!reducedMotion) {
-                    window.setTimeout(shuffleRows, 350);
-                }
+            await new Promise((resolve) => window.setTimeout(resolve, 120));
+
+            for (let columnIndex = 0; columnIndex < Math.min(topRowOrder.length, bottomRowOrder.length); columnIndex += 1) {
+                await swapColumn(columnIndex);
+                await new Promise((resolve) => window.setTimeout(resolve, 20));
             }
+
+            section.classList.remove('is-shuffling');
         };
 
-        window.addEventListener('scroll', triggerAtViewportCenter, { passive: true });
-        triggerAtViewportCenter();
-
-        if ('IntersectionObserver' in window) {
-            const revealObserver = new IntersectionObserver(([entry], observer) => {
-                if (entry.isIntersecting) {
-                    revealSection();
-                    observer.unobserve(section);
-                }
-            }, { threshold: 0.12 });
-
-            revealObserver.observe(section);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runInitialShuffle, { once: true });
         } else {
-            revealSection();
+            window.requestAnimationFrame(runInitialShuffle);
         }
     })();
 </script>

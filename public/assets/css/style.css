@@ -6289,13 +6289,13 @@ body:has(.sub_menu_main:hover) {
 .jewellery-category-shuffle-row {
     display: grid;
     gap: clamp(12px, 1.8vw, 26px);
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     margin: 0 auto;
     width: 100%;
 }
 
 .jewellery-category-shuffle-row.is-offset {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     max-width: 100%;
 }
 
@@ -6388,6 +6388,11 @@ body:has(.sub_menu_main:hover) {
     border-color: rgba(198, 161, 91, .3);
 }
 
+.jewellery-category-shuffle .jewellery-category-card.is-moving {
+    position: relative;
+    z-index: 2;
+}
+
 @media (max-width: 767px) {
     .jewellery-categories-section {
         padding-bottom: 58px;
@@ -6436,7 +6441,7 @@ body:has(.sub_menu_main:hover) {
 @media (min-width: 768px) and (max-width: 1199px) {
     .jewellery-category-shuffle-row,
     .jewellery-category-shuffle-row.is-offset {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
