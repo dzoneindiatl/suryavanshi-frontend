@@ -1,7 +1,7 @@
 var notRequiredQtyAjaxClickonQtyBtn = true;
 function getSelectedVariants(cartItems = [], checkDuplicate = true) {
     let selected = {};
-    const productId = String($('#product_id').val() || '');
+    const productId = String($('.addToCartBtn').first().data('id') || '');
 
     $('.s-variant.active[data-type]').each(function() {
         const $variant = $(this);
@@ -13,8 +13,6 @@ function getSelectedVariants(cartItems = [], checkDuplicate = true) {
         }
     });
 
-    console.log('Selected Variants:', selected);
-
     if (!checkDuplicate) {
         return selected;
     }
@@ -24,109 +22,143 @@ function getSelectedVariants(cartItems = [], checkDuplicate = true) {
             return false;
         }
 
-        const variant = item.selectedVariants || {};
-        const selectedKeys = Object.keys(selected);
-        const variantKeys = Object.keys(variant);
-
-        if (selectedKeys.length !== variantKeys.length) {
-            return false;
+        const selectedIds = getSelectedVariantIds();
+        const existingIds = item.selectedVariantIds || [];
+        if (selectedIds.length && existingIds.length) {
+            return selectedIds.slice().sort().join(',') === existingIds.slice().sort().join(',');
         }
 
-        return selectedKeys.every(function(key) {
-            return String(variant[key]) === String(selected[key]);
-        });
+        return sameVariantSelection(item.selectedVariants, selected);
     });
 
     return exists ? null : selected;
 }
 
+function getSelectedVariantIds() {
+    return $('.s-variant.active[data-type]').map(function() {
+        return String($(this).attr('data-vid') || '');
+    }).get().filter(Boolean);
+}
+
+function sameVariantSelection(first, second) {
+    const firstEntries = Object.entries(first || {})
+        .map(([key, value]) => [String(key).toLowerCase(), String(value)])
+        .sort(([firstKey], [secondKey]) => firstKey.localeCompare(secondKey));
+    const secondEntries = Object.entries(second || {})
+        .map(([key, value]) => [String(key).toLowerCase(), String(value)])
+        .sort(([firstKey], [secondKey]) => firstKey.localeCompare(secondKey));
+
+    return JSON.stringify(firstEntries) === JSON.stringify(secondEntries);
+}
+
+function setAddToCartButtonState(button, isInCart) {
+    const $button = $(button);
+    $button.attr('data-cart-state', isInCart ? 'in-cart' : 'add');
+    $button.find('span').first().text(isInCart ? 'GO TO CART' : 'ADD TO CART');
+}
+
 $(document).on('click', '.addToCartBtn', function() {
-
-    let button = $(this);
-    if (button.text() === 'Go To Cart') {
-        window.location.href = goTocartUrl;
+    const button = $(this);
+    if (button.prop('disabled') || button.hasClass('disabled-action')) {
         return;
     }
-    let productId = button.data('id');
-    let productName = button.data('name');
-    let productType = button.data('producttype');
-    let sku = button.data('sku');
-    let slug = button.data('slug');
-    let price = button.data('price');
-    let sellingPrice = button.data('saleprice');
-    let discountType = button.data('discounttype');
-    let discountAmount = button.data('discount');
-    let rawTaxArr = button.attr('data-tax-arr');
-    let quantity = parseInt($('#quantity').val()) || 1;
-
-    if (isLoggedIn) {
-        let selectedVariants = getSelectedVariants([], false);
-        console.log('Logged-in selectedVariants:', selectedVariants);
-        isLoginUser(productId,quantity,selectedVariants);
+    if (button.attr('data-cart-state') === 'in-cart') {
+        window.location.href = viewCartUrl;
+        return;
+    }
+    const productId = button.data('id');
+    const quantity = parseInt($('#quantity').val(), 10) || 1;
+    const selectedVariants = getSelectedVariants([], false);
+    const selectedVariantIds = getSelectedVariantIds();
+    const requiredVariantCount = parseInt(button.attr('data-variant-count'), 10) || 0;
+    if (button.attr('data-variant-required') === 'true'
+        && selectedVariantIds.length < requiredVariantCount) {
+        showFlashMessage('Please select all product options.', 'error');
         return;
     }
 
-    let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-    let selectedVariants = getSelectedVariants(cartItems, true);
-    console.log('Guest selectedVariants:', selectedVariants);
-    if (selectedVariants === null) {
-        showFlashMessage(
-            "This product with selected options is already in your cart."
-        );
+    if (window.isLoggedIn) {
+        button.prop('disabled', true);
+        isLoginUser(productId, quantity, selectedVariants, null, null, selectedVariantIds, button);
         return;
     }
 
-    let productData = {
-        randomId: 'prod_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
-        productId: productId,
-        name: productName,
-        productType: productType,
-        sku: sku,
-        slug:slug,
-        quantity: quantity,
-        price: price,
-        sellingPrice: sellingPrice,
-        discountType: discountType,
-        discountAmount: discountAmount,
-        image: document.querySelector('.default-image')?.src || '',
-        selectedVariants: selectedVariants,
-        rawTaxArr: rawTaxArr
-    };
+    const stock = parseInt(button.attr('data-stock'), 10);
+    if (Number.isFinite(stock) && stock >= 0 && quantity > stock) {
+        showFlashMessage(stock > 0
+            ? 'Only ' + stock + ' item(s) are available.'
+            : 'This product is out of stock.', 'error');
+        return;
+    }
 
-    let isExist = cartItems.some(function(item) {
-        if (item.productId != productId) {
+    let cartItems;
+    try {
+        cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+        if (!Array.isArray(cartItems)) {
+            cartItems = [];
+        }
+    } catch (error) {
+        console.error('Unable to read guest cart.', error);
+        showFlashMessage('Unable to access your cart. Please try again.', 'error');
+        return;
+    }
+
+    const existingItem = cartItems.find(function(item) {
+        if (String(item.productId) !== String(productId)) {
             return false;
         }
 
-        let oldVariants = item.selectedVariants || {};
-        let newVariants = selectedVariants || {};
-
-        let oldKeys = Object.keys(oldVariants);
-        let newKeys = Object.keys(newVariants);
-
-        if (oldKeys.length !== newKeys.length) {
-            return false;
+        const existingIds = item.selectedVariantIds || [];
+        if (selectedVariantIds.length && existingIds.length) {
+            return selectedVariantIds.slice().sort().join(',')
+                === existingIds.slice().sort().join(',');
         }
 
-        return oldKeys.every(function(key) {
-            return oldVariants[key] === newVariants[key];
-        });
+        return sameVariantSelection(item.selectedVariants, selectedVariants);
     });
-
-    if (isExist) {
-        showFlashMessage("This product with selected options is already in your cart.");
-        // openCartDropdown();
+    const newQuantity = quantity;
+    if (Number.isFinite(stock) && stock >= 0 && newQuantity > stock) {
+        showFlashMessage('Only ' + stock + ' item(s) are available.', 'error');
         return;
     }
 
-    cartItems.push(productData);
-    localStorage.setItem('cartItems',JSON.stringify(cartItems));
-    $('.addToCartText').html("Go To Cart");
+    if (existingItem) {
+        existingItem.quantity = newQuantity;
+    } else {
+        cartItems.push({
+            randomId: 'prod_' + Date.now() + '_' + Math.floor(Math.random() * 10000),
+            productId: productId,
+            name: button.data('name'),
+            productType: button.data('producttype'),
+            sku: button.data('sku'),
+            slug: button.data('slug'),
+            quantity: quantity,
+            price: button.data('price'),
+            sellingPrice: button.data('saleprice'),
+            discountType: button.data('discounttype'),
+            discountAmount: button.data('discount'),
+            image: document.querySelector('.default-image')?.src || '',
+            selectedVariants: selectedVariants,
+            selectedVariantIds: selectedVariantIds,
+            rawTaxArr: button.attr('data-tax-arr')
+        });
+    }
+
+    try {
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    } catch (error) {
+        console.error('Unable to save guest cart.', error);
+        showFlashMessage('Unable to save your cart. Please try again.', 'error');
+        return;
+    }
+
+    setAddToCartButtonState(button, true);
+    $('.center-main').text(cartItems.length);
     showFlashMessage("Product added to cart successfully");
 });
 
 $(document).ready(function () {
-    if (!isLoggedIn) {
+    if (!window.isLoggedIn) {
         // updateHeaderCart();
     }
 });
@@ -237,18 +269,18 @@ function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
    
     let cartItems = [];
     cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
-    let productListContainer = $('.productListContainer');
-    let productListCartPageContainer = $('.productListCartPageContainer');
+    // let productListContainer = $('.productListContainer');
+    // let productListCartPageContainer = $('.productListCartPageContainer');
 
     console.log("cart ITem ----",cartItems); 
-    productListContainer.empty();
+    // productListContainer.empty();
     
     $('.center-main').html(cartItems.length);
 
     if (cartItems.length == 0) {
         $(".add-cart-footer").hide();
-        productListContainer.append(emptyCartImg);
-        productListCartPageContainer.append(emptyCartImg);
+        // productListContainer.append(emptyCartImg);
+        // productListCartPageContainer.append(emptyCartImg);
         $('.cart-collaterals').hide();
    } else {
         $(".add-cart-footer").show();
@@ -259,7 +291,7 @@ function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
     console.log(' before foreach notRequiredQtyAjaxClickonQtyBtn : ',notRequiredQtyAjaxClickonQtyBtn);
     console.log('cartItems : ',cartItems);
     var cartTotal = 0;
-    productListCartPageContainer.empty();
+    // productListCartPageContainer.empty();
 
     
     cartItems.forEach(function (item, index) {
@@ -404,7 +436,7 @@ function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
 
     // localStorage.setItem('applied_coupon',[]);
     // localStorage.setItem('coupon_discount',0);
-    if (!isLoggedIn) {
+    if (!window.isLoggedIn) {
         priceCalculation();
     }
 }
@@ -674,7 +706,7 @@ $(document).off('click','.addToNewQtyBtn, .addToDecQtyBtn').on('click','.addToNe
         e.preventDefault();
         var input =$(this).closest('.input-increment').find('.quantityInputs');
         var randomId =input.data('randomid');
-        if (isLoggedIn) {
+        if (window.isLoggedIn) {
             var productId =input.data('productid');
             var selectedVariants =input.data('variants') || {};
             var currentQty =parseInt(input.val()) || 1;
@@ -727,8 +759,8 @@ $(document).off('click','.addToNewQtyBtn, .addToDecQtyBtn').on('click','.addToNe
     }
 );
 
-function isLoginUser(productId, quantity, selectedVariants, type = null, cartId = null) {
-    if (!isLoggedIn) {
+function isLoginUser(productId, quantity, selectedVariants, type = null, cartId = null, selectedVariantIds = [], button = null) {
+    if (!window.isLoggedIn) {
         return;
     }
 
@@ -740,27 +772,43 @@ function isLoginUser(productId, quantity, selectedVariants, type = null, cartId 
             product_id: productId,
             quantity: quantity,
             selected_variants: selectedVariants,
+            selected_variant_ids: selectedVariantIds,
             addType: type,
             cart_id: cartId
         },
         success: function(response) {
-            console.log('Logged-in cart response:', response);
             if (!response.success) {
                 showFlashMessage(response.message || "Unable to update cart.");
                 return;
             }
             if (type === 'remove') {
-                $('.addToCartText').html("Add To Cart");
                 showFlashMessage("Product removed from cart","warning");
                 return;
             }
-            $('.addToCartText').html("Go To Cart");
+            if (button && selectedVariantIds.length) {
+                const selectedIds = selectedVariantIds.map(Number).sort((first, second) => first - second);
+                const exists = (window.productCartVariantIds || []).some(function(ids) {
+                    return ids.slice().map(Number).sort((first, second) => first - second).join(',')
+                        === selectedIds.join(',');
+                });
+                if (!exists) {
+                    window.productCartVariantIds = window.productCartVariantIds || [];
+                    window.productCartVariantIds.push(selectedIds);
+                }
+            }
+            setAddToCartButtonState(button || '.addToCartBtn', true);
             showFlashMessage("Product added to cart successfully");
-            // openCartDropdown();
         },
-        error: function(error) {
-            console.log('Logged-in cart error:', error);
-            showFlashMessage("Unable to update cart. Please try again.");
+        error: function(xhr) {
+            showFlashMessage(
+                xhr.responseJSON?.message || "Unable to update cart. Please try again.",
+                'error'
+            );
+        },
+        complete: function() {
+            if (button) {
+                $(button).prop('disabled', false);
+            }
         }
     });
 }
@@ -841,4 +889,3 @@ function getCoupon() {
         }
     });
 }
-

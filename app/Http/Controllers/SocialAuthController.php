@@ -42,12 +42,11 @@ class SocialAuthController extends Controller
         return Socialite::driver('facebook')->redirect();
     }
 
-    public function handleFacebookCallback(){
+    public function handleFacebookCallback()
+    {
         $facebookUser = Socialite::driver('facebook')->user();
         $customer = User::updateOrCreate(
-            [
-                'email' => $facebookUser->getEmail(),
-            ],
+            ['email' => $facebookUser->getEmail()],
             [
                 'name' => $facebookUser->getName(),
                 'facebook_id' => $facebookUser->getId(),
@@ -57,7 +56,7 @@ class SocialAuthController extends Controller
         if (!$customer->hasRole('customer')) {
             $customer->assignRole('customer');
         }
-        Cookie::queue('user_email',$customer->email,60 * 24 * 15);
+
         Auth::guard('customer')->login($customer);
         return redirect('/');
     }

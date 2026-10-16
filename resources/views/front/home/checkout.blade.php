@@ -423,7 +423,7 @@
 								</label>     
 							</div>
 							
-							<div class="checkout-payment-item">
+							<div class="checkout-payment-item" id="codPaymentOption">
 								<input class="checkout-payment-input payment_method" id="payment2" type="radio" name="payment" value="cod">
 								<label class="checkout-payment-label" for="payment2">
 									<p class="checkout-payment-title"><img src="images/icon-cod.png" alt=""> Cash on delivery</p>
@@ -433,7 +433,7 @@
 								</label>     
 							</div>
 							
-							<div class="checkout-payment-item">
+							<div class="checkout-payment-item" id="ccavenuePaymentOption">
 								<input class="checkout-payment-input payment_method" id="payment3" type="radio" name="payment" value="ccavenue">
 								<label class="checkout-payment-label" for="payment3">
 									<p class="checkout-payment-title"><img src="images/icon-upi.png" alt=""> Pay With CC Avenue</p>
@@ -443,7 +443,7 @@
 								</label>     
 							</div>
 							
-							<div class="checkout-payment-item">
+							<div class="checkout-payment-item" id="paypalPaymentOption">
 								<input class="checkout-payment-input payment_method" id="payment4" type="radio" name="payment" value="paypal">
 								<label class="checkout-payment-label" for="payment4">
 									<p class="checkout-payment-title"><img src="images/icon-paypal.png" alt=""> Pay with PayPal</p>
@@ -467,7 +467,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							    @foreach($carts as $cartItem)
+							@foreach($carts as $cartItem)
 								<tr class="cart_item">
 									<td class="product-name">
 										<div class="product-item-thumbnail">
@@ -479,7 +479,7 @@
 									</td>
 
 									<td class="product-total">
-										<span class="price-amount">
+										<span class="price-amount cart-country-price" data-base-amount="{{ number_format($cartItem->item_total) }}">
 											₹{{ number_format($cartItem->item_total, 2) }}
 										</span>
 									</td>
@@ -487,23 +487,23 @@
 							@endforeach
 						</tbody>
 						<tfoot>
-						<tr>
-							<th>Subtotal</th>
-							<td>
-								<span class="price_subtotal">
-									₹{{ number_format($subtotal, 2) }}
-								</span>
-							</td>
-						</tr>
+							<tr>
+								<th>Subtotal</th>
+								<td>
+									<span class="price_subtotal cart-country-price" data-base-amount="{{ number_format($subtotal, 2) }}">
+										₹{{ number_format($subtotal, 2) }}
+									</span>
+								</td>
+							</tr>
 
-						<tr>
-							<th>GST ({{ $finalTaxRate }}%)</th>
-							<td>
-								<span class="gst_txt_price">
-									₹{{ number_format($totalGst, 2) }}
-								</span>
-							</td>
-						</tr>
+							<tr>
+								<th>GST ({{ $finalTaxRate }}%)</th>
+								<td>
+									<span class="gst_txt_price cart-country-price" data-base-amount="{{ number_format($totalGst, 2) }}">
+										₹{{ number_format($totalGst, 2) }}
+									</span>
+								</td>
+							</tr>
 
 						{{-- <tr>
 							<th>Shipping</th>
@@ -515,26 +515,24 @@
 							</td>
 						</tr> --}}
 
-						@if($couponDiscount > 0)
-							<tr>
-								<th>Discount</th>
+							<tr id="checkoutCouponDiscount" style="{{ $couponDiscount > 0 ? '' : 'display:none;' }}">
+								<th>Coupon Discount</th>
 								<td>
-									<span class="discount_txt_price">
+									<span class="discount_txt_price cart-country-price" data-base-amount="{{ number_format($couponDiscount, 2) }}" data-display-sign="-">
 										-₹{{ number_format($couponDiscount, 2) }}
 									</span>
 								</td>
 							</tr>
-						@endif
 
-						<tr class="order-total">
-							<th>Total</th>
-							<td>
-								<span class="price_total">
-									₹{{ number_format($totalPayable, 2) }}
-								</span>
-							</td>
-						</tr>
-					</tfoot>
+							<tr class="order-total">
+								<th>Total</th>
+								<td>
+									<span class="price_total cart-country-price" data-base-amount="{{ number_format($totalPayable, 2) }}">
+										₹{{ number_format($totalPayable, 2) }}
+									</span>
+								</td>
+							</tr>
+						</tfoot>
 					</table>
 					<button type="submit" class="btn_place_order" id="placeOrder">Place order</button>
 				</div>
@@ -557,10 +555,170 @@
 	window.totalPayable = @json($totalPayable); 
 	window.shippingcharge = @json($shippingcharge); 
 	window.isBuyNow = @json($isBuyNow); 
+	window.checkoutBaseTotals = {
+		grandTotal: @json((float) $grandTotal),
+		totalPayable: @json((float) $totalPayable),
+		taxableAmount: @json((float) $taxableAmount)
+	};
+	window.couponValidationPending = false;
+	window.checkoutCouponInvalid = false;
 	console.log('CHECKOUT DATA:', window.dbCartItems);
 </script>
 <script>
-	
+	function updatePaymentMethods() {
+		let country = {};
+
+		try {
+			country = JSON.parse($('#countryData').val() || '{}');
+		} catch (e) {
+			country = {};
+		}
+
+		const countryCode = String(country.iso2 || '').toUpperCase();
+		const isIndia = countryCode === 'IN';
+
+		$('#paypalPaymentOption').toggle(!isIndia);
+		$('#ccavenuePaymentOption').toggle(isIndia);
+		$('#codPaymentOption').toggle(isIndia);
+
+		const $selectedPayment = $('input[name="payment"]:checked');
+
+		if ($selectedPayment.length &&
+			!$selectedPayment.closest('.checkout-payment-item').is(':visible')) {
+			$selectedPayment.prop('checked', false);
+		}
+	}
+
+	$(document).ready(function () {
+		updatePaymentMethods();
+	});
+
+	$(document).on('click', '.country-option', function () {
+		// Country selector ke existing click handler ke baad countryData update hona chahiye.
+		setTimeout(updatePaymentMethods, 0);
+	});
+	function getSelectedCurrency() {
+		let country = {};
+		try {
+			country = JSON.parse($('#countryData').val() || '{}'); 
+			console.log("=========country===========",country); 
+		} catch (e) {
+			country = {};
+		}
+		const currencyCode = country.currency_code || 'INR';
+		const currencySymbol = country.currency_symbol || '₹';
+        const rate = country.exchange_rates || 0; 
+		const countryName = country.name || 'India';
+		const countryId = country.id  || 102 ;  
+		return {
+			code: currencyCode,
+			symbol: currencySymbol,
+			rate: currencyCode === 'INR' ? 1 : rate,
+			cName : countryName,
+			cId:countryId 
+		};
+	}
+
+    function updateCartCountryPrices() {
+        const currency = getSelectedCurrency();
+        if (!currency.rate || currency.rate <= 0) {
+            console.error('Exchange rate not found:', currency.code);
+            return;
+        }
+        $('.cart-country-price').each(function () {
+           const baseAmount = Number(String($(this).attr('data-base-amount') || 0).replace(/,/g, ''));
+			const currencyRate = currency.rate; 
+			const convertedAmount = baseAmount * currencyRate;
+			const displaySign = $(this).attr('data-display-sign') || '';
+            $(this).text(
+                displaySign + currency.symbol + convertedAmount.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })
+            );
+        });
+    }
+
+	function applySavedCheckoutCoupon() {
+		if (window.isBuyNow) {
+			return;
+		}
+
+		const couponCode = localStorage.getItem('coupon_code');
+		if (!couponCode || !window.dbCartItems || window.dbCartItems.length === 0) {
+			return;
+		}
+
+		window.couponValidationPending = true;
+		window.checkoutCouponInvalid = false;
+		$('#placeOrder').prop('disabled', true);
+		$.ajax({
+			url: "{{ route('apply.coupon') }}",
+			type: 'POST',
+			dataType: 'json',
+			data: {
+				coupon_code: couponCode,
+				cart_total: window.subtotal,
+				cart_items: window.dbCartItems,
+				_token: $('meta[name="csrf-token"]').attr('content')
+			},
+			success: function (response) {
+				if (!response.status) {
+					localStorage.removeItem('coupon_id');
+					localStorage.removeItem('coupon_discount');
+					localStorage.removeItem('coupon_code');
+					window.checkoutCouponInvalid = true;
+					$('.error-msg').text(response.message || 'This coupon is no longer valid.');
+					return;
+				}
+
+				localStorage.setItem('coupon_id', response.coupon.id);
+				localStorage.setItem('coupon_discount', response.discount);
+				localStorage.setItem('coupon_code', response.coupon.coupon_code);
+				applyCheckoutCouponDiscount(response.discount);
+			},
+			error: function (xhr) {
+				localStorage.removeItem('coupon_id');
+				localStorage.removeItem('coupon_discount');
+				localStorage.removeItem('coupon_code');
+				window.checkoutCouponInvalid = true;
+				$('.error-msg').text(
+					xhr.responseJSON?.message || 'Unable to validate your coupon. Please try again.'
+				);
+			},
+			complete: function () {
+				window.couponValidationPending = false;
+				$('#placeOrder').prop('disabled', false);
+			}
+		});
+	}
+
+	function applyCheckoutCouponDiscount(discount) {
+		const couponDiscount = Math.min(
+			Math.max(0, Number(discount) || 0),
+			Number(window.checkoutBaseTotals.grandTotal) || 0
+		);
+		window.grandTotal = Math.max(0, window.checkoutBaseTotals.grandTotal - couponDiscount);
+		window.totalPayable = Math.max(0, window.checkoutBaseTotals.totalPayable - couponDiscount);
+		window.taxableAmount = Math.max(0, window.checkoutBaseTotals.taxableAmount - couponDiscount);
+
+		$('#checkoutCouponDiscount')
+			.show()
+			.find('.discount_txt_price')
+			.attr('data-base-amount', couponDiscount);
+		$('.price_total').attr('data-base-amount', window.totalPayable);
+		updateCartCountryPrices();
+	}
+
+	$(document).ready(applySavedCheckoutCoupon);
+
+    $(document).ready(function () {
+        updateCartCountryPrices();
+    });
+
+    $(document).on('click', '.country-option', function () {
+        updateCartCountryPrices();
+    });
 	$('#country_id').on('change',function(){
 		var countryId = $(this).val();  
 		$.ajax({
@@ -613,12 +771,28 @@
 	$('#placeOrder').on('click', function (e) {
 		e.preventDefault();
 		$('.error-msg').html('');
+		if (!window.isBuyNow && window.checkoutCouponInvalid) {
+			$('.error-msg').html('Your coupon could not be validated. Please return to your cart and apply it again.');
+			return false;
+		}
+		if (!window.isBuyNow && window.couponValidationPending) {
+			$('.error-msg').html('Please wait while your coupon is validated.');
+			return false;
+		}
 		let that = $(this);
 		let paymentMethod = $('input[name="payment"]:checked').val();
 		let addressInput = $('input[name="address"]:checked');
 		let addressId = addressInput.val();
 		let cartItems = window.dbCartItems || [];
 		console.log("=======paymentMethod========",paymentMethod); 
+
+		let countryData = getSelectedCurrency(); 
+		let currencySymbol = countryData.symbol;
+		let countryCode = countryData.code; 
+		let countryName = countryData.cName; 
+		let countryId = countryData.cId;
+		let currencyRate = countryData.rate; 
+
 		if (cartItems.length === 0) {
 			$('.error-msg').html('Your cart is empty, Please add some product in cart.');
 			return false;
@@ -646,6 +820,11 @@
 		if (paymentMethod === 'cod') {
 			let postData = {
 				cartItems: window.dbCartItems,
+				currencySymbol:currencySymbol,
+				countryCode:countryCode,
+				countryName:countryName,
+				countryId:countryId,
+				currencyRate:currencyRate,
 				sub_total: window.totalPayable,
 				total_gst: window.totalGst,
 				taxable_amount: window.taxableAmount,
@@ -657,9 +836,10 @@
 				tax_to: window.taxTo,
 				grand_total: window.grandTotal,
 				total_payable: window.totalPayable,
+				base_total_payable: window.checkoutBaseTotals.totalPayable,
 				payment_mode: 'cod',
-				coupon_id: localStorage.getItem('coupon_id'),
-				coupon_discount: parseFloat(localStorage.getItem('coupon_discount')) || 0,
+				coupon_id: window.isBuyNow ? null : localStorage.getItem('coupon_id'),
+				coupon_discount: window.isBuyNow ? 0 : (parseFloat(localStorage.getItem('coupon_discount')) || 0),
 
 				// Abhi shipping charge nahi hai
 				shippingcharge: 0,
@@ -691,6 +871,7 @@
 					if (data.success === true) {
 						localStorage.removeItem('coupon_id');
 						localStorage.removeItem('coupon_discount');
+						localStorage.removeItem('coupon_code');
 						window.location.href = data.url;
 					}
 				},
@@ -708,6 +889,11 @@
 
 			let postData = {
 				cartItems: window.dbCartItems,
+				currencySymbol:currencySymbol,
+				countryCode:countryCode,
+				countryName:countryName,
+				countryId:countryId,
+				currencyRate:currencyRate,
 				sub_total: window.totalPayable,
 				total_gst: window.totalGst,
 				taxable_amount: window.taxableAmount,
@@ -719,9 +905,10 @@
 				tax_to: window.taxTo,
 				grand_total: window.grandTotal,
 				total_payable: window.totalPayable,
+				base_total_payable: window.checkoutBaseTotals.totalPayable,
 				payment_mode: 'ccavenue',
-				coupon_id: localStorage.getItem('coupon_id'),
-				coupon_discount: parseFloat(localStorage.getItem('coupon_discount')) || 0,
+				coupon_id: window.isBuyNow ? null : localStorage.getItem('coupon_id'),
+				coupon_discount: window.isBuyNow ? 0 : (parseFloat(localStorage.getItem('coupon_discount')) || 0),
 				shippingcharge: 0,
 				billing_id: addressId,
 				shipping_id: addressId
@@ -754,41 +941,24 @@
 					}
 
 					if (data.success === true && data.payment_mode === 'ccavenue') {
+						const paymentForm = document.createElement('form');
+						paymentForm.method = 'POST';
+						paymentForm.action = "{{ route('front-ccavenue.pay') }}";
 
-						let paymentData = data.data;
+						const csrfInput = document.createElement('input');
+						csrfInput.type = 'hidden';
+						csrfInput.name = '_token';
+						csrfInput.value = $('meta[name="csrf-token"]').attr('content');
+						paymentForm.appendChild(csrfInput);
 
-						$.ajax({
-							type: 'POST',
-							url: "{{ route('front-ccavenue.pay') }}",
-							headers: {
-        						'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-    						},
-							data: paymentData,
-							success: function(paymentResponse) {
+						const orderInput = document.createElement('input');
+						orderInput.type = 'hidden';
+						orderInput.name = 'order_id';
+						orderInput.value = data.data.order_id;
+						paymentForm.appendChild(orderInput);
 
-								console.log(
-									'CCAvenue PAYMENT RESPONSE:',
-									paymentResponse
-								);
-
-								$('body').html(paymentResponse);
-							},
-							error: function(xhr) {
-
-								console.log(
-									'CCAvenue PAYMENT ERROR:',
-									xhr
-								);
-
-								that.prop('disabled', false)
-									.text('Place Order');
-
-								$('.error-msg').html(
-									xhr.responseJSON?.message ||
-									'Unable to start CCAvenue payment.'
-								);
-							}
-						});
+						document.body.appendChild(paymentForm);
+						paymentForm.submit();
 					}
 				},
 
@@ -812,6 +982,11 @@
 
 			let postData = {
 				cartItems: window.dbCartItems,
+				currencySymbol:currencySymbol,
+				countryCode:countryCode,
+				countryName:countryName,
+				countryId:countryId,
+				currencyRate:currencyRate,
 				sub_total: window.totalPayable,
 				total_gst: window.totalGst,
 				taxable_amount: window.taxableAmount,
@@ -823,11 +998,11 @@
 				tax_to: window.taxTo,
 				grand_total: window.grandTotal,
 				total_payable: window.totalPayable,
+				base_total_payable: window.checkoutBaseTotals.totalPayable,
 				payment_mode: 'paypal',
 
-				coupon_id: localStorage.getItem('coupon_id'),
-				coupon_discount:
-					parseFloat(localStorage.getItem('coupon_discount')) || 0,
+				coupon_id: window.isBuyNow ? null : localStorage.getItem('coupon_id'),
+				coupon_discount: window.isBuyNow ? 0 : (parseFloat(localStorage.getItem('coupon_discount')) || 0),
 
 				shippingcharge: 0,
 				billing_id: addressId,

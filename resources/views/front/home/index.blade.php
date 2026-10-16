@@ -6,17 +6,25 @@
     <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
     <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
   </div>
-  <div class="carousel-inner">
-    <div class="carousel-item active">
-      <img src="{{ asset('assets/image/new-slider1.jpg') }}" alt="slide 1">
-    </div>
-    <div class="carousel-item">
-      <img src="{{ asset('assets/image/new-slider2.jpg') }}" alt="slide 2">
-    </div>
-    <div class="carousel-item">
-      <img src="{{ asset('assets/image/slide_ring4.png') }}" alt="slide 3">
-    </div>
-  </div>
+  	<div class="carousel-inner">
+		@foreach($sliders as $key => $slider)
+		@php 
+			$active = 1 ; 
+		@endphp
+		<div class="carousel-item @if($active == 1) active @endif">
+			<img src="{{ asset('uploads/banners/'.$slider->media_url) }}" alt="slide {{ $key + 1 }}">
+		</div>
+		@php 
+			$active++ ; 
+		@endphp 
+		@endforeach 
+		{{-- <div class="carousel-item">
+			<img src="{{ asset('assets/image/new-slider2.jpg') }}" alt="slide 2">
+		</div>
+		<div class="carousel-item">
+			<img src="{{ asset('assets/image/slide_ring4.png') }}" alt="slide 3">
+		</div> --}}
+  	</div>
   <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
     <span class="visually-hidden">Previous</span>
@@ -942,7 +950,7 @@ sections.forEach((el) => observer.observe(el));
 		      		<img src="{{ asset('assets/image/image-with-text_small.webp') }}" alt="">
 		      	</div>
 		      </div>
-		      <a href="#" class="insta_sec_txt">
+		      <a href="{{ $instagramProfileUrl }}" class="insta_sec_txt" target="_blank" rel="noopener noreferrer">
 						<h3>Take me to instagram</h3>
 						<span class="insta_arrow">
 							<i class="fa fa-instagram"></i>
@@ -953,60 +961,21 @@ sections.forEach((el) => observer.observe(el));
 			<div class="col-md-4">
 				<div class="insta_sec_main">
 					<div class="insta_sec">
-						<div class="insta_sec_img insta_sec_small">
-							<img src="{{ asset('assets/image/insta1.webp') }}" alt="">
-							<div class="insta_icon">
-								<i class="fa fa-instagram"></i>
-							</div>
-						</div>
-						<div class="insta_sec_img insta_sec_medium">
-							<img src="{{ asset('assets/image/insta2.webp') }}" alt="">
-							<div class="insta_icon">
-								<i class="fa fa-instagram"></i>
-							</div>
-						</div>
-						<div class="insta_sec_img insta_sec_large">
-							<img src="{{ asset('assets/image/insta3.webp') }}" alt="">
-							<div class="insta_icon">
-								<i class="fa fa-instagram"></i>
-							</div>
-						</div>
-						<div class="insta_sec_img insta_sec_large">
-							<img src="{{ asset('assets/image/insta4.webp') }}" alt="">
-							<div class="insta_icon">
-								<i class="fa fa-instagram"></i>
-							</div>
-						</div>
-						<div class="insta_sec_img insta_sec_medium">
-							<img src="{{ asset('assets/image/insta5.webp') }}" alt="">
-							<div class="insta_icon">
-								<i class="fa fa-instagram"></i>
-							</div>
-						</div>
-						<div class="insta_sec_img insta_sec_small">
-							<img src="{{ asset('assets/image/insta1.webp') }}" alt="">
-							<div class="insta_icon">
-								<i class="fa fa-instagram"></i>
-							</div>
-						</div>
-						<div class="insta_sec_img insta_sec_small">
-							<img src="{{ asset('assets/image/insta2.webp') }}" alt="">
-							<div class="insta_icon">
-								<i class="fa fa-instagram"></i>
-							</div>
-						</div>
-						<div class="insta_sec_img insta_sec_large">
-							<img src="{{ asset('assets/image/insta3.webp') }}" alt="">
-							<div class="insta_icon">
-								<i class="fa fa-instagram"></i>
-							</div>
-						</div>
-						<div class="insta_sec_img insta_sec_medium">
-							<img src="{{ asset('assets/image/insta4.webp') }}" alt="">
-							<div class="insta_icon">
-								<i class="fa fa-instagram"></i>
-							</div>
-						</div>
+						@php
+							$instagramCardSizes = ['insta_sec_small', 'insta_sec_medium', 'insta_sec_large'];
+						@endphp
+						@forelse ($instagramPosts as $index => $post)
+							<a class="insta_sec_img {{ $instagramCardSizes[$index % count($instagramCardSizes)] }}"
+								href="{{ $post['permalink'] }}" target="_blank" rel="noopener noreferrer"
+								aria-label="View Instagram post">
+								<img src="{{ $post['image_url'] }}" alt="{{ $post['caption'] }}" loading="lazy">
+								<div class="insta_icon">
+									<i class="fa fa-instagram"></i>
+								</div>
+							</a>
+						@empty
+							<p>Instagram posts are temporarily unavailable.</p>
+						@endforelse
 					</div>
 				</div>
 			</div>

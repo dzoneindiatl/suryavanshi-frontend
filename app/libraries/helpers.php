@@ -325,26 +325,44 @@ if (!function_exists('DesignationbyName')) {
 }
 if (!function_exists('getCartData')) {
   function getCartData()
-  {  
-    if (auth()->check()) {
-      $cartData = Cart::where('user_id', auth()->user()->id)->select('product_id', 'quantity')->get()->toArray();
+  {
+    $customerId = Auth::guard('customer')->id();
+    if ($customerId) {
+      $cartData = Cart::where('user_id', $customerId)->select('product_id', 'quantity')->get()->toArray();
     } else {
-
-      // $cartData = session()->get('cartData', []);
-      $cartData = localStorage.getItem('cartItems');
+      $cartData = session()->get('cartData', []);
     }
-    if (!empty($cartData)) {
-      foreach ($cartData as &$cartVal) {
-        $productDetails = ProductVariantCombination::where('product_variant_combinations.id', $cartVal['product_id'] ?? 0)->leftJoin('products', 'products.id', 'product_variant_combinations.product_id')->select('product_variant_combinations.*', 'products.name', DB::raw('(SELECT name from variant_values WHERE id = product_variant_combinations.variant1_value_id ) as variant_value1_name'), DB::raw('(SELECT name from variant_values WHERE id = product_variant_combinations.variant2_value_id ) as variant_value2_name'))->first();
+    if (is_string($cartData)) {
+      $cartData = json_decode($cartData, true);
+    }
+    if (!is_array($cartData)) {
+      return [];
+    }
 
-        $cartVal['product_name'] = $productDetails->name ?? '';
-        $cartVal['variant_value1_name'] = $productDetails->variant_value1_name ?? '';
-        $cartVal['variant_value2_name'] = $productDetails->variant_value2_name ?? '';
-        $cartVal['product_price'] = ($productDetails->selling_price ?? 0) * ($cartVal['quantity'] ?? 0);
-        $cartVal['buying_price'] = ($productDetails->buying_price ?? 0) * ($cartVal['quantity'] ?? 0);
-        $productImage = ProductVariantCombinationImage::where('product_variant_combination_images.product_variant_combination_id', $productDetails->id)->leftJoin('product_images', 'product_images.id', 'product_variant_combination_images.product_image_id')->value('product_images.image');
-        $cartVal['product_image'] = (!empty($productImage)) ? Config('constant.PRODUCT_IMAGE_URL') . $productImage : Config('constant.IMAGE_URL') . "noimage.png";
-      }
+    foreach ($cartData as &$cartVal) {
+      $productDetails = ProductVariantCombination::where('product_variant_combinations.id', $cartVal['product_id'] ?? 0)
+        ->leftJoin('products', 'products.id', 'product_variant_combinations.product_id')
+        ->select(
+          'product_variant_combinations.*',
+          'products.name',
+          DB::raw('(SELECT name from variant_values WHERE id = product_variant_combinations.variant1_value_id ) as variant_value1_name'),
+          DB::raw('(SELECT name from variant_values WHERE id = product_variant_combinations.variant2_value_id ) as variant_value2_name')
+        )
+        ->first();
+
+      $cartVal['product_name'] = $productDetails->name ?? '';
+      $cartVal['variant_value1_name'] = $productDetails->variant_value1_name ?? '';
+      $cartVal['variant_value2_name'] = $productDetails->variant_value2_name ?? '';
+      $cartVal['product_price'] = ($productDetails->selling_price ?? 0) * ($cartVal['quantity'] ?? 0);
+      $cartVal['buying_price'] = ($productDetails->buying_price ?? 0) * ($cartVal['quantity'] ?? 0);
+      $productImage = $productDetails
+        ? ProductVariantCombinationImage::where('product_variant_combination_images.product_variant_combination_id', $productDetails->id)
+          ->leftJoin('product_images', 'product_images.id', 'product_variant_combination_images.product_image_id')
+          ->value('product_images.image')
+        : null;
+      $cartVal['product_image'] = $productImage
+        ? Config('constant.PRODUCT_IMAGE_URL') . $productImage
+        : Config('constant.IMAGE_URL') . 'noimage.png';
     }
 
     return $cartData;

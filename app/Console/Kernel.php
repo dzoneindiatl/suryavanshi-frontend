@@ -12,7 +12,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('app:update-exchange-rates')->dailyAt('05:00')->timezone('Asia/Kolkata');
     }
 
     /**

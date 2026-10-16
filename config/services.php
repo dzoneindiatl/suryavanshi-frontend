@@ -42,6 +42,12 @@ return [
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
         'redirect' => env('FACEBOOK_REDIRECT_URI'),
     ],
+    'instagram' => [
+        'user_id' => env('INSTAGRAM_USER_ID'),
+        'access_token' => env('INSTAGRAM_ACCESS_TOKEN'),
+        'graph_api_version' => env('INSTAGRAM_GRAPH_API_VERSION', 'v23.0'),
+        'profile_url' => env('INSTAGRAM_PROFILE_URL', 'https://www.instagram.com/'),
+    ],
     'paypal' => [
         'client_id' => env('PAYPAL_CLIENT_ID'),
         'client_secret' => env('PAYPAL_CLIENT_SECRET'),
@@ -49,5 +55,18 @@ return [
         'currency' => env('PAYPAL_CURRENCY', 'USD'),
         'mode' => env('PAYPAL_MODE', 'sandbox'),
     ],
+    'ccavenue' => [
+        'merchant_id' => env('CCAVENUE_MERCHANT_ID'),
+        'access_code' => env('CCAVENUE_ACCESS_CODE'),
+        'working_key' => env('CCAVENUE_WORKING_KEY'),
+        'gateway_url' => env('CCAVENUE_URL', 'https://secure.ccavenue.com/transaction/transaction.do'),
+        'currency' => env('CCAVENUE_CURRENCY', 'INR'),
+        'redirect_url' => env('CCAVENUE_REDIRECT_URL'),
+        'cancel_url' => env('CCAVENUE_CANCEL_URL'),
+    ],
+
+    'restcountries'=> [
+        'key'=>'rc_live_828356f106f449379f5d983336facb3b'
+    ]
 
 ];

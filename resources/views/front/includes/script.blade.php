@@ -1,7 +1,7 @@
 <script>
     window.csrfToken = "{{ csrf_token() }}";
+    window.isLoggedIn = @json(Auth::guard('customer')->check());
     var addToWish = "{{ route('front-addwish') }}";
-    const isLoggedIn = "{{ Auth::guard('customer')->check() ? true : false }}";
     var addToCart = "{{ route('user.addToCart') }}";
     var isOutOfStock = "{{ url('is-outofstock') }}"; 
     var getCouponUrl = "{{ route('get.coupon') }}";
@@ -13,7 +13,7 @@
 </script>
 <script>
     $('.wishlist_button').on('click',function(){
-        if(isLoggedIn){
+        if(window.isLoggedIn){
             window.location.href="{{ route('front-user.wishlist') }}";
         }else{
             window.location.href="{{ route('front-user.login') }}";
@@ -58,10 +58,10 @@
     }
 
     $(document).off('click', '.addtoWishList').on('click', '.addtoWishList', function () {
+    
         const productId = this.getAttribute('data-product-id');
         const heartIcon = this.querySelector('i');
-    
-        if (!isLoggedIn) {
+        if (!window.isLoggedIn) {
             window.location.href = '/login';
             return;
         }
@@ -95,35 +95,101 @@
             console.error("Wishlist error:", error);
         });
     });
+    function displayWishlistItem() {
+        let wishlistCount = (localStorage.getItem('wishlistCount') && localStorage.getItem('wishlistCount') != "undefined") ? JSON.parse(localStorage.getItem('wishlistCount')) : 0;
+        $(".wishlist-count").html(wishlistCount);
+    }
+
 </script>
 
 <script>
-  	const localCartData = JSON.parse(localStorage.getItem('cartItems') || '[]');
-    console.log("=========carts data============",localCartData); 
-    localCartData.forEach(function(item,index){
-        let productId = item.productId;
-        let localSelectedVariants = item.selectedVariants;
-        let quantity = item.quantity; 
-        if(isLoggedIn){
-            $.ajax({
-                url:window.mergeAddToCart,
-                method:'POST',
-                data:{
-                    _token: "{{ csrf_token() }}",
-                    productId:productId,
-                    SelectedVariants:localSelectedVariants,
-                    quantity:quantity,
-                },
-                success:function(response){
-                console.log(response);
-                    if(response == 'Cart Db Updated'){
-                        localStorage.removeItem('cartItems');
-                    }
-                },
-                error:function(err){
-                console.log(err); 
-                }
-            }); 
+    (function mergeGuestCartAfterLogin() {
+        if (!window.isLoggedIn || window.guestCartMergeInProgress) {
+            return;
         }
-    });
+
+        const skipCartMergeReload = sessionStorage.getItem('skipGuestCartMergeReload') === '1';
+        if (skipCartMergeReload) {
+            sessionStorage.removeItem('skipGuestCartMergeReload');
+        }
+
+        let cartItems;
+        try {
+            cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+            if (!Array.isArray(cartItems) || cartItems.length === 0) {
+                return;
+            }
+        } catch (error) {
+            console.error('Unable to read guest cart for account merge.', error);
+            return;
+        }
+
+        window.guestCartMergeInProgress = true;
+        cartItems.forEach(function(item, index) {
+            if (!item.randomId) {
+                item.randomId = 'legacy_' + Date.now() + '_' + index;
+            }
+        });
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+
+        $.ajax({
+            url: window.mergeAddToCart,
+            method: 'POST',
+            data: {
+                _token: window.csrfToken,
+                cart_items: cartItems
+            },
+            success: function(response) {
+                const databaseCartCount = parseInt(response.cart_count, 10) || 0;
+                const mergedItems = response.merged_items || [];
+                if (mergedItems.length === 0) {
+                    const localItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+                    $('.center-main, .cartTotal').text(databaseCartCount + localItems.length);
+                    if (response.errors && response.errors.length) {
+                        showFlashMessage(response.errors[0].message, 'warning');
+                    }
+                    return;
+                }
+
+                const mergedById = new Map(mergedItems.map(function(item) {
+                    return [String(item.random_id), parseInt(item.quantity, 10) || 0];
+                }));
+                const latestItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+                const remainingItems = latestItems.reduce(function(remaining, item) {
+                    const importedQuantity = mergedById.get(String(item.randomId));
+                    if (importedQuantity === undefined) {
+                        remaining.push(item);
+                        return remaining;
+                    }
+
+                    const currentQuantity = parseInt(item.quantity, 10) || 0;
+                    if (currentQuantity > importedQuantity) {
+                        item.quantity = currentQuantity - importedQuantity;
+                        remaining.push(item);
+                    }
+                    return remaining;
+                }, []);
+
+                localStorage.setItem('cartItems', JSON.stringify(remainingItems));
+                $('.center-main, .cartTotal').text(databaseCartCount + remainingItems.length);
+                const cartPath = new URL(window.viewCartUrl, window.location.origin).pathname.replace(/\/+$/, '');
+                const currentPath = window.location.pathname.replace(/\/+$/, '');
+                if (mergedItems.length && currentPath === cartPath && !skipCartMergeReload) {
+                    sessionStorage.setItem('skipGuestCartMergeReload', '1');
+                    window.location.reload();
+                    return;
+                }
+                if (response.errors && response.errors.length) {
+                    showFlashMessage(response.errors[0].message, 'warning');
+                }
+            },
+            error: function(xhr) {
+                console.error('Unable to merge guest cart.', xhr.responseText);
+                showFlashMessage(
+                    xhr.responseJSON?.message || 'Unable to merge your cart. Please try again.',
+                    'error'
+                );
+            }
+        });
+    })();
 </script>

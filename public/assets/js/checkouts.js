@@ -1,7 +1,7 @@
 
 /* Billing Address country */
 function getCartItems() {
-    if (isLoggedIn) {
+    if (window.isLoggedIn) {
         return window.dbCartItems || [];
     }
     return JSON.parse(localStorage.getItem('cartItems')) || [];

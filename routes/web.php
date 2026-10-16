@@ -51,7 +51,7 @@ Route::get('/product/product-sort-filter', [ShopController::class, 'productSortF
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.update.quantity');
 Route::post('/buy-now', [CheckoutController::class,'buyNow'])->name('product.buynow');
-Route::match(['get', 'post'], '/add-to-cart', [CartController::class, 'addToCart'])->name('user.addToCart');
+Route::post('/add-to-cart', [CartController::class, 'addToCart'])->name('user.addToCart');
 Route::post('merge/cart',[CartController::class,'mergeLocalCartData'])->name('merge.localcart'); 
 Route::match(['get', 'post'], '/get-cart-items', [CartController::class, 'getCartItems'])->name('user.get-cart-items');
 Route::post('/apply-coupons', [CartController::class, 'applyCoupon'])->name('apply.coupon');
@@ -85,6 +85,8 @@ Route::get('/get-cities', [App\Http\Controllers\Front\HomeController::class, 'ge
 Route::name('front-')->group(function () {
     Route::get('/', [App\Http\Controllers\Front\HomeController::class, 'index'])->name('home.index');
     Route::get('/shop/{categoryId?}/{subCategoryId?}/{childCategoryId?}', [App\Http\Controllers\Front\ShopController::class, 'index'])->name('shop.index');
+    Route::post('/ccavenue/response', [CCAvenueController::class, 'response'])->name('ccavenue.response');
+    Route::post('/ccavenue/cancel', [CCAvenueController::class, 'cancel'])->name('ccavenue.cancel');
     
         Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle'])->name("google");
         Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
@@ -165,10 +167,6 @@ Route::name('front-')->group(function () {
 
         
             Route::post('/ccavenue/pay', [CCAvenueController::class, 'pay'])->name('ccavenue.pay');
-            Route::post('/ccavenue/response', [CCAvenueController::class, 'response'])->name('ccavenue.response');
-            Route::post('/ccavenue/cancel', [CCAvenueController::class, 'cancel'])->name('ccavenue.cancel');
-
-
             Route::post('/paypal/create', [PaymentController::class, 'createPaypalOrder'])->name('paypal.create');
             Route::get('/paypal/success', [PaymentController::class, 'success'])->name('paypal.success');
             Route::get('/paypal/cancel', [PaymentController::class, 'cancel'])->name('paypal.cancel');
@@ -186,5 +184,3 @@ Route::name('front-')->group(function () {
 Route::post('/checkVarientStock', [App\Http\Controllers\Front\HomeController::class, 'variantStockCheck'])->name('variant.stock.check');
 Route::get('product/collection/{slug}', [HomeController::class, 'collectionListing'])->name('collections.show');
 Route::get('{path}', [HomeController::class, 'productListing'])->where('path', '.*')->name('category.show');
-
-
