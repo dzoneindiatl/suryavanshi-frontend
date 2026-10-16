@@ -83,8 +83,7 @@
 										<button type="reset" name="reset-button" class=" reset-button d-none d-md-none" aria-label="Clear search keywords">
 											<svg id="Component_593_1" data-name="Component 593 – 1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
 												<line id="Line_145" data-name="Line 145" x2="14.25" transform="translate(5.625 12)" fill="none" stroke="#832729" stroke-width="1"></line>
-												<rect id="Rectangle_9948" data-name="Rectangle 9948" width="24" height="24" fill="none"></rect>
-												<path id="Path_1438" data-name="Path 1438" d="M13.627,7,6.87,13.75l6.75,6.75" transform="translate(-1.717 -1.75)" fill="none" stroke="#832729" stroke-width="1"></path>	
+												<rect id="Rectangle_9948" data-name="Rectangle 9948" width="24" height="24" fill="none"></rect> <path id="Path_1438" data-name="Path 1438" d="M13.627,7,6.87,13.75l6.75,6.75" transform="translate(-1.717 -1.75)" fill="none" stroke="#832729" stroke-width="1"></path>	
 											</svg>
 										</button>
 										<button type="submit" name="search-button" class="search-button-color hidden-sm-down d-md-block pb-1" aria-label="Submit search keywords">
