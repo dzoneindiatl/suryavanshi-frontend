@@ -4274,13 +4274,14 @@ button.btn_drop_sorting {
     }
 }
 
-/* Arrow controls for the native horizontal product carousels. */
+/* Arrow controls & interactive animations for horizontal product carousels */
 .product-carousel-shell {
     align-items: center;
     display: flex;
     gap: clamp(10px, 1.5vw, 24px);
     margin: 0 auto;
     max-width: var(--homepage-content-max, 1600px);
+    position: relative;
 }
 
 .product-carousel-shell .new-arrivals-carousel,
@@ -4289,6 +4290,30 @@ button.btn_drop_sorting {
     min-width: 0;
     max-width: none;
     margin: 0;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 4px;
+    -webkit-overflow-scrolling: touch;
+    cursor: grab;
+    perspective: 1400px;
+    transform-style: preserve-3d;
+    outline: none;
+    padding-top: 10px;
+    padding-bottom: 14px;
+}
+
+.product-carousel-shell .new-arrivals-carousel:focus-visible,
+.product-carousel-shell .top-selling-carousel:focus-visible {
+    outline: 2px dashed rgba(198, 161, 91, 0.45);
+    outline-offset: 4px;
+}
+
+.product-carousel-shell .new-arrivals-carousel.is-dragging,
+.product-carousel-shell .top-selling-carousel.is-dragging {
+    cursor: grabbing !important;
+    scroll-behavior: auto !important;
+    scroll-snap-type: none !important;
+    user-select: none;
 }
 
 .product-carousel-button {
@@ -4299,14 +4324,28 @@ button.btn_drop_sorting {
     color: #252321;
     cursor: pointer;
     display: inline-flex;
-    flex: 0 0 40px;
+    flex: 0 0 42px;
     font-size: 20px;
-    height: 40px;
+    height: 42px;
     justify-content: center;
     line-height: 1;
     padding: 0;
-    transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, transform 300ms ease;
-    width: 40px;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    box-shadow: 0 4px 14px rgba(37, 35, 33, 0.06);
+    transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, transform 260ms cubic-bezier(0.2, 0.8, 0.4, 1), box-shadow 300ms ease;
+    width: 42px;
+    z-index: 2;
+}
+
+.product-carousel-button .carousel-btn-icon,
+.product-carousel-button span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 260ms cubic-bezier(0.2, 0.8, 0.4, 1);
+    will-change: transform;
 }
 
 .product-carousel-button:hover,
@@ -4315,11 +4354,129 @@ button.btn_drop_sorting {
     border-color: #c6a15b;
     color: #fff;
     transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(198, 161, 91, 0.35);
 }
 
-.product-carousel-button:focus-visible {
-    outline: 2px solid #c6a15b;
-    outline-offset: 4px;
+.product-carousel-button-prev:hover .carousel-btn-icon,
+.product-carousel-button-prev:hover span,
+.product-carousel-button-prev:focus-visible .carousel-btn-icon,
+.product-carousel-button-prev:focus-visible span {
+    transform: translateX(-3px) scale(1.12);
+}
+
+.product-carousel-button-next:hover .carousel-btn-icon,
+.product-carousel-button-next:hover span,
+.product-carousel-button-next:focus-visible .carousel-btn-icon,
+.product-carousel-button-next:focus-visible span {
+    transform: translateX(3px) scale(1.12);
+}
+
+.product-carousel-button:active {
+    transform: scale(0.92) !important;
+    box-shadow: 0 0 0 4px rgba(198, 161, 91, 0.28);
+}
+
+.product-carousel-button.is-clicked-prev .carousel-btn-icon,
+.product-carousel-button.is-clicked-prev span {
+    animation: carouselArrowNudgePrev 400ms cubic-bezier(0.2, 0.8, 0.4, 1);
+}
+
+.product-carousel-button.is-clicked-next .carousel-btn-icon,
+.product-carousel-button.is-clicked-next span {
+    animation: carouselArrowNudgeNext 400ms cubic-bezier(0.2, 0.8, 0.4, 1);
+}
+
+@keyframes carouselArrowNudgePrev {
+    0% { transform: translateX(0); }
+    35% { transform: translateX(-6px) scale(1.15); }
+    100% { transform: translateX(0); }
+}
+
+@keyframes carouselArrowNudgeNext {
+    0% { transform: translateX(0); }
+    35% { transform: translateX(6px) scale(1.15); }
+    100% { transform: translateX(0); }
+}
+
+/* Card Motion, Snap & Sliding Kinetics */
+.new-arrivals-carousel .new-arrival-card,
+.top-selling-carousel .top-selling-card {
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+    transform-origin: center center;
+    backface-visibility: hidden;
+    transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 380ms ease,
+                border-color 380ms ease,
+                opacity 380ms ease;
+    will-change: transform;
+}
+
+/* Directional inertia tilt when sliding */
+.new-arrivals-carousel.is-sliding-next .new-arrival-card,
+.top-selling-carousel.is-sliding-next .top-selling-card {
+    transform: translateY(-5px) scale(0.978) rotateY(-3.5deg) skewX(-0.5deg);
+}
+
+.new-arrivals-carousel.is-sliding-prev .new-arrival-card,
+.top-selling-carousel.is-sliding-prev .top-selling-card {
+    transform: translateY(-5px) scale(0.978) rotateY(3.5deg) skewX(0.5deg);
+}
+
+/* Staggered settle wave upon slide end */
+.new-arrivals-carousel .new-arrival-card:nth-child(1),
+.top-selling-carousel .top-selling-card:nth-child(1) { transition-delay: 20ms; }
+.new-arrivals-carousel .new-arrival-card:nth-child(2),
+.top-selling-carousel .top-selling-card:nth-child(2) { transition-delay: 40ms; }
+.new-arrivals-carousel .new-arrival-card:nth-child(3),
+.top-selling-carousel .top-selling-card:nth-child(3) { transition-delay: 60ms; }
+.new-arrivals-carousel .new-arrival-card:nth-child(4),
+.top-selling-carousel .top-selling-card:nth-child(4) { transition-delay: 80ms; }
+.new-arrivals-carousel .new-arrival-card:nth-child(5),
+.top-selling-carousel .top-selling-card:nth-child(5) { transition-delay: 100ms; }
+.new-arrivals-carousel .new-arrival-card:nth-child(6),
+.top-selling-carousel .top-selling-card:nth-child(6) { transition-delay: 120ms; }
+
+/* Luxury Diamond / Gold Sparkle Sheen sweep across card media when sliding */
+.new-arrival-card-media,
+.top-selling-card-media {
+    position: relative;
+    overflow: hidden;
+}
+
+.new-arrivals-carousel.is-sliding .new-arrival-card-media::before,
+.top-selling-carousel.is-sliding .top-selling-card-media::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        115deg,
+        transparent 35%,
+        rgba(255, 255, 255, 0.45) 48%,
+        rgba(198, 161, 91, 0.4) 52%,
+        transparent 65%
+    );
+    transform: translateX(-100%) rotate(25deg);
+    animation: carouselMediaShimmer 750ms ease forwards;
+    pointer-events: none;
+    z-index: 4;
+}
+
+@keyframes carouselMediaShimmer {
+    0% {
+        transform: translateX(-100%) rotate(25deg);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(100%) rotate(25deg);
+        opacity: 0;
+    }
 }
 
 @media (max-width: 767px) {
@@ -5828,6 +5985,9 @@ body:has(.sub_menu_main:hover) {
     overflow-y: visible;
     padding-bottom: 8px;
     scrollbar-width: none;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
 }
 
 .new-arrivals-carousel::-webkit-scrollbar {
@@ -5934,6 +6094,9 @@ body:has(.sub_menu_main:hover) {
     overflow-y: visible;
     padding: 0 0 8px;
     scrollbar-width: none;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
 }
 
 .top-selling-carousel::-webkit-scrollbar {
