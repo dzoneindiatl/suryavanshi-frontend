@@ -35,6 +35,31 @@
     animation: subcat-reveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     animation-delay: min(calc(var(--sub-i, 0) * 0.055s + 0.08s), 2.4s);
 }
+
+/* ── Child category text-reveal animation ────────────────────── */
+@keyframes childcat-reveal {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Base hidden state for child categories */
+.inner_submenu_vertical_inner ul li {
+    opacity: 0;
+    transform: translateY(10px);
+    will-change: opacity, transform;
+}
+
+/* When menu opens, reveal child categories one-by-one under each subcategory */
+.sub_menu_main.menu-open .inner_submenu_vertical_inner ul li {
+    animation: childcat-reveal 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: min(calc(var(--sub-i, 0) * 0.07s + 0.12s + var(--child-i, 0) * 0.045s), 2.4s);
+}
 </style>
 <div class="main_header_top">
 	<div class="header_main">
@@ -236,7 +261,7 @@
 																		$childCategorySlug = data_get($childCategory, 'slug'); 
 																		$childCategoryImage = data_get($childCategory, 'thumbnail_image'); 
 																	@endphp 
-																	<li> 
+																	<li style="--child-i: {{ $loop->index }};"> 
 																		<h4> 
 																			<a href="{{ route('category.show',['path'=>$categorySlug . '/' . $subCategorySlug . '/' . $childCategorySlug]) }}"> {{ $childCategoryName }} </a> 
 																		</h4> 
