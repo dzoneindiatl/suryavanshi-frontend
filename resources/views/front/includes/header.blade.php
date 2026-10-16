@@ -17,7 +17,7 @@
 					<div class="head_logo">
 						<a href="{{ url('/') }}" title="Jaipur Jewellery House">
 							<span class="logo-icon">
-								<img class="logo-icon-holder" src="{{ asset('assets/logos/1.png') }}" alt="logo">
+								<img class="logo-icon-holder" src="{{ asset('assets/logos/image.png') }}" alt="logo">
 							</span>
 						</a>
 					</div>
