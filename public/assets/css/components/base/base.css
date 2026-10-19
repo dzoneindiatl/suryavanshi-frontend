@@ -1,0 +1,284 @@
+/* ========================================================
+   COMPONENT: Base & Global Styles
+   ======================================================== */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+@import url("https://fonts.googleapis.com/css2?family=Questrial&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+html,
+body {
+    font-family: "Inter", sans-serif;
+    font-weight: 300;
+}
+
+.head_logo img {
+
+    padding: 0;
+    background-color: transparent;
+}
+svg {
+
+    right: 20px;
+    height: 65px;
+    cursor: pointer;
+    padding: 25px 10px 10px;
+    font-size: 0.8rem;
+    z-index: 9999;
+    text-transform: uppercase;
+    color: #fff;
+    background-color: #ba8342;
+    text-align: center;
+    border: none;
+    display: inline-block;
+    border-radius: 100px;
+
+}
+.back_to_top_btn:hover {
+    background-color: #9b6322;
+}
+.back_to_top_btn:after {
+    content: "";
+    position: absolute;
+    top: 14px;
+    transform: rotate(273deg);
+    right: 17px;
+    width: 10px;
+    height: 17px;
+    background-size: cover;
+    background: url(../image/btn-arrow-up.svg) no-repeat 0 0;
+}
+
+@keyframes up-down {
+    0% {
+        transform: translate(1px, 20px);
+    }
+    24% {
+        transform: translate(1px, 30px);
+    }
+    50% {
+        transform: translate(1px, 12px);
+    }
+    74% {
+        transform: translate(1px, 22px);
+    }
+    100% {
+        transform: translate(1px, 22px);
+    }
+}
+
+@-moz-keyframes up-down {
+    0% {
+        -moz-transform: translate(1px, 20px);
+    }
+    24% {
+        -moz-transform: translate(1px, 30px);
+    }
+    50% {
+        -moz-transform: translate(1px, 12px);
+    }
+    74% {
+        -moz-transform: translate(1px, 22px);
+    }
+    100% {
+        -moz-transform: translate(1px, 22px);
+    }
+}
+
+@-webkit-keyframes up-down {
+    0% {
+        -webkit-transform: translate(1px, 20px);
+    }
+    24% {
+        -webkit-transform: translate(1px, 30px);
+    }
+    50% {
+        -webkit-transform: translate(1px, 12px);
+    }
+    74% {
+        -webkit-transform: translate(1px, 22px);
+    }
+    100% {
+        -webkit-transform: translate(1px, 22px);
+    }
+}
+
+@-o-keyframes up-down {
+    0% {
+        -o-transform: translate(1px, 20px);
+    }
+    24% {
+        -o-transform: translate(1px, 30px);
+    }
+    50% {
+        -o-transform: translate(1px, 12px);
+    }
+    74% {
+        -o-transform: translate(1px, 22px);
+    }
+    100% {
+        -o-transform: translate(1px, 22px);
+    }
+}
+
+@-ms-keyframes up-down {
+    0% {
+        -ms-transform: translate(1px, 20px);
+    }
+    24% {
+        -ms-transform: translate(1px, 30px);
+    }
+    50% {
+        -ms-transform: translate(1px, 12px);
+    }
+    74% {
+        -ms-transform: translate(1px, 22px);
+    }
+    100% {
+        -ms-transform: translate(1px, 22px);
+    }
+}
+
+
+/* Lock the page while a desktop mega menu is open, but keep the menu scrollable. */
+html {
+    scrollbar-gutter: stable;
+}
+
+html:has(.sub_menu_main:hover),
+body:has(.sub_menu_main:hover) {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+.header_mega_menu {
+    overscroll-behavior: contain;
+}
+
+
+/* Homepage-wide alignment and section rhythm. */
+:root {
+    --homepage-gutter: clamp(18px, 4vw, 68px);
+    --homepage-content-max: 1600px;
+}
+
+
+
+.jewellery-categories-heading,
+.jewellery-category-carousel-shell,
+.featured-collections-heading,
+.featured-collections-grid,
+.new-arrivals-heading,
+.new-arrivals-carousel,
+.top-selling-heading,
+.top-selling-carousel {
+    max-width: var(--homepage-content-max);
+}
+
+
+
+.shop_by_budget_main_inner,
+.shop_look_inner {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: var(--homepage-content-max);
+    width: min(var(--homepage-content-max), calc(100% - (2 * var(--homepage-gutter))));
+}
+
+
+
+.love_main {
+    box-sizing: border-box;
+    max-width: none;
+
+}
+
+.influencers_main > .container,
+.bottom_sec_last > .container {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: var(--homepage-content-max);
+    width: min(var(--homepage-content-max), calc(100% - (2 * var(--homepage-gutter))));
+}
+
+.shop_by_budget_main,
+.shop_look_main,
+.custom_testimonial_main,
+.influencers_main,
+.bottom_sec_last {
+    padding-top: clamp(72px, 7vw, 110px);
+    padding-bottom: clamp(72px, 7vw, 110px);
+}
+
+@media (max-width: 767px) {
+    html,
+    body {
+        overflow-x: hidden;
+    }
+
+    .middle_sell_item_img {
+        padding-top: 70px;
+    }
+
+    .wrap_inner_sec {
+        padding-top: 48px;
+        padding-bottom: 48px;
+    }
+
+    .shop_by_budget_main,
+    .shop_look_main,
+    .custom_testimonial_main,
+    .influencers_main,
+    .bottom_sec_last {
+        padding-top: 58px;
+        padding-bottom: 58px;
+    }
+}
+
+
+/* Subtle motion for the floating Back to Top control. */
+.back_to_top_btn {
+    animation: backToTopBreath 4.5s ease-in-out infinite;
+    box-shadow: 0 6px 16px rgba(186, 131, 66, .18);
+    transition: background-color 300ms ease, box-shadow 300ms ease, transform 300ms ease;
+}
+
+.back_to_top_btn:hover,
+.back_to_top_btn:focus-visible {
+    animation-play-state: paused;
+    background-color: #9b6322;
+    box-shadow: 0 10px 22px rgba(186, 131, 66, .28);
+    transform: translateY(-3px);
+}
+
+.back_to_top_btn:focus-visible {
+    outline: 2px solid #c6a15b;
+    outline-offset: 4px;
+}
+
+@keyframes backToTopBreath {
+    0%,
+    100% {
+        box-shadow: 0 6px 16px rgba(186, 131, 66, .18);
+    }
+
+    50% {
+        box-shadow: 0 8px 20px rgba(186, 131, 66, .28);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .back_to_top_btn {
+        animation: none;
+        transition: none;
+    }
+}
+
+
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1430px;
+    }
+}

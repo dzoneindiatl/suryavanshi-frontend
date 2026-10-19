@@ -1,0 +1,125 @@
+/* ========================================================
+   COMPONENT: Best Sellers
+   ======================================================== */
+
+    bottom: 15px;
+    left: 50%;
+    transform: translate(-50%, 0%);
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    padding: 0px;
+    margin: 0px;
+    list-style: none;
+}
+.middle_sell_item_img ul.slick-dots li button {
+    border-radius: 50%;
+    font-size: 0px;
+    border: medium none;
+    background: #000;
+    padding: 0px;
+    width: 8px;
+    opacity: 0.3;
+    height: 8px;
+}
+.middle_sell_item_img ul.slick-dots li.slick-active button {
+    background: #fff;
+    opacity: 1;
+}
+.middle_sell_item_img button.slick-prev {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    border: medium none;
+    padding: 0px;
+    background: transparent;
+    font-size: 0px;
+}
+.middle_sell_item_img button.slick-prev:before {
+    content: "\f104";
+    font-size: 50px;
+    color: #fff;
+    font-family: FontAwesome;
+}
+.middle_sell_item_img button.slick-next {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    border: medium none;
+    padding: 0px;
+    background: transparent;
+    font-size: 0px;
+}
+.middle_sell_item_img button.slick-next:before {
+    content: "\f105";
+    font-size: 50px;
+    color: #fff;
+    font-family: FontAwesome;
+}
+
+.shop_by_budget_main {
+    margin-top: 80px;
+    background: radial-gradient(
+        50% 50% at 50% 50%,
+        rgba(209, 74, 97, 0.4) 0%,
+        rgba(255, 209, 217, 0.4) 100% 
+    );
+    padding: 80px 0px;
+}
+.shop_by_budget_main_inner {
+    max-width: 1200px;
+    margin: 0px auto;
+}
+.shop_budget_list_inner {
+    position: relative;
+    max-width: 240px;
+    overflow: hidden;
+}
+.shop_budget_list .shop_budget_list_inner:hover .shop_budget_list_img:before {
+    visibility: visible;
+    opacity: 1;
+    width: 0;
+}
+.shop_budget_list .shop_budget_list_inner .shop_budget_list_img:before,
+.shop_budget_list .shop_budget_list_inner .shop_budget_list_img:after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    margin: auto;
+    transition: all 0.5s ease;
+    z-index: 5;
+    top: 0px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    opacity: 0;
+    visibility: hidden;
+    background-color: #f8f8f84d;
+    pointer-events: none;
+}
+.shop_budget_list .shop_budget_list_inner:hover .shop_budget_list_img:after {
+    visibility: visible;
+    opacity: 1;
+    height: 0;
+}
+.shop_budget_list_img {
+    overflow: hidden;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    position: relative;
+    border: 2px solid transparent;
+}
+.shop_budget_list_img img {
+    width: 238px;
+    height: 238px;
+    object-fit: cover;
+    border-radius: 50%;
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .best_details_section {
+        width: 80%;
+    }
+}

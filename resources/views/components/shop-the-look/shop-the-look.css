@@ -1,0 +1,188 @@
+/* ========================================================
+   COMPONENT: Shop the Look
+   ======================================================== */
+
+    color: #fff;
+    text-align: center;
+    margin-bottom: 40px;
+}
+.influencers_txt h3 {
+    color: #6e0d1d;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.3;
+    margin: 0px;
+    background-color: #fff;
+    padding: 4px;
+    width: -webkit-fit-content;
+    width: -moz-fit-content;
+    width: fit-content;
+    border-radius: 5px;
+}
+.influencers_slide_inner ul.slick-dots {
+    position: absolute;
+    top: 10px;
+    left: 0px;
+    right: 0px;
+    margin: 0px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0px;
+}
+.influencers_slide_inner ul.slick-dots li {
+    list-style: none;
+}
+.influencers_slide_inner ul.slick-dots li button {
+    list-style: none;
+    width: 30px;
+    height: 5px;
+    background: #fff;
+    margin: 0px 5px;
+    opacity: 0.5;
+    cursor: pointer;
+    border: medium none;
+    padding: 0px;
+    font-size: 0px;
+}
+.influencers_slide_inner ul.slick-dots li.slick-active button {
+    opacity: 1;
+}
+.influencers_slide_inner {
+    margin-top: 77px;
+}
+.influencers_box {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.influencers_box h2 {
+    font-size: 55px;
+    text-align: center;
+}
+.influencers_box p {
+    text-align: center;
+    max-width: 80%;
+    margin: 0px auto;
+}
+.influencers_box_inner {
+    position: relative;
+    margin-top: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.influencers_img1 img,
+.influencers_img2 img,
+.influencers_img3 img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transition: all 0.5s ease-in-out;
+}
+.influencers_img1:hover img,
+.influencers_img2:hover img,
+.influencers_img3:hover img {
+    transform: scale(1.1);
+}
+.influencers_img1 {
+    width: 150px;
+    height: 150px;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 5px solid #ba8342;
+    background: #fff;
+    padding: 5px;
+    margin-top: 70px;
+    transition: all 0.3s ease-in-out;
+}
+.influencers_img1:hover {
+    box-shadow: 0px 0px 15px #e1ad2275;
+}
+.influencers_img2 {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 5px solid #ba8342;
+    background: #fff;
+    padding: 5px;
+    margin-top: -70px;
+    transition: all 0.3s ease-in-out;
+}
+.influencers_img2:hover {
+    box-shadow: 0px 0px 15px #e1ad2275;
+}
+
+@media (max-width: 767px) {
+    .shop_look_inner1 {
+        gap: 70px;
+        padding: 0px 15px;
+        flex-direction: column;
+    }
+    img.shop_img1 {
+        left: -68px;
+        width: 100%;
+    }
+    img.shop_img2 {
+        right: -68px;
+        width: 100%;
+    }
+    img.shop_img3 {
+        width: 100%;
+    }
+    .shop_look_inner_right {
+        width: 100%;
+    }
+    .shop_look_inner_right h2 {
+        font-size: 35px;
+    }
+    .shop_look_inner_right p {
+        font-size: 16px;
+        line-height: 20px;
+    }
+    a.btn_shop_look {
+        width: 180px;
+        margin-top: 10px;
+    }
+    .shop_look_main {
+        padding: 130px 0px 80px;
+        overflow: hidden;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .shop_look_inner1 {
+        gap: 25px;
+    }
+    img.shop_img1 {
+        left: 15px;
+    }
+    img.shop_img2 {
+        right: 15px;
+    }
+    .shop_look_inner_right h2 {
+        font-size: 35px;
+    }
+    .shop_look_inner_right p {
+        font-size: 15px;
+        line-height: 20px;
+    }
+    a.btn_shop_look {
+        width: 170px;
+        height: 44px;
+        line-height: 44px;
+        margin-top: 10px;
+    }
+    img.shop_img3 {
+        max-width: 100%;
+    }
+    .shop_img_reveal {
+        max-width: 70%;
+        margin: 0px auto;
+    }
+}

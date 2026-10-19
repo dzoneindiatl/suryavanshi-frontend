@@ -1,0 +1,114 @@
+/* ========================================================
+   COMPONENT: Subscription & Newsletter
+   ======================================================== */
+
+    height: 46px;
+}
+input.btn_subs:hover,
+input.btn_subs:focus {
+    background: #ba8342;
+    color: #fff;
+    border: 1px solid #ba8342;
+    outline: none;
+}
+input.int_email_btn::-webkit-input-placeholder {
+    color: #686868;
+}
+input.int_email_btn::-moz-placeholder {
+    color: #686868;
+}
+input.int_email_btn:-ms-input-placeholder {
+    color: #686868;
+}
+input.int_email_btn:-moz-placeholder {
+    color: #686868;
+}
+.inner_stay_connected h5 {
+    text-align: center;
+    font-family: cursive;
+    margin-bottom: 10px;
+}
+ul.footer_social_links {
+    list-style: none;
+    padding: 0px;
+    gap: 10px;
+    margin: 0px;
+    display: flex;
+}
+ul.footer_social_links li a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #000;
+    position: relative;
+    width: 35px;
+    height: 35px;
+}
+ul.footer_social_links li a:before {
+    background: #fff;
+    transform: scale(1);
+}
+ul.footer_social_links li a:hover:before {
+    transform: scale(0);
+}
+ul.footer_social_links li a:after,
+ul.footer_social_links li a:before {
+    width: 35px;
+    height: 35px;
+    transition: all ease-in-out 0.35s;
+    position: absolute;
+    left: 0;
+    top: 0;
+    content: "";
+    pointer-events: none;
+    border-radius: 100%;
+    z-index: 1;
+}
+ul.footer_social_links li a:after {
+    background: #ba8342;
+    transform: scale(0);
+
+@media (max-width: 767px) {
+    .bottom_sec_last {
+        padding: 80px 0px;
+    }
+    .bottom_sec_last_right {
+        margin-top: 20px;
+    }
+    #banner_subscribe {
+        padding: 15px;
+    }
+    input.btn_subs {
+        right: 16px;
+    }
+    .bottom_sec_last_icon {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .bottom_sec_last_right h3 {
+        font-size: 20px;
+    }
+    .bottom_sec_last_right h3 b {
+        display: inline;
+    }
+    #banner_subscribe {
+        padding: 10px;
+        flex-direction: column;
+        gap: 15px;
+    }
+    input.btn_subs {
+        width: 100%;
+        font-size: 15px;
+        position: inherit;
+        right: auto;
+        line-height: 38px;
+        height: 40px;
+    }
+    .bottom_sec_last_icon {
+        flex-direction: column;
+        gap: 20px;
+    }
+}
