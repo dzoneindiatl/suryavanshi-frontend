@@ -12,9 +12,9 @@
         @foreach (range(1, 5) as $number)
             <div class="testimonial_line testimonial_line{{ $number }}">
                 <div class="testimonial_border_line"></div>
-                <div class="testimonial_clip"><img src="{{ asset('assets/image/ribbon1.png') }}" width="28" height="30"></div>
+                <div class="testimonial_clip"><img src="{{ asset('assets/image/ribbon1.png') }}" alt="" width="28" height="30"></div>
                 <div class="testimonial_item">
-                    <div class="testimonial_image"><img src="{{ asset('assets/image/' . $testimonial['image']) }}" alt="img1" width="277" height="242"></div>
+                    <div class="testimonial_image"><img src="{{ asset('assets/image/' . $testimonial['image']) }}" alt="{{ $testimonial['name'] }}" width="277" height="242" loading="lazy"></div>
                     <div class="testimonial_title">{{ $testimonial['name'] }}</div>
                     <div class="testimonial_desc">{{ $testimonial['description'] }}</div>
                 </div>
@@ -22,3 +22,46 @@
         @endforeach
     </div>
 </div>
+
+<script>
+    (function () {
+        function initTestimonialDrag() {
+            var slider = document.querySelector('.teatimonial_card_inner');
+            if (!slider || slider.dataset.dragInit === 'true') return;
+            slider.dataset.dragInit = 'true';
+
+            var isDown = false;
+            var startX = 0;
+            var scrollLeft = 0;
+
+            slider.addEventListener('mousedown', function (e) {
+                isDown = true;
+                slider.style.cursor = 'grabbing';
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+
+            window.addEventListener('mouseup', function () {
+                if (isDown) {
+                    isDown = false;
+                    if (slider) slider.style.cursor = '';
+                }
+            });
+
+            slider.addEventListener('mousemove', function (e) {
+                if (!isDown) return;
+                e.preventDefault();
+                var x = e.pageX - slider.offsetLeft;
+                var walk = (x - startX) * 1.4;
+                slider.scrollLeft = scrollLeft - walk;
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initTestimonialDrag);
+        } else {
+            initTestimonialDrag();
+        }
+    })();
+</script>
+

@@ -97,26 +97,6 @@
     box-shadow: 0 6px 14px rgba(198, 161, 91, 0.35);
 }
 
-/* Mobile Progress Bar */
-.new-arrivals-mobile-progress {
-    display: none;
-    width: 100%;
-    max-width: 180px;
-    height: 3px;
-    background: #f0e7dc;
-    border-radius: 3px;
-    margin: 16px auto 0;
-    overflow: hidden;
-    position: relative;
-}
-
-.new-arrivals-progress-bar {
-    height: 100%;
-    width: 33%;
-    background: #bb8442;
-    border-radius: 3px;
-    transition: width 0.15s ease-out;
-}
 
 /* ── Mobile Layout (< 768px) ─────────────────────────────────── */
 @media (max-width: 767px) {
@@ -160,10 +140,7 @@
         display: flex;
     }
 
-    /* Show mobile scroll progress bar */
-    .new-arrivals-mobile-progress {
-        display: block;
-    }
+
 
     /* Hide the overlapping side buttons on mobile */
     .desktop-carousel-btn {
