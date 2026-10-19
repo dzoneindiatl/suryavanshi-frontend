@@ -11,8 +11,8 @@
     </div>
 
     <div class="product-carousel-shell top-selling-carousel-shell">
-        <button class="product-carousel-button product-carousel-button-prev" type="button" data-carousel-prev="top-selling-carousel" aria-label="Show previous top selling products" onclick="this.nextElementSibling.scrollBy({ left: -(this.nextElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.nextElementSibling).gap) || 0)), behavior: 'auto' })">
-            <span aria-hidden="true">&larr;</span>
+        <button class="product-carousel-button product-carousel-button-prev" type="button" data-carousel-prev="top-selling-carousel" aria-label="Show previous top selling products" onclick="window.slideProductCarousel ? window.slideProductCarousel(this, -1) : this.nextElementSibling.scrollBy({ left: -(this.nextElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.nextElementSibling).gap) || 0)), behavior: 'smooth' })">
+            <span class="carousel-btn-icon" aria-hidden="true">&larr;</span>
         </button>
 
         <div id="top-selling-carousel" class="top-selling-carousel" data-product-carousel>
@@ -34,8 +34,14 @@
         @endforeach
         </div>
 
-        <button class="product-carousel-button product-carousel-button-next" type="button" data-carousel-next="top-selling-carousel" aria-label="Show next top selling products" onclick="this.previousElementSibling.scrollBy({ left: this.previousElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.previousElementSibling).gap) || 0), behavior: 'auto' })">
-            <span aria-hidden="true">&rarr;</span>
+        <button class="product-carousel-button product-carousel-button-next" type="button" data-carousel-next="top-selling-carousel" aria-label="Show next top selling products" onclick="window.slideProductCarousel ? window.slideProductCarousel(this, 1) : this.previousElementSibling.scrollBy({ left: this.previousElementSibling.querySelector('article').getBoundingClientRect().width + (parseFloat(getComputedStyle(this.previousElementSibling).gap) || 0), behavior: 'smooth' })">
+            <span class="carousel-btn-icon" aria-hidden="true">&rarr;</span>
         </button>
     </div>
 </section>
+
+<script>
+    if (window.initProductCarousels) {
+        window.initProductCarousels();
+    }
+</script>

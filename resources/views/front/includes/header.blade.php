@@ -9,6 +9,58 @@
 .country-option:hover{background:#f5f1e8}
 .country-option span{color:#222}
 </style>
+
+<style>
+/* ── Subcategory text-reveal animation ───────────────────────── */
+@keyframes subcat-reveal {
+    0% {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Base hidden state — items are invisible until menu opens */
+.inner_submenu_vertical .inner_submenu_vertical_inner {
+    opacity: 0;
+    transform: translateY(14px);
+    will-change: opacity, transform;
+}
+
+/* When menu opens (.menu-open added on hover), reveal every option sequentially */
+.sub_menu_main.menu-open .inner_submenu_vertical .inner_submenu_vertical_inner {
+    animation: subcat-reveal 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: min(calc(var(--sub-i, 0) * 0.055s + 0.08s), 2.4s);
+}
+
+/* ── Child category text-reveal animation ────────────────────── */
+@keyframes childcat-reveal {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Base hidden state for child categories */
+.inner_submenu_vertical_inner ul li {
+    opacity: 0;
+    transform: translateY(10px);
+    will-change: opacity, transform;
+}
+
+/* When menu opens, reveal child categories one-by-one under each subcategory */
+.sub_menu_main.menu-open .inner_submenu_vertical_inner ul li {
+    animation: childcat-reveal 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: min(calc(var(--sub-i, 0) * 0.07s + 0.12s + var(--child-i, 0) * 0.045s), 2.4s);
+}
+</style>
 <div class="main_header_top">
 	<div class="header_main">
 		<div class="container">
@@ -17,7 +69,7 @@
 					<div class="head_logo">
 						<a href="{{ url('/') }}" title="Jaipur Jewellery House">
 							<span class="logo-icon">
-								<img class="logo-icon-holder" src="{{ asset('assets/logos/image.png') }}" alt="logo">
+								<img class="logo-icon-holder" src="{{ asset('assets/logos/jjh-logo.png') }}" alt="logo">
 							</span>
 						</a>
 					</div>
@@ -31,8 +83,7 @@
 										<button type="reset" name="reset-button" class=" reset-button d-none d-md-none" aria-label="Clear search keywords">
 											<svg id="Component_593_1" data-name="Component 593 – 1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
 												<line id="Line_145" data-name="Line 145" x2="14.25" transform="translate(5.625 12)" fill="none" stroke="#832729" stroke-width="1"></line>
-												<rect id="Rectangle_9948" data-name="Rectangle 9948" width="24" height="24" fill="none"></rect>
-												<path id="Path_1438" data-name="Path 1438" d="M13.627,7,6.87,13.75l6.75,6.75" transform="translate(-1.717 -1.75)" fill="none" stroke="#832729" stroke-width="1"></path>	
+												<rect id="Rectangle_9948" data-name="Rectangle 9948" width="24" height="24" fill="none"></rect> <path id="Path_1438" data-name="Path 1438" d="M13.627,7,6.87,13.75l6.75,6.75" transform="translate(-1.717 -1.75)" fill="none" stroke="#832729" stroke-width="1"></path>	
 											</svg>
 										</button>
 										<button type="submit" name="search-button" class="search-button-color hidden-sm-down d-md-block pb-1" aria-label="Submit search keywords">
@@ -198,7 +249,7 @@
 															return data_get($childCategory, 'parent_id') == $subCategoryId;
 														}); 
 													@endphp 
-													<div class="inner_submenu_vertical_inner {{ $subKey === 0 ? 'active' : '' }}" data-sub-content="{{ $subCategoryId }}"> 
+													<div class="inner_submenu_vertical_inner {{ $loop->first ? 'active' : '' }}" data-sub-content="{{ $subCategoryId }}" style="--sub-i: {{ $loop->index }};"> 
 														<a href="{{ route('category.show',['path'=>$categorySlug.'/'.$subCategorySlug]) }}" class="inner_sub_title"> {{ $subCategoryName }} </a> 
 														@if($childCats->isNotEmpty()) 
 															<ul> 
@@ -209,12 +260,7 @@
 																		$childCategorySlug = data_get($childCategory, 'slug'); 
 																		$childCategoryImage = data_get($childCategory, 'thumbnail_image'); 
 																	@endphp 
-																	<li> 
-																		<div class="mega_menu_img"> 
-																			@if(!empty($childCategoryImage)) 
-																				<img src="{{ asset($childCategoryImage) }}" alt="{{ $childCategoryName }}">
-																			@endif 
-																		</div> 
+																	<li style="--child-i: {{ $loop->index }};"> 
 																		<h4> 
 																			<a href="{{ route('category.show',['path'=>$categorySlug . '/' . $subCategorySlug . '/' . $childCategorySlug]) }}"> {{ $childCategoryName }} </a> 
 																		</h4> 
@@ -381,6 +427,17 @@
 
 		if (india) applySelectedCountry(india);
 
+	});
+	// ── Subcategory reveal: toggle .menu-open to cleanly trigger animation ──
+	document.querySelectorAll('.sub_menu_main').forEach(function (menuItem) {
+		menuItem.addEventListener('mouseenter', function () {
+			menuItem.classList.remove('menu-open');
+			void menuItem.offsetWidth;
+			menuItem.classList.add('menu-open');
+		});
+		menuItem.addEventListener('mouseleave', function () {
+			menuItem.classList.remove('menu-open');
+		});
 	});
 
 </script>
