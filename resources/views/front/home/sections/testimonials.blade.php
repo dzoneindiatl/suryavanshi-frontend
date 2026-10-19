@@ -15,6 +15,13 @@
                 <div class="testimonial_clip"><img src="{{ asset('assets/image/ribbon1.png') }}" alt="" width="28" height="30"></div>
                 <div class="testimonial_item">
                     <div class="testimonial_image"><img src="{{ asset('assets/image/' . $testimonial['image']) }}" alt="{{ $testimonial['name'] }}" width="277" height="242" loading="lazy"></div>
+                    <div class="testimonial_rating" aria-label="5 out of 5 stars">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                    </div>
                     <div class="testimonial_title">{{ $testimonial['name'] }}</div>
                     <div class="testimonial_desc">{{ $testimonial['description'] }}</div>
                 </div>
