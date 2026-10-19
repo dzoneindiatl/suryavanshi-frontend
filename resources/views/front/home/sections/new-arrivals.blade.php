@@ -1,10 +1,42 @@
 @php
-    $newArrivalProducts = array_fill(0, 6, [
-        'image' => 'collection_img1.webp',
-        'price' => '75,317',
-        'name' => 'Modern Gleam Diamond Bangle',
-        'category' => 'Diamond Bangles',
-    ]);
+    $newArrivalProducts = [
+        [
+            'image' => 'collection_img1.webp',
+            'price' => '75,317',
+            'name' => 'Modern Gleam Diamond Bangle',
+            'category' => 'Diamond Bangles',
+        ],
+        [
+            'image' => 'collection_img1.webp',
+            'price' => '82,450',
+            'name' => 'Eternal Grace Diamond Necklace',
+            'category' => 'Diamond Necklaces',
+        ],
+        [
+            'image' => 'collection_img1.webp',
+            'price' => '64,190',
+            'name' => 'Classic Solitaire Diamond Ring',
+            'category' => 'Solitaire Rings',
+        ],
+        [
+            'image' => 'collection_img1.webp',
+            'price' => '91,200',
+            'name' => 'Celestial Radiance Earrings',
+            'category' => 'Diamond Earrings',
+        ],
+        [
+            'image' => 'collection_img1.webp',
+            'price' => '79,900',
+            'name' => 'Opulent Petal Diamond Bracelet',
+            'category' => 'Diamond Bracelets',
+        ],
+        [
+            'image' => 'collection_img1.webp',
+            'price' => '88,600',
+            'name' => 'Royal Heritage Diamond Choker',
+            'category' => 'Diamond Chokers',
+        ],
+    ];
 @endphp
 
 <style>
@@ -301,26 +333,7 @@
 
         <div id="new-arrivals-carousel" class="new-arrivals-carousel" data-product-carousel>
             @foreach ($newArrivalProducts as $product)
-                <article class="new-arrival-card">
-                    <div class="new-arrival-card-media">
-                        <img src="{{ asset('assets/image/' . $product['image']) }}" alt="{{ $product['name'] }}"
-                            loading="lazy" decoding="async">
-                        <div class="new-arrival-actions">
-                            <a href="javascript:void(0);" class="wishlist_button" aria-label="Add {{ $product['name'] }} to wishlist"><i
-                                    class="fa fa-heart-o" aria-hidden="true"></i></a>
-                            <a href="#" aria-label="View {{ $product['name'] }}"><i class="fa fa-eye"
-                                    aria-hidden="true"></i></a>
-                        </div>
-                    </div>
-                    <div class="new-arrival-card-content">
-                        <span class="new-arrival-card-category">{{ $product['category'] }}</span>
-                        <h3>{{ $product['name'] }}</h3>
-                        <div class="new-arrival-card-footer">
-                            <span class="new-arrival-price">&#8377;{{ $product['price'] }}</span>
-                            <span class="new-arrival-arrow" aria-hidden="true">&rarr;</span>
-                        </div>
-                    </div>
-                </article>
+                @include('front.includes.product-card', ['product' => $product])
             @endforeach
         </div>
 
@@ -332,36 +345,5 @@
         </button>
     </div>
 
-    <!-- Mobile Scroll Progress Indicator -->
-    <div class="new-arrivals-mobile-progress" aria-hidden="true">
-        <div class="new-arrivals-progress-bar" id="newArrivalsProgressBar"></div>
-    </div>
+
 </section>
-
-<script>
-    if (window.initProductCarousels) {
-        window.initProductCarousels();
-    }
-
-    // Mobile scroll progress bar tracker
-    (function () {
-        const carousel = document.getElementById('new-arrivals-carousel');
-        const progressBar = document.getElementById('newArrivalsProgressBar');
-        if (!carousel || !progressBar) return;
-
-        function updateProgress() {
-            const maxScroll = carousel.scrollWidth - carousel.clientWidth;
-            if (maxScroll <= 0) {
-                progressBar.style.width = '100%';
-                return;
-            }
-            const ratio = carousel.scrollLeft / maxScroll;
-            const widthPct = 25 + ratio * 75; // minimum 25% pill width
-            progressBar.style.width = Math.min(100, Math.max(25, widthPct)) + '%';
-        }
-
-        carousel.addEventListener('scroll', updateProgress, { passive: true });
-        window.addEventListener('resize', updateProgress, { passive: true });
-        updateProgress();
-    })();
-</script>

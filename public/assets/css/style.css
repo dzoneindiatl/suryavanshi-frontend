@@ -4404,6 +4404,7 @@ button.btn_drop_sorting {
 
 /* Card Motion, Snap & Sliding Kinetics */
 .new-arrivals-carousel .new-arrival-card,
+.top-selling-carousel .new-arrival-card,
 .top-selling-carousel .top-selling-card {
     scroll-snap-align: start;
     scroll-snap-stop: normal;
@@ -4418,27 +4419,35 @@ button.btn_drop_sorting {
 
 /* Directional inertia tilt when sliding */
 .new-arrivals-carousel.is-sliding-next .new-arrival-card,
+.top-selling-carousel.is-sliding-next .new-arrival-card,
 .top-selling-carousel.is-sliding-next .top-selling-card {
     transform: translateY(-5px) scale(0.978) rotateY(-3.5deg) skewX(-0.5deg);
 }
 
 .new-arrivals-carousel.is-sliding-prev .new-arrival-card,
+.top-selling-carousel.is-sliding-prev .new-arrival-card,
 .top-selling-carousel.is-sliding-prev .top-selling-card {
     transform: translateY(-5px) scale(0.978) rotateY(3.5deg) skewX(0.5deg);
 }
 
 /* Staggered settle wave upon slide end */
 .new-arrivals-carousel .new-arrival-card:nth-child(1),
+.top-selling-carousel .new-arrival-card:nth-child(1),
 .top-selling-carousel .top-selling-card:nth-child(1) { transition-delay: 20ms; }
 .new-arrivals-carousel .new-arrival-card:nth-child(2),
+.top-selling-carousel .new-arrival-card:nth-child(2),
 .top-selling-carousel .top-selling-card:nth-child(2) { transition-delay: 40ms; }
 .new-arrivals-carousel .new-arrival-card:nth-child(3),
+.top-selling-carousel .new-arrival-card:nth-child(3),
 .top-selling-carousel .top-selling-card:nth-child(3) { transition-delay: 60ms; }
 .new-arrivals-carousel .new-arrival-card:nth-child(4),
+.top-selling-carousel .new-arrival-card:nth-child(4),
 .top-selling-carousel .top-selling-card:nth-child(4) { transition-delay: 80ms; }
 .new-arrivals-carousel .new-arrival-card:nth-child(5),
+.top-selling-carousel .new-arrival-card:nth-child(5),
 .top-selling-carousel .top-selling-card:nth-child(5) { transition-delay: 100ms; }
 .new-arrivals-carousel .new-arrival-card:nth-child(6),
+.top-selling-carousel .new-arrival-card:nth-child(6),
 .top-selling-carousel .top-selling-card:nth-child(6) { transition-delay: 120ms; }
 
 /* Luxury Diamond / Gold Sparkle Sheen sweep across card media when sliding */
@@ -6003,29 +6012,37 @@ body:has(.sub_menu_main:hover) {
     display: none;
 }
 
-.new-arrivals-carousel .new-arrival-card {
+.new-arrivals-carousel .new-arrival-card,
+.top-selling-carousel .new-arrival-card,
+.top-selling-carousel .top-selling-card {
     flex: 0 0 calc((100% - 5 * 20px) / 6) !important;
     min-width: 0;
     width: calc((100% - 5 * 20px) / 6) !important;
 }
 
 @media (max-width: 1199px) {
-    .new-arrivals-carousel {
+    .new-arrivals-carousel,
+    .top-selling-carousel {
         flex-wrap: nowrap;
     }
 
-    .new-arrivals-carousel .new-arrival-card {
+    .new-arrivals-carousel .new-arrival-card,
+    .top-selling-carousel .new-arrival-card,
+    .top-selling-carousel .top-selling-card {
         flex-basis: calc((100% - 3 * 20px) / 4) !important;
         width: calc((100% - 3 * 20px) / 4) !important;
     }
 }
 
 @media (max-width: 767px) {
-    .new-arrivals-carousel {
+    .new-arrivals-carousel,
+    .top-selling-carousel {
         gap: 12px;
     }
 
-    .new-arrivals-carousel .new-arrival-card {
+    .new-arrivals-carousel .new-arrival-card,
+    .top-selling-carousel .new-arrival-card,
+    .top-selling-carousel .top-selling-card {
         flex-basis: calc((100% - 12px) / 2) !important;
         width: calc((100% - 12px) / 2) !important;
     }
@@ -6113,25 +6130,28 @@ body:has(.sub_menu_main:hover) {
 }
 
 .top-selling-card {
-    background: #fff;
-    border: 1px solid rgba(198, 161, 91, .24);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    height: 100%;
+    margin: 0;
+    transition: transform 350ms ease;
     flex: 0 0 calc((100% - 5 * 20px) / 6) !important;
     min-width: 0;
-    overflow: hidden;
-    transition: border-color 350ms ease, box-shadow 350ms ease, transform 350ms ease;
     width: calc((100% - 5 * 20px) / 6) !important;
 }
 
 .top-selling-card:hover,
 .top-selling-card:focus-within {
-    border-color: rgba(198, 161, 91, .78);
-    box-shadow: 0 18px 32px rgba(37, 35, 33, .1);
+    border-color: transparent;
+    box-shadow: none;
     transform: translateY(-4px);
 }
 
 .top-selling-card-media {
     aspect-ratio: 1 / 1;
     background: var(--arrivals-champagne, #f2eadf);
+    border: 1px solid rgba(198, 161, 91, .25);
     overflow: hidden;
     position: relative;
 }
@@ -6166,7 +6186,6 @@ body:has(.sub_menu_main:hover) {
 
 .top-selling-card-actions {
     display: flex;
-    flex-direction: column;
     gap: 7px;
     position: absolute;
     right: 14px;
@@ -6196,41 +6215,21 @@ body:has(.sub_menu_main:hover) {
     color: #fff;
 }
 
-.top-selling-badge {
-    bottom: 14px;
-    color: #fff;
-    font-size: 9px;
-    font-weight: 600;
-    left: 14px;
-    letter-spacing: .13em;
-    line-height: 1;
-    padding: 9px 10px;
-    position: absolute;
-    text-transform: uppercase;
-    z-index: 1;
-}
-
+.new-arrival-badge.is-best-seller,
 .top-selling-badge.is-best-seller {
     background: var(--arrivals-charcoal, #252321);
+    color: #fff;
 }
 
+.new-arrival-badge.is-trending,
 .top-selling-badge.is-trending {
     background: var(--arrivals-gold, #c6a15b);
+    color: #fff;
 }
 
 .top-selling-card-content {
-    padding: 16px 16px 18px;
-}
-
-.top-selling-card-content .price {
-    margin-bottom: 10px;
-}
-
-.top-selling-card-content .price span {
-    color: var(--arrivals-charcoal, #252321);
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: .03em;
+    border-bottom: 1px solid rgba(198, 161, 91, .3);
+    padding: 17px 2px 19px;
 }
 
 .top-selling-card-content h3 {
@@ -6282,21 +6281,9 @@ body:has(.sub_menu_main:hover) {
     .top-selling-card {
         flex-basis: calc((100% - 12px) / 2) !important;
         width: calc((100% - 12px) / 2) !important;
-    }
-
-    .top-selling-card-actions {
-        right: 10px;
-        top: 10px;
-    }
-
-    .top-selling-badge {
-        bottom: 10px;
-        left: 10px;
-        padding: 8px;
-    }
-
-    .top-selling-card-content {
-        padding: 14px 12px 16px;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 }
 
