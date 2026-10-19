@@ -1,6 +1,5 @@
 @include('front.includes.head')
 @include('components.header.header')
-<link rel="stylesheet" href="{{ asset('assets/css/magiczoomplus.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/components/product-detail/product-detail.css') }}?v={{ file_exists(public_path('assets/css/components/product-detail/product-detail.css')) ? filemtime(public_path('assets/css/components/product-detail/product-detail.css')) : time() }}">
 
 <div class="breadcrumb_main">
@@ -42,33 +41,37 @@
                             : ($product->images['first'] ?? asset('assets/image/placeholder.png'));
 				    @endphp
 
-					<div class="product_main_image_holder">
-						<a id="Zoom-1"
-							class="MagicZoom"
-							href="{{ $firstImageUrl }}"
-							data-options="zoomPosition: inner;"
-							data-zoom-image-2x="{{ $firstImageUrl }}"
-							data-image-2x="{{ $firstImageUrl }}">
-							<img src="{{ $firstImageUrl }}"
-								alt="{{ $product->name }}" class="default-image"/>
-						</a>
+					<div class="product_main_image_holder custom-zoom-container" id="customZoomContainer">
+						<div class="zoom-lens-wrapper" id="zoomLensWrapper">
+							<img id="mainProductImage"
+								src="{{ $firstImageUrl }}"
+								data-zoom-src="{{ $firstImageUrl }}"
+								alt="{{ $product->name }}"
+								class="main-zoom-image default-image"/>
+						</div>
+
+						<div class="zoom-indicator-badge">
+							<i class="fa fa-search-plus"></i> <span class="d-none d-sm-inline">Hover to zoom</span>
+						</div>
+
+						<button type="button" class="zoom-expand-btn" id="openLightboxBtn" title="Click to view full screen" aria-label="Expand view">
+							<i class="fa fa-expand"></i>
+						</button>
 					</div>
 
-					<div class="selectors" id="productImageSelectors">
+					<div class="product_thumbnail_gallery selectors" id="productImageSelectors">
 						@foreach($sortedProductImages as $img)
 							@php
 								$imageUrl = asset('uploads/products/' . $img->graphic);
 							@endphp
 
-							<a data-zoom-id="Zoom-1"
-								href="{{ $imageUrl }}"
+							<div class="thumb-item {{ $loop->first ? 'thumb-active' : '' }}"
 								data-image="{{ $imageUrl }}"
-								data-zoom-image-2x="{{ $imageUrl }}"
-								data-image-2x="{{ $imageUrl }}"
-								class="mz-thumb {{ $loop->first ? 'mz-thumb-selected' : '' }}">
+								data-index="{{ $loop->index }}"
+								title="{{ $product->name }}">
 								<img src="{{ $imageUrl }}"
 									alt="{{ $product->name }}" class="default-image"/>
-							</a>
+							</div>
 						@endforeach
 					</div>
 				</div>
@@ -947,6 +950,33 @@
 {{-- DYNAMIC MODULAR FOOTER --}}
 @include('components.footer.footer')
 
+{{-- LUXURY PRODUCT IMAGE LIGHTBOX MODAL --}}
+<div class="custom-lightbox-modal" id="productLightboxModal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Product Image Viewer">
+	<div class="lightbox-overlay" id="lightboxOverlay"></div>
+	<div class="lightbox-dialog">
+		<button type="button" class="lightbox-close-btn" id="lightboxCloseBtn" aria-label="Close image viewer">
+			<i class="fa fa-times"></i>
+		</button>
+		
+		<div class="lightbox-content">
+			<button type="button" class="lightbox-nav-btn lightbox-prev-btn" id="lightboxPrevBtn" aria-label="Previous image">
+				<i class="fa fa-angle-left"></i>
+			</button>
+
+			<div class="lightbox-image-wrap" id="lightboxImageWrap" title="Double click to toggle extra zoom">
+				<img src="{{ $firstImageUrl }}" id="lightboxImage" alt="{{ $product->name }}">
+				<div class="lightbox-hint"><i class="fa fa-search-plus"></i> Double click to toggle extra zoom</div>
+			</div>
+
+			<button type="button" class="lightbox-nav-btn lightbox-next-btn" id="lightboxNextBtn" aria-label="Next image">
+				<i class="fa fa-angle-right"></i>
+			</button>
+		</div>
+
+		<div class="lightbox-counter" id="lightboxCounter">1 / {{ count($sortedProductImages) ?: 1 }}</div>
+	</div>
+</div>
+
 @php
     $minSellingQty = 1;
     $maxSellingQty = 10;
@@ -976,11 +1006,194 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.3.15/slick.min.js"></script>
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ asset('assets/js/magiczoomplus.js') }}"></script>
 <script src="{{ asset('assets/js/cart.js') }}"></script>
 
 <script>
+// ========================================================
+// CUSTOM LUXURY HOVER ZOOM & LIGHTBOX GALLERY
+// ========================================================
+var refreshGalleryImageList;
+
+function initCustomProductZoom() {
+    const container = document.getElementById('customZoomContainer');
+    const image = document.getElementById('mainProductImage');
+    const lightboxModal = document.getElementById('productLightboxModal');
+    const lightboxImg = document.getElementById('lightboxImage');
+    const lightboxWrap = document.getElementById('lightboxImageWrap');
+    const lightboxCounter = document.getElementById('lightboxCounter');
+    const openLightboxBtn = document.getElementById('openLightboxBtn');
+    const closeLightboxBtn = document.getElementById('lightboxCloseBtn');
+    const overlay = document.getElementById('lightboxOverlay');
+    const prevBtn = document.getElementById('lightboxPrevBtn');
+    const nextBtn = document.getElementById('lightboxNextBtn');
+
+    if (!container || !image) return;
+
+    let isHovering = false;
+    const zoomScale = 2.4; // 2.4x magnification for jewelry inspection
+
+    function handleMouseMove(e) {
+        if (!isHovering) return;
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        // Clamped 0% to 100%
+        const xPercent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+        const yPercent = Math.max(0, Math.min(100, (y / rect.height) * 100));
+
+        image.style.transformOrigin = xPercent + '% ' + yPercent + '%';
+    }
+
+    function handleMouseEnter(e) {
+        if (window.matchMedia('(hover: none)').matches) return;
+        isHovering = true;
+        container.classList.add('is-zooming');
+        image.style.transform = 'scale(' + zoomScale + ')';
+        handleMouseMove(e);
+    }
+
+    function handleMouseLeave() {
+        isHovering = false;
+        container.classList.remove('is-zooming');
+        image.style.transform = 'scale(1)';
+        image.style.transformOrigin = '50% 50%';
+    }
+
+    // Bind hover zoom events
+    container.onmouseenter = handleMouseEnter;
+    container.onmousemove = handleMouseMove;
+    container.onmouseleave = handleMouseLeave;
+
+    // Gallery images for lightbox
+    let currentGalleryImages = [];
+    let currentImageIndex = 0;
+
+    refreshGalleryImageList = function() {
+        currentGalleryImages = [];
+        $('#productImageSelectors .thumb-item').each(function() {
+            const src = $(this).attr('data-image');
+            if (src && !currentGalleryImages.includes(src)) {
+                currentGalleryImages.push(src);
+            }
+        });
+        if (currentGalleryImages.length === 0) {
+            currentGalleryImages = [image.getAttribute('src')];
+        }
+        if (lightboxCounter) {
+            lightboxCounter.textContent = (currentImageIndex + 1) + ' / ' + currentGalleryImages.length;
+        }
+    };
+    refreshGalleryImageList();
+
+    function updateLightbox(index) {
+        if (!currentGalleryImages.length) refreshGalleryImageList();
+        currentImageIndex = (index + currentGalleryImages.length) % currentGalleryImages.length;
+        const targetSrc = currentGalleryImages[currentImageIndex];
+        if (lightboxImg) {
+            lightboxImg.src = targetSrc;
+        }
+        if (lightboxCounter) {
+            lightboxCounter.textContent = (currentImageIndex + 1) + ' / ' + currentGalleryImages.length;
+        }
+        if (lightboxWrap) {
+            lightboxWrap.classList.remove('is-zoomed');
+            if (lightboxImg) lightboxImg.style.transformOrigin = '50% 50%';
+        }
+    }
+
+    function openLightbox() {
+        refreshGalleryImageList();
+        const currentSrc = image.getAttribute('src');
+        const idx = currentGalleryImages.indexOf(currentSrc);
+        currentImageIndex = idx >= 0 ? idx : 0;
+        updateLightbox(currentImageIndex);
+        if (lightboxModal) {
+            lightboxModal.classList.add('is-open');
+            lightboxModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeLightbox() {
+        if (lightboxModal) {
+            lightboxModal.classList.remove('is-open');
+            lightboxModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+        if (lightboxWrap) {
+            lightboxWrap.classList.remove('is-zoomed');
+        }
+    }
+
+    // Open lightbox on container click (or expand icon)
+    container.onclick = function(e) {
+        openLightbox();
+    };
+
+    if (openLightboxBtn) {
+        openLightboxBtn.onclick = function(e) {
+            e.stopPropagation();
+            openLightbox();
+        };
+    }
+
+    if (closeLightboxBtn) closeLightboxBtn.onclick = closeLightbox;
+    if (overlay) overlay.onclick = closeLightbox;
+
+    if (prevBtn) {
+        prevBtn.onclick = function(e) {
+            e.stopPropagation();
+            updateLightbox(currentImageIndex - 1);
+        };
+    }
+
+    if (nextBtn) {
+        nextBtn.onclick = function(e) {
+            e.stopPropagation();
+            updateLightbox(currentImageIndex + 1);
+        };
+    }
+
+    // Keyboard support
+    $(document).off('keydown.productLightbox').on('keydown.productLightbox', function(e) {
+        if (!lightboxModal || !lightboxModal.classList.contains('is-open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') updateLightbox(currentImageIndex - 1);
+        if (e.key === 'ArrowRight') updateLightbox(currentImageIndex + 1);
+    });
+
+    // Double-click toggle extra zoom in lightbox
+    if (lightboxWrap) {
+        lightboxWrap.ondblclick = function(e) {
+            lightboxWrap.classList.toggle('is-zoomed');
+        };
+    }
+
+    // Thumbnail switching on click & hover
+    $(document).off('click.thumbSwitch mouseenter.thumbSwitch', '#productImageSelectors .thumb-item')
+        .on('click.thumbSwitch mouseenter.thumbSwitch', '#productImageSelectors .thumb-item', function() {
+            const newSrc = $(this).attr('data-image');
+            if (!newSrc) return;
+
+            $('#productImageSelectors .thumb-item').removeClass('thumb-active');
+            $(this).addClass('thumb-active');
+
+            if (image.getAttribute('src') !== newSrc) {
+                image.style.opacity = '0.3';
+                const preloader = new Image();
+                preloader.onload = function() {
+                    image.src = newSrc;
+                    image.setAttribute('data-zoom-src', newSrc);
+                    image.style.opacity = '1';
+                };
+                preloader.src = newSrc;
+            }
+        });
+}
+
 $(document).ready(function() {
+    initCustomProductZoom();
     if (typeof AOS !== 'undefined') {
         AOS.init({ duration: 1000, once: true });
     }
@@ -1395,57 +1608,30 @@ $(document).ready(function() {
                 }
 
                 const firstImage = response.images[0];
-                const zoomLink = document.getElementById('Zoom-1');
-                if (zoomLink) {
-                    zoomLink.setAttribute('href', firstImage);
-                    zoomLink.setAttribute('data-zoom-image-2x', firstImage);
-                    zoomLink.setAttribute('data-image-2x', firstImage);
-
-                    const zoomImg = zoomLink.querySelector('img');
-                    if (zoomImg) {
-                        zoomImg.setAttribute('src', firstImage);
-                        zoomImg.removeAttribute('srcset');
-                    }
+                const mainImg = document.getElementById('mainProductImage');
+                if (mainImg) {
+                    mainImg.src = firstImage;
+                    mainImg.setAttribute('data-zoom-src', firstImage);
+                    mainImg.style.transform = 'scale(1)';
+                    mainImg.style.transformOrigin = '50% 50%';
                 }
 
                 let html = '';
-                response.images.forEach(function(image, index) {
+                response.images.forEach(function(imgUrl, index) {
                     html += `
-                        <a data-zoom-id="Zoom-1"
-                           href="${image}"
-                           data-image="${image}"
-                           data-zoom-image-2x="${image}"
-                           data-image-2x="${image}"
-                           class="mz-thumb ${index === 0 ? 'mz-thumb-selected' : ''}">
-                            <img src="${image}" alt="" class="default-image">
-                        </a>
+                        <div class="thumb-item ${index === 0 ? 'thumb-active' : ''}"
+                             data-image="${imgUrl}"
+                             data-index="${index}">
+                            <img src="${imgUrl}" alt="" class="default-image">
+                        </div>
                     `;
                 });
 
                 $('#productImageSelectors').html(html);
-                if (typeof MagicZoom !== 'undefined') {
-                    try {
-                        MagicZoom.refresh('Zoom-1');
-                    } catch (e) {
-                        try {
-                            MagicZoom.refresh();
-                        } catch (e2) {}
-                    }
-                }
 
-                setTimeout(function() {
-                    const zoomLinkAfterRefresh = document.getElementById('Zoom-1');
-                    if (!zoomLinkAfterRefresh) return;
-                    zoomLinkAfterRefresh.setAttribute('href', firstImage);
-                    zoomLinkAfterRefresh.setAttribute('data-image', firstImage);
-                    zoomLinkAfterRefresh.setAttribute('data-zoom-image-2x', firstImage);
-                    zoomLinkAfterRefresh.setAttribute('data-image-2x', firstImage);
-                    const imgAfterRefresh = zoomLinkAfterRefresh.querySelector('img');
-                    if (imgAfterRefresh) {
-                        imgAfterRefresh.setAttribute('src', firstImage);
-                        imgAfterRefresh.removeAttribute('srcset');
-                    }
-                }, 100);
+                if (typeof refreshGalleryImageList === 'function') {
+                    refreshGalleryImageList();
+                }
             },
             error: function(xhr) {
                 console.error('Variant image error:', xhr.responseText);
