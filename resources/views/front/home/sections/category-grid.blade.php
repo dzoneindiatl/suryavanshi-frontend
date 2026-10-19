@@ -138,8 +138,19 @@
         const rows = section ? [...section.querySelectorAll('[data-category-shuffle-row]')] : [];
         const cards = section ? [...section.querySelectorAll('[data-category-shuffle-card]')] : [];
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const isMobileOrTablet = () => window.matchMedia('(max-width: 1199px)').matches || (window.innerWidth && window.innerWidth < 1200);
 
         if (!section || rows.length !== 2 || cards.length < 2) return;
+
+        const revealSection = () => {
+            section.classList.add('is-visible');
+        };
+
+        // Immediately reveal and disable animation on mobile and tablet
+        if (isMobileOrTablet()) {
+            revealSection();
+            return;
+        }
 
         const cardByOrder = new Map(cards.map((card) => [card.dataset.categoryOrder, card]));
         const splitAt = Math.ceil(cards.length / 2);
@@ -194,17 +205,13 @@
             }, 600);
         });
 
-        const revealSection = () => {
-            section.classList.add('is-visible');
-        };
-
         const runInitialShuffle = async () => {
             if (hasShuffled) return;
 
             hasShuffled = true;
             revealSection();
 
-            if (reducedMotion) return;
+            if (reducedMotion || isMobileOrTablet()) return;
 
             await new Promise((resolve) => window.setTimeout(resolve, 120));
 

@@ -6794,6 +6794,29 @@ body:has(.sub_menu_main:hover) {
     }
 }
 
+/* Disable category grid and shuffle animations on mobile and tablet */
+@media (max-width: 1199px) {
+    .jewellery-category-shuffle .jewellery-category-card,
+    .jewellery-category-card,
+    .jewellery-categories-section.is-visible .jewellery-category-card {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+        will-change: auto !important;
+    }
+
+    .jewellery-category-shuffle .jewellery-category-image-wrap,
+    .jewellery-category-shuffle .jewellery-category-image-wrap::after,
+    .jewellery-category-shuffle .jewellery-category-image-wrap img,
+    .jewellery-category-shuffle .jewellery-category-explore-arrow {
+        transition: none !important;
+    }
+
+    .jewellery-categories-section.is-shuffling .jewellery-category-image-wrap::after {
+        border-color: transparent !important;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .jewellery-category-shuffle .jewellery-category-card,
     .jewellery-category-shuffle .jewellery-category-image-wrap,
