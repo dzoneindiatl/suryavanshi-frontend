@@ -1,11 +1,13 @@
 /* ========================================================
-   COMPONENT: Base & Global Styles
+   COMPONENT: Base
    ======================================================== */
 
 @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
 @import url("https://fonts.googleapis.com/css2?family=Questrial&display=swap");
+
 @import url("https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&display=swap");
+
 @import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
 html,
@@ -14,13 +16,14 @@ body {
     font-weight: 300;
 }
 
-.head_logo img {
-
-    padding: 0;
-    background-color: transparent;
-}
 svg {
+    overflow: hidden;
+    vertical-align: middle;
+}
 
+.back_to_top_btn {
+    position: fixed;
+    bottom: 70px;
     right: 20px;
     height: 65px;
     cursor: pointer;
@@ -34,11 +37,12 @@ svg {
     border: none;
     display: inline-block;
     border-radius: 100px;
-
 }
+
 .back_to_top_btn:hover {
     background-color: #9b6322;
 }
+
 .back_to_top_btn:after {
     content: "";
     position: absolute;
@@ -141,22 +145,25 @@ svg {
     }
 }
 
+@media (min-width: 1200px) {
+.container {
+        max-width: 1430px;
+    }
+}
+
+/* Keep the lower navigation visible while the upper header row slides away. */
+@media (min-width: 768px) {
+    .header_fixed {
+        transition: transform 280ms ease;
+        will-change: transform;
+        backface-visibility: hidden;
+    }
+}
 
 /* Lock the page while a desktop mega menu is open, but keep the menu scrollable. */
 html {
     scrollbar-gutter: stable;
 }
-
-html:has(.sub_menu_main:hover),
-body:has(.sub_menu_main:hover) {
-    overflow: hidden;
-    overscroll-behavior: none;
-}
-
-.header_mega_menu {
-    overscroll-behavior: contain;
-}
-
 
 /* Homepage-wide alignment and section rhythm. */
 :root {
@@ -164,79 +171,12 @@ body:has(.sub_menu_main:hover) {
     --homepage-content-max: 1600px;
 }
 
-
-
-.jewellery-categories-heading,
-.jewellery-category-carousel-shell,
-.featured-collections-heading,
-.featured-collections-grid,
-.new-arrivals-heading,
-.new-arrivals-carousel,
-.top-selling-heading,
-.top-selling-carousel {
-    max-width: var(--homepage-content-max);
-}
-
-
-
-.shop_by_budget_main_inner,
-.shop_look_inner {
-    margin-left: auto;
-    margin-right: auto;
-    max-width: var(--homepage-content-max);
-    width: min(var(--homepage-content-max), calc(100% - (2 * var(--homepage-gutter))));
-}
-
-
-
-.love_main {
-    box-sizing: border-box;
-    max-width: none;
-
-}
-
-.influencers_main > .container,
-.bottom_sec_last > .container {
-    margin-left: auto;
-    margin-right: auto;
-    max-width: var(--homepage-content-max);
-    width: min(var(--homepage-content-max), calc(100% - (2 * var(--homepage-gutter))));
-}
-
-.shop_by_budget_main,
-.shop_look_main,
-.custom_testimonial_main,
-.influencers_main,
-.bottom_sec_last {
-    padding-top: clamp(72px, 7vw, 110px);
-    padding-bottom: clamp(72px, 7vw, 110px);
-}
-
 @media (max-width: 767px) {
-    html,
+html,
     body {
         overflow-x: hidden;
     }
-
-    .middle_sell_item_img {
-        padding-top: 70px;
-    }
-
-    .wrap_inner_sec {
-        padding-top: 48px;
-        padding-bottom: 48px;
-    }
-
-    .shop_by_budget_main,
-    .shop_look_main,
-    .custom_testimonial_main,
-    .influencers_main,
-    .bottom_sec_last {
-        padding-top: 58px;
-        padding-bottom: 58px;
-    }
 }
-
 
 /* Subtle motion for the floating Back to Top control. */
 .back_to_top_btn {
@@ -270,15 +210,221 @@ body:has(.sub_menu_main:hover) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .back_to_top_btn {
+.back_to_top_btn {
         animation: none;
         transition: none;
     }
 }
 
+/* Disable category grid and shuffle animations on mobile and tablet */
+@media (max-width: 1199px) {
+    .jewellery-category-shuffle .jewellery-category-card,
+    .jewellery-category-card,
+    .jewellery-categories-section.is-visible .jewellery-category-card {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+        will-change: auto !important;
+    }
 
-@media (min-width: 1200px) {
-    .container {
-        max-width: 1430px;
+    .jewellery-category-shuffle .jewellery-category-image-wrap,
+    .jewellery-category-shuffle .jewellery-category-image-wrap::after,
+    .jewellery-category-shuffle .jewellery-category-image-wrap img,
+    .jewellery-category-shuffle .jewellery-category-explore-arrow {
+        transition: none !important;
+    }
+
+    .jewellery-categories-section.is-shuffling .jewellery-category-image-wrap::after {
+        border-color: transparent !important;
+    }
+}
+
+/* Show four larger product cards per carousel view. */
+@media (min-width: 768px) {
+    .new-arrivals-carousel,
+    .top-selling-carousel {
+        --product-carousel-gap: clamp(18px, 2vw, 32px);
+        gap: var(--product-carousel-gap);
+    }
+
+    .new-arrivals-carousel:not(.slick-initialized) .new-arrival-card,
+    .new-arrivals-carousel .new-arrival-card,
+    .top-selling-carousel .top-selling-card {
+        flex-basis: calc((100% - (3 * var(--product-carousel-gap))) / 4) !important;
+        width: calc((100% - (3 * var(--product-carousel-gap))) / 4) !important;
+    }
+
+    .new-arrivals-carousel.slick-initialized .slick-slide {
+        flex-basis: 25% !important;
+        width: 25% !important;
+    }
+}
+
+/* ========================================================
+   TABLET RESPONSIVE (768px - 991px)
+   ======================================================== */
+@media (max-width: 991px) {
+    .btn_filter_mobile_trigger {
+        display: inline-flex;
+    }
+
+    .shop_top_head_wrap {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .shop_actions_bar {
+        width: 100%;
+        gap: 10px;
+    }
+
+    .btn_filter_mobile_trigger {
+        flex: 1;
+        height: 42px;
+    }
+
+    .shop_sort_dropdown {
+        flex: 1;
+    }
+
+    .shop_sort_dropdown .btn_drop_sorting {
+        width: 100%;
+        height: 42px;
+    }
+
+    /* Off-Canvas Filter Drawer on Mobile/Tablet */
+    .filter_sidebar_drawer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 320px;
+        max-width: 86vw;
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100dvh;
+        z-index: 99999;
+        transform: translateX(-105%);
+        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 10px 0 35px rgba(0, 0, 0, 0.25);
+        border-radius: 0;
+        border: none;
+    }
+
+    .filter_sidebar_drawer.is-open {
+        transform: translateX(0);
+    }
+
+    .btn_filter_close {
+        display: inline-block;
+    }
+
+    .filter_drawer_footer {
+        display: flex;
+        padding: 12px 18px;
+        background: #ffffff;
+        border-top: 1px solid #ebe5dc;
+        gap: 10px;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.06);
+    }
+
+    .btn_drawer_clear {
+        flex: 1;
+        height: 42px;
+        border-radius: 8px;
+        border: 1.5px solid #dcd6cd;
+        background: #fff;
+        color: #444;
+        font-weight: 600;
+        font-size: 13.5px;
+        cursor: pointer;
+    }
+
+    .btn_drawer_apply {
+        flex: 1.4;
+        height: 42px;
+        border-radius: 8px;
+        border: none;
+        background: #ba8342;
+        color: #fff;
+        font-weight: 600;
+        font-size: 13.5px;
+        box-shadow: 0 4px 12px rgba(186, 131, 66, 0.3);
+        cursor: pointer;
+    }
+
+    .products_cards_grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+/* ========================================================
+   MOBILE PHONE RESPONSIVE (≤ 767px)
+   ======================================================== */
+@media (max-width: 767px) {
+    .banner_top_inner img {
+        height: 80px;
+    }
+
+    .shop_category_name {
+        font-size: 18px;
+        line-height: 22px;
+    }
+
+    .shop_items_badge {
+        font-size: 12px;
+    }
+
+    .products_cards_grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .product_card_item .collection_inner_box_txt {
+        padding: 8px 8px 10px;
+    }
+
+    .product_card_item .collection_inner_box_txt .price span {
+        font-size: 13.5px;
+    }
+
+    .product_card_item .collection_inner_box_txt .price span.price_new_cut {
+        font-size: 11px !important;
+        margin-left: 3px;
+    }
+
+    .offer_txt1 {
+        font-size: 8.5px;
+        padding: 2px 4px;
+        margin-left: 3px;
+        line-height: 9px;
+    }
+
+    .product_card_item .collection_inner_box_txt h5 {
+        font-size: 12px;
+        line-height: 15px;
+        margin: 5px 0 0;
+    }
+
+    .product_card_item .collection_inner_box_icon {
+        top: 6px;
+        left: 6px;
+    }
+
+    .product_card_item .collection_inner_box_icon a {
+        width: 26px;
+        height: 26px;
+        font-size: 12px;
+    }
+
+    .collection_best_seller {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+
+    .product_card_item .btn_cart_add {
+        display: none;
     }
 }

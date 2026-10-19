@@ -1,5 +1,5 @@
 /* ========================================================
-   COMPONENT: New Arrivals Carousel
+   COMPONENT: New-arrivals
    ======================================================== */
 
 /* Arrow controls & interactive animations for horizontal product carousels */
@@ -158,18 +158,23 @@
 .new-arrivals-carousel .new-arrival-card:nth-child(1),
 .top-selling-carousel .new-arrival-card:nth-child(1),
 .top-selling-carousel .top-selling-card:nth-child(1) { transition-delay: 20ms; }
+
 .new-arrivals-carousel .new-arrival-card:nth-child(2),
 .top-selling-carousel .new-arrival-card:nth-child(2),
 .top-selling-carousel .top-selling-card:nth-child(2) { transition-delay: 40ms; }
+
 .new-arrivals-carousel .new-arrival-card:nth-child(3),
 .top-selling-carousel .new-arrival-card:nth-child(3),
 .top-selling-carousel .top-selling-card:nth-child(3) { transition-delay: 60ms; }
+
 .new-arrivals-carousel .new-arrival-card:nth-child(4),
 .top-selling-carousel .new-arrival-card:nth-child(4),
 .top-selling-carousel .top-selling-card:nth-child(4) { transition-delay: 80ms; }
+
 .new-arrivals-carousel .new-arrival-card:nth-child(5),
 .top-selling-carousel .new-arrival-card:nth-child(5),
 .top-selling-carousel .top-selling-card:nth-child(5) { transition-delay: 100ms; }
+
 .new-arrivals-carousel .new-arrival-card:nth-child(6),
 .top-selling-carousel .new-arrival-card:nth-child(6),
 .top-selling-carousel .top-selling-card:nth-child(6) { transition-delay: 120ms; }
@@ -217,18 +222,17 @@
 }
 
 @media (max-width: 767px) {
-    .product-carousel-shell {
+.product-carousel-shell {
         gap: 8px;
     }
 
-    .product-carousel-button {
+.product-carousel-button {
         flex-basis: 32px;
         font-size: 16px;
         height: 32px;
         width: 32px;
     }
 }
-
 
 /* Premium new arrivals */
 .new-arrivals-section {
@@ -464,37 +468,37 @@
 }
 
 @media (max-width: 767px) {
-    .new-arrivals-heading p {
+.new-arrivals-heading p {
         font-size: 13px;
     }
 
-    .new-arrivals-carousel .slick-list {
+.new-arrivals-carousel .slick-list {
         margin: 0 -6px;
     }
 
-    .new-arrivals-carousel .slick-slide {
+.new-arrivals-carousel .slick-slide {
         padding: 0 6px;
     }
 
-    .new-arrival-card-content {
+.new-arrival-card-content {
         padding-top: 14px;
     }
 
-    .new-arrival-badge {
+.new-arrival-badge {
         font-size: 8px;
         left: 10px;
         padding: 8px;
         top: 10px;
     }
 
-    .new-arrival-actions {
+.new-arrival-actions {
         right: 10px;
         top: 10px;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .new-arrival-card,
+.new-arrival-card,
     .new-arrival-card-media img,
     .new-arrival-card-media::after,
     .new-arrival-arrow {
@@ -532,28 +536,28 @@
 }
 
 @media (max-width: 1199px) {
-    .new-arrivals-carousel:not(.slick-initialized) .new-arrival-card {
+.new-arrivals-carousel:not(.slick-initialized) .new-arrival-card {
         flex-basis: calc((100% - 3 * 20px) / 4);
         width: calc((100% - 3 * 20px) / 4);
     }
 
-    .new-arrivals-carousel.slick-initialized .slick-slide {
+.new-arrivals-carousel.slick-initialized .slick-slide {
         flex-basis: 33.333333% !important;
         width: 33.333333% !important;
     }
 }
 
 @media (max-width: 767px) {
-    .new-arrivals-carousel:not(.slick-initialized) {
+.new-arrivals-carousel:not(.slick-initialized) {
         gap: 12px;
     }
 
-    .new-arrivals-carousel:not(.slick-initialized) .new-arrival-card {
+.new-arrivals-carousel:not(.slick-initialized) .new-arrival-card {
         flex-basis: calc((100% - 12px) / 2);
         width: calc((100% - 12px) / 2);
     }
 
-    .new-arrivals-carousel.slick-initialized .slick-slide {
+.new-arrivals-carousel.slick-initialized .slick-slide {
         flex-basis: 100% !important;
         width: 100% !important;
     }
@@ -588,12 +592,12 @@
 }
 
 @media (max-width: 1199px) {
-    .new-arrivals-carousel,
+.new-arrivals-carousel,
     .top-selling-carousel {
         flex-wrap: nowrap;
     }
 
-    .new-arrivals-carousel .new-arrival-card,
+.new-arrivals-carousel .new-arrival-card,
     .top-selling-carousel .new-arrival-card,
     .top-selling-carousel .top-selling-card {
         flex-basis: calc((100% - 3 * 20px) / 4) !important;
@@ -602,12 +606,12 @@
 }
 
 @media (max-width: 767px) {
-    .new-arrivals-carousel,
+.new-arrivals-carousel,
     .top-selling-carousel {
         gap: 12px;
     }
 
-    .new-arrivals-carousel .new-arrival-card,
+.new-arrivals-carousel .new-arrival-card,
     .top-selling-carousel .new-arrival-card,
     .top-selling-carousel .top-selling-card {
         flex-basis: calc((100% - 12px) / 2) !important;
@@ -615,32 +619,21 @@
     }
 }
 
+.new-arrival-badge.is-best-seller,
+.top-selling-badge.is-best-seller {
+    background: var(--arrivals-charcoal, #252321);
+    color: #fff;
+}
 
-/* Show four larger product cards per carousel view. */
-@media (min-width: 768px) {
-    .new-arrivals-carousel,
-    .top-selling-carousel {
-        --product-carousel-gap: clamp(18px, 2vw, 32px);
-        gap: var(--product-carousel-gap);
-    }
-
-    .new-arrivals-carousel:not(.slick-initialized) .new-arrival-card,
-    .new-arrivals-carousel .new-arrival-card,
-    .top-selling-carousel .top-selling-card {
-        flex-basis: calc((100% - (3 * var(--product-carousel-gap))) / 4) !important;
-        width: calc((100% - (3 * var(--product-carousel-gap))) / 4) !important;
-    }
-
-    .new-arrivals-carousel.slick-initialized .slick-slide {
-        flex-basis: 25% !important;
-        width: 25% !important;
-    }
+.new-arrival-badge.is-trending,
+.top-selling-badge.is-trending {
+    background: var(--arrivals-gold, #c6a15b);
+    color: #fff;
 }
 
 @media (max-width: 767px) {
-    .new-arrivals-carousel,
+.new-arrivals-carousel,
     .top-selling-carousel {
         gap: 12px;
     }
 }
-

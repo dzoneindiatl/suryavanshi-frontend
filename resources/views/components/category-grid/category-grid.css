@@ -1,78 +1,14 @@
 /* ========================================================
-   COMPONENT: Category Grid & Showcase
+   COMPONENT: Category-grid
    ======================================================== */
 
-    width: 50px !important;
-    height: 50px !important;
+h2.pattren_txt {
     text-align: center;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-    top: 50% !important;
-    right: 50px;
-    cursor: pointer;
-    margin-top: -25px;
-    animation: animatearrow 0.6s infinite alternate ease-in-out;
-    -webkit-animation: animatearrow 0.6s infinite alternate ease-in-out;
-}
-.carousel-control-next .carousel-control-next-icon {
-    background-image: url("../image/arrow-right-black.svg");
-    margin: 0 auto;
-    display: none;
-}
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    background: no-repeat 50% / 100% 100%;
-}
-.home_main_slider .carousel-indicators [data-bs-target] {
-    background: #ba8342;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    transition: all 0.3s ease-in-out;
-    cursor: pointer;
-    opacity: 1;
-    border: medium none;
-}
-.home_main_slider .carousel-indicators button.active {
-    opacity: 1;
-    width: 40px;
-    border-radius: 5px;
-}
-
-.home_main_slider:before {
-    background-image: url(../image/slide_pin.webp);
-    background-size: contain;
-    background-repeat: repeat-x;
-    background-position: 0 100%;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-    content: "";
-}
-
-@keyframes animatearrow {
-    0% {
-        -webkit-transform: translateX(0);
-    }
-    100% {
-        -webkit-transform: translateX(-0.5em);
-    }
-}
-
-@-webkit-keyframes animatearrow {
-    0% {
-        -webkit-transform: translateX(0);
-    }
-    100% {
-        -webkit-transform: translateX(-0.5em);
-    }
+    margin-bottom: 30px;
+    font-size: 28px;
+    line-height: 30px;
+    font-weight: normal;
+    color: #936023;
 }
 
 .grid_pattren_img {
@@ -80,6 +16,7 @@
     margin-bottom: 0px;
     overflow: hidden;
 }
+
 .grid_pattren_img_inner {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
@@ -87,12 +24,15 @@
     box-sizing: border-box;
     padding: 10px 20px 0;
 }
+
 .grid_img_item {
     transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .grid_img_item a {
     text-decoration: none;
 }
+
 .grid_image_box {
     background: /*#bb844240*/ #b99e7d40;
     border-radius: 25px;
@@ -107,9 +47,11 @@
     overflow: hidden;
     position: relative;
 }
+
 .grid_img_item:hover .grid_image_box {
     transform: translateY(-10px);
 }
+
 .grid_image_box img {
     margin: 0 auto;
     max-width: 180px;
@@ -120,9 +62,11 @@
     object-fit: cover;
     transition: all 0.4s ease-in-out;
 }
+
 .grid_img_item:hover .grid_image_box img {
     transform: scale(1.1);
 }
+
 .grid_img_item h3 {
     color: #936023;
     font-size: 16px;
@@ -131,26 +75,33 @@
     text-align: center;
     transition: all 0.3s ease-in-out;
 }
+
 .grid_pattren_img_inner_box .grid_img_item:nth-child(even) {
     transform: translateY(calc(100% - 505px));
 }
+
 .grid_pattren_img_inner_box .grid_img_item:nth-child(odd) {
     transform: translateY(calc(100% + 20px));
 }
+
 .grid_pattren_img_inner_box {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
+
 .grid_pattren_img_inner_box .grid_img_item:nth-child(even) .grid_image_box {
     border-radius: 25px;
 }
+
 .grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(odd) {
     transform: translateY(calc(100% - 242px));
 }
+
 .grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(even) {
     transform: translateY(calc(100% - 242px));
 }
+
 .grid_image_box h3 {
     position: absolute;
     left: 0px;
@@ -166,12 +117,68 @@
     border-radius: 5px;
     display: none;
 }
+
 /*.grid_img_item:hover .grid_image_box h3 {transform: translateX(0%);}*/
 /*.grid_img_item:hover .grid_image_box+h3 {opacity: 0;}*/
 .grid_pattren_img_inner_box .grid_img_item:nth-child(odd) .grid_image_box h3 {
     bottom: auto;
     top: 50%;
     margin-top: -14px;
+    display: none;
+}
+
+@media (max-width: 767px) {
+.grid_pattren_img_inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        padding: 50px 15px 0px;
+    }
+
+h2.pattren_txt {
+        font-size: 25px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+.grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(odd) {
+        transform: translateY(calc(100% - 118px));
+    }
+
+.grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(even) {
+        transform: translateY(calc(100% - 120px));
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1400px) {
+.grid_img_item h3 {
+        font-size: 12px;
+        line-height: 14px;
+    }
+
+.grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(odd) {
+        transform: translateY(calc(100% - 164px));
+    }
+
+.grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(even) {
+        transform: translateY(calc(100% - 164px));
+    }
+}
+
+@media (min-width: 1401px) and (max-width: 1550px) {
+.grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(odd) {
+        transform: translateY(calc(100% - 195px));
+    }
+
+.grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(even) {
+        transform: translateY(calc(100% - 195px));
+    }
+}
+
+@media (min-width: 1600px) {
+.grid_image_box {
+        height: 215px;
+    }
+}
 
 /* Minimal product grid */
 .grid_pattren_img {
@@ -257,29 +264,28 @@
 }
 
 @media (max-width: 1199px) {
-    .grid_pattren_img_inner {
+.grid_pattren_img_inner {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 767px) {
-    .grid_pattren_img {
+.grid_pattren_img {
         padding: 30px 0 52px;
     }
 
-    .grid_pattren_img_inner {
+.grid_pattren_img_inner {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 28px 12px;
         padding: 0 16px;
     }
 
-    .grid_img_item h3 {
+.grid_img_item h3 {
         margin-top: 10px;
         font-size: 10px;
         letter-spacing: 0.1em;
     }
 }
-
 
 /* Premium jewellery category showcase */
 .jewellery-categories-section {
@@ -511,48 +517,48 @@
 }
 
 @media (max-width: 1199px) {
-    .jewellery-category-grid {
+.jewellery-category-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 767px) {
-    .jewellery-categories-heading {
+.jewellery-categories-heading {
         align-items: flex-start;
         flex-direction: column;
         gap: 24px;
     }
 
-    .jewellery-categories-heading p {
+.jewellery-categories-heading p {
         font-size: 13px;
     }
 
-    .jewellery-category-grid {
+.jewellery-category-grid {
         gap: 30px 12px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .jewellery-category-card-content {
+.jewellery-category-card-content {
         padding-top: 12px;
     }
 
-    .jewellery-category-card-content h3 {
+.jewellery-category-card-content h3 {
         font-size: 13px;
     }
 
-    .jewellery-category-explore {
+.jewellery-category-explore {
         font-size: 8px;
         letter-spacing: .08em;
     }
 
-    .jewellery-category-explore-arrow {
+.jewellery-category-explore-arrow {
         opacity: 1;
         transform: none;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .jewellery-category-card,
+.jewellery-category-card,
     .jewellery-category-image-wrap,
     .jewellery-category-image-wrap img,
     .jewellery-category-explore-arrow,
@@ -560,7 +566,6 @@
         transition: none;
     }
 }
-
 
 /* Homepage category carousel */
 .jewellery-category-carousel-shell {
@@ -630,30 +635,40 @@
 }
 
 @media (max-width: 1199px) {
-    .jewellery-category-carousel .jewellery-category-card {
+.jewellery-category-carousel .jewellery-category-card {
         flex-basis: calc((100% - 3 * clamp(12px, 1.7vw, 30px)) / 4);
         width: calc((100% - 3 * clamp(12px, 1.7vw, 30px)) / 4);
     }
 }
 
 @media (max-width: 767px) {
-    .jewellery-category-carousel-shell {
+.jewellery-category-carousel-shell {
         gap: 8px;
     }
 
-    .jewellery-category-carousel-button {
+.jewellery-category-carousel-button {
         flex-basis: 32px;
         font-size: 16px;
         height: 32px;
         width: 32px;
     }
 
-    .jewellery-category-carousel .jewellery-category-card {
+.jewellery-category-carousel .jewellery-category-card {
         flex-basis: calc((100% - 12px) / 2);
         width: calc((100% - 12px) / 2);
     }
 }
 
+.jewellery-categories-heading,
+.jewellery-category-carousel-shell,
+.featured-collections-heading,
+.featured-collections-grid,
+.new-arrivals-heading,
+.new-arrivals-carousel,
+.top-selling-heading,
+.top-selling-carousel {
+    max-width: var(--homepage-content-max);
+}
 
 /* Editorial two-row category shuffle */
 .jewellery-categories-section {
@@ -804,24 +819,24 @@
 }
 
 @media (max-width: 767px) {
-    .jewellery-categories-section {
+.jewellery-categories-section {
         padding-bottom: 58px;
         padding-top: 58px;
     }
 
-    .jewellery-categories-heading {
+.jewellery-categories-heading {
         margin-bottom: 32px;
     }
 
-    .jewellery-categories-heading-note {
+.jewellery-categories-heading-note {
         display: none;
     }
 
-    .jewellery-category-shuffle {
+.jewellery-category-shuffle {
         gap: 26px;
     }
 
-    .jewellery-category-shuffle-row,
+.jewellery-category-shuffle-row,
     .jewellery-category-shuffle-row.is-offset {
         gap: 14px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -829,116 +844,37 @@
         width: 100%;
     }
 
-    .jewellery-category-shuffle .jewellery-category-card-content {
+.jewellery-category-shuffle .jewellery-category-card-content {
         padding-top: 11px;
     }
 
-    .jewellery-category-shuffle .jewellery-category-card-content h3 {
+.jewellery-category-shuffle .jewellery-category-card-content h3 {
         font-size: 13px;
     }
 
-    .jewellery-category-shuffle .jewellery-category-explore {
+.jewellery-category-shuffle .jewellery-category-explore {
         font-size: 8px;
         letter-spacing: .08em;
     }
 
-    .jewellery-category-card-index,
+.jewellery-category-card-index,
     .jewellery-category-image-caption {
         font-size: 7px;
     }
 }
 
 @media (min-width: 768px) and (max-width: 1199px) {
-    .jewellery-category-shuffle-row,
+.jewellery-category-shuffle-row,
     .jewellery-category-shuffle-row.is-offset {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
-/* Disable category grid and shuffle animations on mobile and tablet */
-@media (max-width: 1199px) {
-    .jewellery-category-shuffle .jewellery-category-card,
-    .jewellery-category-card,
-    .jewellery-categories-section.is-visible .jewellery-category-card {
-        opacity: 1 !important;
-        transform: none !important;
-        transition: none !important;
-        will-change: auto !important;
-    }
-
-    .jewellery-category-shuffle .jewellery-category-image-wrap,
-    .jewellery-category-shuffle .jewellery-category-image-wrap::after,
-    .jewellery-category-shuffle .jewellery-category-image-wrap img,
-    .jewellery-category-shuffle .jewellery-category-explore-arrow {
-        transition: none !important;
-    }
-
-    .jewellery-categories-section.is-shuffling .jewellery-category-image-wrap::after {
-        border-color: transparent !important;
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
-    .jewellery-category-shuffle .jewellery-category-card,
+.jewellery-category-shuffle .jewellery-category-card,
     .jewellery-category-shuffle .jewellery-category-image-wrap,
     .jewellery-category-shuffle .jewellery-category-image-wrap img,
     .jewellery-category-shuffle .jewellery-category-explore-arrow {
         transition: none;
     }
-}
-
-
-@media (max-width: 767px) {
-    .grid_pattren_img_inner {
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        padding: 50px 15px 0px;
-    }
-    h2.pattren_txt {
-        font-size: 25px;
-    }
-    .home_collection_sec.animate_collection
-        .home_collection_sec_inner
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-    .grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(odd) {
-        transform: translateY(calc(100% - 118px));
-    }
-    .grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(even) {
-        transform: translateY(calc(100% - 120px));
-    }
-    .home_collection_sec .btn_button .btn_collection_all,
-}
-
-@media (min-width: 1200px) and (max-width: 1400px) {
-    .grid_img_item h3 {
-        font-size: 12px;
-        line-height: 14px;
-    }
-    .grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(odd) {
-        transform: translateY(calc(100% - 164px));
-    }
-    .grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(even) {
-        transform: translateY(calc(100% - 164px));
-    }
-}
-
-@media (min-width: 1401px) and (max-width: 1550px) {
-    .grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(odd) {
-        transform: translateY(calc(100% - 195px));
-    }
-    .grid_pattren_img_inner_box.in-view .grid_img_item:nth-child(even) {
-        transform: translateY(calc(100% - 195px));
-    }
-}
-
-}
-
-@media (min-width: 1600px) {
-@media (min-width: 1600px) {
-    .grid_image_box {
-        height: 215px;
-    }
-}
 }

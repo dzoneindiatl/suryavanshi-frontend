@@ -289,17 +289,6 @@
 				<div class="col-md-12">
 					<div class="main_menu">
 						<ul> 
-							<!-- All Categories Hamburger Toggle on Desktop -->
-							<li class="all-categories-hamburger-item">
-								<button type="button" class="desktop-category-hamburger-btn open-category-drawer" aria-label="Browse all categories in drawer">
-									<span class="hamburger-icon-bars">
-										<span></span>
-										<span></span>
-										<span></span>
-									</span>
-									<span>All Categories</span>
-								</button>
-							</li>
 
 							@foreach($categories->where('show_on_menu', 1) as $category) 
 								@php 

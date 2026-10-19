@@ -89,6 +89,10 @@
     height: 24px;
     stroke: currentColor;
     display: block;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
     transition: transform 0.2s ease;
 }
 
@@ -145,6 +149,10 @@
     height: 20px;
     stroke: currentColor;
     display: block;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
 }
 
 .mobile-action-btn .cart-badge {

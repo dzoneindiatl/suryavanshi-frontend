@@ -1,10 +1,47 @@
 /* ========================================================
-   COMPONENT: Occasions & Gift Cards
+   COMPONENT: Occasions
    ======================================================== */
 
+.middle_img img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 68px;
+}
+
+.middle_img {
+    position: relative;
+    flex: 1;
+    max-width: 100%;
+    border-radius: 17px;
+    background-color: #ddd1c3;
+    padding: 15px;
+}
+
+.middle_img h2 {
+    text-align: center;
+    color: #222;
+    margin-top: 10px;
+    font-size: 22px;
+    margin-bottom: 0px;
+}
+
+.middle_img a {
+    text-decoration: none;
+}
+
+.middle_section_img {
+    padding: 0px;
+}
+
+.middle_section_img_inner {
+    padding-left: 20px;
+    padding-right: 20px;
+    display: flex;
     gap: 28px;
     position: relative;
 }
+
 .middle_section_img_inner:before {
     content: "";
     position: absolute;
@@ -15,6 +52,7 @@
     background: #d6b4a7;
     transform: translateX(-50%);
 }
+
 .middle_section_img_inner:after {
     content: "";
     position: absolute;
@@ -25,6 +63,7 @@
     background: #d6b4a7;
     transform: translateX(-50%);
 }
+
 .col_left_3:before {
     content: "";
     position: absolute;
@@ -34,6 +73,7 @@
     height: 100%;
     background: #d6b4a7;
 }
+
 .col_left_3 {
     width: 47.08640321500335%;
     max-width: 47.08640321500335%;
@@ -43,6 +83,7 @@
     justify-content: center;
     position: relative;
 }
+
 .col_left_1,
 .col_left_2 {
     width: 26.456798392498325%;
@@ -53,12 +94,14 @@
     padding-top: 60px;
     padding-bottom: 60px;
 }
+
 .giftcard-section {
     position: relative;
     padding-top: 0px;
     padding-left: 75px;
     padding-right: 75px;
 }
+
 .giftcard-section .giftcard-wrap {
     position: relative;
     padding: 10px;
@@ -66,10 +109,12 @@
     background: #b5956f;
     border-radius: 15px;
 }
+
 .giftcard-section .bg-img-wrap {
     border: 2px dashed rgba(255, 255, 255, 0.6);
     border-radius: 10px;
 }
+
 .giftcard-section .giftcard-wrap .bg-img {
     margin: 40px auto 20px;
     position: relative;
@@ -80,6 +125,7 @@
     max-width: 100%;
     max-height: 100%;
 }
+
 .giftcard-section .giftcard-wrap .left-h-img,
 .giftcard-section .giftcard-wrap .right-h-img {
     position: absolute;
@@ -91,10 +137,12 @@
     max-width: 100%;
     max-height: 100%;
 }
+
 .giftcard-section .giftcard-wrap .right-h-img {
     right: -74px;
     left: auto;
 }
+
 .giftcard-section .giftcard-wrap .gift-wrap {
     display: flex;
     align-items: center;
@@ -102,12 +150,14 @@
     width: 90%;
     margin: 0 auto;
 }
+
 .gift-wrap a:link,
 .gift-wrap a:visited,
 .gift-wrap a:hover,
 .gift-wrap a:active {
     text-decoration: none;
 }
+
 .giftcard-section .giftcard-wrap .gift-wrap .gift-item img {
     width: 100%;
     height: auto;
@@ -116,52 +166,97 @@
     max-height: 100%;
 }
 
-.love_main {
-    padding: 0px 20px 70px;
-    display: flex;
-    flex-flow: wrap;
-    max-width: 1835px;
-    margin: 0px auto;
+@media (max-width: 767px) {
+.middle_section_img_inner {
+        flex-direction: column;
+        padding-top: 35px;
+        padding-bottom: 35px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+.middle_section_img_inner:before {
+        width: 90%;
+    }
+
+.col_left_3 {
+        width: 100%;
+        max-width: 100%;
+        padding-bottom: 35px;
+    }
+
+.col_left_3:before {
+        right: auto;
+        bottom: 0;
+        left: 50%;
+        width: 100%;
+        transform: translateX(-50%);
+        height: 1px;
+        background: #d6b4a7;
+        top: auto;
+    }
+
+.giftcard-section {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+
+.giftcard-section .giftcard-wrap .bg-img {
+        margin: 20px auto 20px;
+        width: 85%;
+    }
+
+.giftcard-section .giftcard-wrap .left-h-img,
+    .giftcard-section .giftcard-wrap .right-h-img {
+        left: -10px;
+    }
+
+.giftcard-section .giftcard-wrap .right-h-img {
+        right: -10px;
+        left: auto;
+    }
+
+.col_left_1,
+    .col_left_2 {
+        width: 100%;
+        max-width: 100%;
+        padding-top: 5px;
+        padding-bottom: 0px;
+    }
 }
-.love_main_inner {
-    padding: 40px;
-    background: #f3e7d9;
-    border: 2px solid #e9c08f;
-    border-radius: 12px;
-    display: flex;
-    -webkit-box-align: center;
-    align-items: center;
-    -webkit-box-pack: justify;
-    justify-content: space-between;
-    width: 100%;
+
+@media (min-width: 768px) and (max-width: 991px) {
+.giftcard-section {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+
+.giftcard-section .giftcard-wrap .left-h-img,
+    .giftcard-section .giftcard-wrap .right-h-img {
+        left: -10px;
+    }
+
+.giftcard-section .giftcard-wrap .right-h-img {
+        right: -10px;
+        left: auto;
+    }
+
+.middle_img h2 {
+        font-size: 14px;
+    }
 }
-.love_top_left {
-    max-width: 210px;
+
+@media (min-width: 1200px) and (max-width: 1400px) {
+.middle_section_img_inner {
+        padding-left: 35px;
+        padding-right: 35px;
+    }
+
+.col_left_1,
+    .col_left_2 {
+        gap: 10px;
+    }
 }
-.love_top_left img {
-    width: 100%;
-    display: block;
-    border-radius: 20px;
-    margin: 0px auto;
-    max-width: 137px;
-    max-height: 99px;
-    object-fit: cover;
-}
-.love_top_left p {
-    font-size: 22px;
-    color: #ba8342;
-    padding-top: 16px;
-    margin: 0px;
-}
-.love_main_right {
-    display: flex;
-    width: 80%;
-    -webkit-box-pack: end;
-    justify-content: end;
-    gap: 20px;
-}
-.love_main_right_inner a {
-    display: block;
 
 /* Full-width occasion cards without the former gift-finder panel */
 .middle_section_img {
@@ -234,100 +329,30 @@
 }
 
 @media (max-width: 991px) {
-    .occasion-cards-grid {
+.occasion-cards-grid {
         grid-auto-rows: 270px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .occasion-card {
+.occasion-card {
         height: 270px;
     }
 }
 
 @media (max-width: 575px) {
-    .middle_section_img_inner {
+.middle_section_img_inner {
         padding-left: 15px;
         padding-right: 15px;
     }
 
-    .occasion-cards-grid {
+.occasion-cards-grid {
         gap: 12px;
         grid-auto-rows: 250px;
         grid-template-columns: 1fr;
     }
 
-    .occasion-card {
+.occasion-card {
         height: 250px;
         padding: 9px;
-    }
-}
-
-
-@media (max-width: 767px) {
-    .middle_section_img_inner {
-        flex-direction: column;
-        padding-top: 35px;
-        padding-bottom: 35px;
-        padding-left: 15px;
-        padding-right: 15px;
-    }
-    .middle_section_img_inner:before {
-        width: 90%;
-    }
-    .col_left_3 {
-        width: 100%;
-        max-width: 100%;
-        padding-bottom: 35px;
-    }
-    .col_left_3:before {
-        right: auto;
-        bottom: 0;
-        left: 50%;
-        width: 100%;
-        transform: translateX(-50%);
-        height: 1px;
-        background: #d6b4a7;
-        top: auto;
-    }
-    .giftcard-section {
-        padding-left: 0px;
-        padding-right: 0px;
-    }
-    .giftcard-section .giftcard-wrap .bg-img {
-        margin: 20px auto 20px;
-        width: 85%;
-    }
-    .giftcard-section .giftcard-wrap .left-h-img,
-    .giftcard-section .giftcard-wrap .right-h-img {
-        left: -10px;
-    }
-    .giftcard-section .giftcard-wrap .right-h-img {
-        right: -10px;
-        left: auto;
-    }
-    .col_left_1,
-    .col_left_2 {
-        width: 100%;
-        max-width: 100%;
-        padding-top: 5px;
-        padding-bottom: 0px;
-    }
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-    .giftcard-section {
-        padding-left: 0px;
-        padding-right: 0px;
-    }
-    .giftcard-section .giftcard-wrap .left-h-img,
-    .giftcard-section .giftcard-wrap .right-h-img {
-        left: -10px;
-    }
-    .giftcard-section .giftcard-wrap .right-h-img {
-        right: -10px;
-        left: auto;
-    }
-    .middle_img h2 {
-        font-size: 14px;
     }
 }
