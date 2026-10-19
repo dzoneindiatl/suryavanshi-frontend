@@ -21,7 +21,7 @@
 <div class="product_details_main_page">
 	<div class="container">
 		<div class="row">
-			<div class="col-12 col-lg-7 col-md-6 mb-4 mb-md-0">
+			<div class="col-12 col-lg-5 col-md-5 product_gallery_col mb-4 mb-md-0">
 				<div class="app-figure" id="zoom-fig">
 					@php
                         $primaryVariantId = \App\Models\ProductVariantValue::where('product_id', $product->id)
@@ -42,14 +42,16 @@
                             : ($product->images['first'] ?? asset('assets/image/placeholder.png'));
 				    @endphp
 
-					<a id="Zoom-1"
-						class="MagicZoom"
-						href="{{ $firstImageUrl }}"
-						data-zoom-image-2x="{{ $firstImageUrl }}"
-						data-image-2x="{{ $firstImageUrl }}">
-						<img src="{{ $firstImageUrl }}"
-							alt="{{ $product->name }}" class="default-image"/>
-					</a>
+					<div class="product_main_image_holder">
+						<a id="Zoom-1"
+							class="MagicZoom"
+							href="{{ $firstImageUrl }}"
+							data-zoom-image-2x="{{ $firstImageUrl }}"
+							data-image-2x="{{ $firstImageUrl }}">
+							<img src="{{ $firstImageUrl }}"
+								alt="{{ $product->name }}" class="default-image"/>
+						</a>
+					</div>
 
 					<div class="selectors" id="productImageSelectors">
 						@foreach($sortedProductImages as $img)
@@ -71,7 +73,7 @@
 				</div>
 			</div>
 
-			<div class="col-12 col-lg-5 col-md-6">
+			<div class="col-12 col-lg-7 col-md-7 product_info_col">
 				<div class="product_detail_right">
 					<h1>{{ $product->name }}</h1>
 
