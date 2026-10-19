@@ -1,5 +1,5 @@
 @include('front.includes.head')
-@include('front.includes.header')
+@include('components.header.header')
 <link rel="stylesheet" href="{{ asset('assets/css/magiczoomplus.css') }}">
 <link rel="stylesheet" href="{{ asset('assets/css/components/product-detail/product-detail.css') }}?v={{ file_exists(public_path('assets/css/components/product-detail/product-detail.css')) ? filemtime(public_path('assets/css/components/product-detail/product-detail.css')) : time() }}">
 
@@ -46,6 +46,7 @@
 						<a id="Zoom-1"
 							class="MagicZoom"
 							href="{{ $firstImageUrl }}"
+							data-options="zoomPosition: inner;"
 							data-zoom-image-2x="{{ $firstImageUrl }}"
 							data-image-2x="{{ $firstImageUrl }}">
 							<img src="{{ $firstImageUrl }}"
@@ -944,7 +945,7 @@
 @endif 
 
 {{-- DYNAMIC MODULAR FOOTER --}}
-@include('front.includes.footer')
+@include('components.footer.footer')
 
 @php
     $minSellingQty = 1;

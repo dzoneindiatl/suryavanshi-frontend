@@ -1,8 +1,7 @@
 /* ========================================================
    JAIPUR JEWELLERY HOUSE / SURYAVANSHI
    Modular Master Stylesheet
-   Each component has its own dedicated CSS file under:
-     - resources/views/components/<component>/<component>.css
+   Each component has its dedicated CSS file under:
      - public/assets/css/components/<component>/<component>.css
    ======================================================== */
 

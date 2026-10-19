@@ -363,7 +363,7 @@
 
         <div id="top-selling-carousel" class="top-selling-carousel" data-product-carousel>
             @foreach ($topSellingProducts as $product)
-                @include('front.includes.product-card', ['product' => $product, 'cardClass' => 'top-selling-card'])
+                @include('components.product-card.product-card', ['product' => $product, 'cardClass' => 'top-selling-card'])
             @endforeach
         </div>
 

@@ -98,8 +98,8 @@
     max-height: 480px !important;
     border-radius: 14px;
     background: #ffffff;
-    /* border: 1px solid var(--pd-primary-border); */
-    /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); */
+    border: 1px solid var(--pd-primary-border);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;

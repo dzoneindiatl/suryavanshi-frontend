@@ -310,7 +310,7 @@
 
         <div id="new-arrivals-carousel" class="new-arrivals-carousel" data-product-carousel>
             @foreach ($newArrivalProducts as $product)
-                @include('front.includes.product-card', ['product' => $product])
+                @include('components.product-card.product-card', ['product' => $product])
             @endforeach
         </div>
 

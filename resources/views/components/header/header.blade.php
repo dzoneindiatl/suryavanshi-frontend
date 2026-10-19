@@ -142,7 +142,7 @@
 
 <div class="main_header_top">
 	{{-- Responsive Mobile Navbar (Imported from separate file) --}}
-	@include('front.includes.responsive-navbar')
+	@include('components.responsive-navbar.responsive-navbar')
 
 	{{-- Desktop Navbar (Visible on lg and above) --}}
 	<div class="desktop-header-wrap d-none d-lg-block">
