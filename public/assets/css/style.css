@@ -35,6 +35,10 @@
 /* 4. Product Listing & Filter Drawer */
 @import url("components/product-list/product-list.css?v=4");
 
-/* 5. User Authentication */
+/* 5. Product Detail Page */
+@import url("components/product-detail/product-detail.css?v=4");
+
+/* 6. User Authentication */
 @import url("components/login/login.css?v=4");
 @import url("components/signup/signup.css?v=4");
+
