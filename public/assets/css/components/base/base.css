@@ -52,7 +52,7 @@ svg {
     width: 10px;
     height: 17px;
     background-size: cover;
-    background: url(../image/btn-arrow-up.svg) no-repeat 0 0;
+    background: url(../../../image/btn-arrow-up.svg) no-repeat 0 0;
 }
 
 @keyframes up-down {

@@ -5,7 +5,7 @@
 .footer_bottom_sec {
     padding: 80px 0px;
     background: #f0f0f0;
-    background-image: url(../image/lines.png);
+    background-image: url(../../../image/lines.png);
 }
 
 .footer_bottom_sec a {
@@ -15,7 +15,7 @@
 .footer_main {
     background: rgba(0, 0, 0, 0.897);
     padding: 80px 0px;
-    /* background-image: url(../image/lines.png); */
+    /* background-image: url(../../../image/lines.png); */
 }
 
 .footer_main_inner{

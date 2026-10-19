@@ -75,7 +75,7 @@
 }
 
 .carousel-control-prev {
-    background: url("../image/arrow_left_slider.png");
+    background: url("../../../image/arrow_left_slider.png");
     opacity: 1;
     border-radius: 30px;
     width: 50px !important;
@@ -93,13 +93,13 @@
 }
 
 .carousel-control-prev .carousel-control-prev-icon {
-    background-image: url("../image/arrow-left-black.svg");
+    background-image: url("../../../image/arrow-left-black.svg");
     margin: 0 auto;
     display: none;
 }
 
 .carousel-control-next {
-    background: url("../image/arrow_right_slider.png");
+    background: url("../../../image/arrow_right_slider.png");
     opacity: 1;
     border-radius: 30px;
     width: 50px !important;
@@ -117,7 +117,7 @@
 }
 
 .carousel-control-next .carousel-control-next-icon {
-    background-image: url("../image/arrow-right-black.svg");
+    background-image: url("../../../image/arrow-right-black.svg");
     margin: 0 auto;
     display: none;
 }
@@ -148,7 +148,7 @@
 }
 
 .home_main_slider:before {
-    background-image: url(../image/slide_pin.webp);
+    background-image: url(../../../image/slide_pin.webp);
     background-size: contain;
     background-repeat: repeat-x;
     background-position: 0 100%;
