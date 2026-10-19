@@ -42,6 +42,7 @@
             var scrollLeft = 0;
 
             slider.addEventListener('mousedown', function (e) {
+                if (slider.scrollWidth <= slider.clientWidth) return;
                 isDown = true;
                 slider.style.cursor = 'grabbing';
                 startX = e.pageX - slider.offsetLeft;
@@ -57,6 +58,7 @@
 
             slider.addEventListener('mousemove', function (e) {
                 if (!isDown) return;
+                if (slider.scrollWidth <= slider.clientWidth) return;
                 e.preventDefault();
                 var x = e.pageX - slider.offsetLeft;
                 var walk = (x - startX) * 1.4;

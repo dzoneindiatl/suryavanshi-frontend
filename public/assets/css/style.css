@@ -7,34 +7,34 @@
    ======================================================== */
 
 /* 1. Base, Reset & Global Layout */
-@import url("components/base/base.css?v=3");
+@import url("components/base/base.css?v=4");
 
 /* 2. Global Navigation & Layout Components */
-@import url("components/header/header.css?v=3");
-@import url("components/responsive-navbar/responsive-navbar.css?v=3");
-@import url("components/footer/footer.css?v=3");
-@import url("components/product-card/product-card.css?v=3");
+@import url("components/header/header.css?v=4");
+@import url("components/responsive-navbar/responsive-navbar.css?v=4");
+@import url("components/footer/footer.css?v=4");
+@import url("components/product-card/product-card.css?v=4");
 
 /* 3. Homepage Section Components */
-@import url("components/hero/hero.css?v=3");
-@import url("components/category-grid/category-grid.css?v=3");
-@import url("components/featured-collections/featured-collections.css?v=3");
-@import url("components/promo-slides/promo-slides.css?v=3");
-@import url("components/wrap-grid/wrap-grid.css?v=3");
-@import url("components/new-arrivals/new-arrivals.css?v=3");
-@import url("components/occasions/occasions.css?v=3");
-@import url("components/best-sellers/best-sellers.css?v=3");
-@import url("components/shop-by-budget/shop-by-budget.css?v=3");
-@import url("components/shop-the-look/shop-the-look.css?v=3");
-@import url("components/testimonials/testimonials.css?v=3");
-@import url("components/top-selling/top-selling.css?v=3");
-@import url("components/wrapped-with-love/wrapped-with-love.css?v=3");
-@import url("components/influencers/influencers.css?v=3");
-@import url("components/subscription/subscription.css?v=3");
+@import url("components/hero/hero.css?v=4");
+@import url("components/category-grid/category-grid.css?v=4");
+@import url("components/featured-collections/featured-collections.css?v=4");
+@import url("components/promo-slides/promo-slides.css?v=4");
+@import url("components/wrap-grid/wrap-grid.css?v=4");
+@import url("components/new-arrivals/new-arrivals.css?v=4");
+@import url("components/occasions/occasions.css?v=4");
+@import url("components/best-sellers/best-sellers.css?v=4");
+@import url("components/shop-by-budget/shop-by-budget.css?v=4");
+@import url("components/shop-the-look/shop-the-look.css?v=4");
+@import url("components/testimonials/testimonials.css?v=4");
+@import url("components/top-selling/top-selling.css?v=4");
+@import url("components/wrapped-with-love/wrapped-with-love.css?v=4");
+@import url("components/influencers/influencers.css?v=4");
+@import url("components/subscription/subscription.css?v=4");
 
 /* 4. Product Listing & Filter Drawer */
-@import url("components/product-list/product-list.css?v=3");
+@import url("components/product-list/product-list.css?v=4");
 
 /* 5. User Authentication */
-@import url("components/login/login.css?v=3");
-@import url("components/signup/signup.css?v=3");
+@import url("components/login/login.css?v=4");
+@import url("components/signup/signup.css?v=4");
