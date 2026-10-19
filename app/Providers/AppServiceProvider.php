@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
      public function boot(): void
     {
           View::composer(
-            'front.includes.header',
+            ['front.includes.header', 'front.includes.responsive-navbar'],
             HeaderComposer::class
         );
         View::composer(
