@@ -33,16 +33,26 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         try {
-            if ($request->query('return_to') === 'cart') {
+            $requestedReturnTo = $request->query('return_to');
+            if ($requestedReturnTo === 'cart') {
                 $request->session()->put('login_return_to_cart', true);
                 $request->session()->forget('login_return_to');
-            } else {
+            } elseif ($requestedReturnTo !== null) {
                 $request->session()->forget('login_return_to_cart');
-                $returnTo = $this->safeLoginReturnPath($request->query('return_to'));
+                $returnTo = $this->safeLoginReturnPath($requestedReturnTo);
                 if ($returnTo !== null) {
                     $request->session()->put('login_return_to', $returnTo);
                 } else {
                     $request->session()->forget('login_return_to');
+                }
+            } else {
+                $returnTo = $this->safeLoginRefererPath(
+                    $request->headers->get('referer'),
+                    $request
+                );
+                if ($returnTo !== null) {
+                    $request->session()->put('login_return_to', $returnTo);
+                    $request->session()->forget('login_return_to_cart');
                 }
             }
 
@@ -174,7 +184,7 @@ class AuthController extends Controller
                 ->with('success', trans('Login successfully'));
         }
 
-        return Redirect::route('user.dashboard')->with('success', trans('Login successfully'));
+        return Redirect::route('front-home.index')->with('success', trans('Login successfully'));
     }
 
     private function safeLoginReturnPath(?string $returnTo): ?string
@@ -194,6 +204,41 @@ class AuthController extends Controller
         }
 
         return $returnTo;
+    }
+
+    private function safeLoginRefererPath(?string $referer, Request $request): ?string
+    {
+        if (!$referer) {
+            return null;
+        }
+
+        $parts = parse_url($referer);
+        if (
+            $parts === false
+            || empty($parts['host'])
+            || strcasecmp($parts['host'], $request->getHost()) !== 0
+        ) {
+            return null;
+        }
+
+        $path = $parts['path'] ?? '/';
+        $loginPath = parse_url(route('front-user.login', [], false), PHP_URL_PATH);
+        $signupPath = parse_url(route('front-user.signup', [], false), PHP_URL_PATH);
+        $postLoginPath = parse_url(route('front-user.postLogin', [], false), PHP_URL_PATH);
+        if (in_array(rtrim($path, '/') ?: '/', [
+            rtrim($loginPath, '/') ?: '/',
+            rtrim($signupPath, '/') ?: '/',
+            rtrim($postLoginPath, '/') ?: '/',
+        ], true)) {
+            return null;
+        }
+
+        $returnTo = $path;
+        if (isset($parts['query'])) {
+            $returnTo .= '?' . $parts['query'];
+        }
+
+        return $this->safeLoginReturnPath($returnTo);
     }
 
     private function cartItems($cartItems)

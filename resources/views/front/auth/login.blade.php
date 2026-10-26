@@ -2,7 +2,7 @@
 
 @section('content')
     @include('components.login.login')
-@endsection
+
 <style>
 	.suryavanshi_login_main {padding: 80px 0px;text-align: center;}
 	.login_inner_main h2 {font-weight: 600;position: relative;margin: 0px 0px 16px;font-size: 22px;line-height: 18px;text-align: center;display: inline-block;color: #ba8341;}

@@ -14,6 +14,7 @@
 		<div class="login_inner_main">
 			<form id="loginForm" action="{{ route('front-user.postLogin') }}" autocomplete="off" method="POST">
                 @csrf
+				<input type="hidden" name="return_to" value="{{ old('return_to', request('return_to')) }}">
 				<h2>Login to </h2>
 				<p class="login_txt">Login to unlock best prices and become an insider for our exclusive launches &amp; offers. Complete your profile and get ₹250 worth of xCLusive Points.</p>
 				<div class="input_login_btn">
