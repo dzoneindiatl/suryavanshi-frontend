@@ -236,10 +236,11 @@ class CartController extends Controller
                         ->where('is_active', 1)
                         ->where('is_deleted', 0)
                         ->first();
+                       
                     if (!$product) {
                         $errors[] = [
                             'random_id' => $item['randomId'],
-                            'message' => 'Product no longer exists.'
+                            'message' => 'Product no longere exists.'
                         ];
                         continue;
                     }

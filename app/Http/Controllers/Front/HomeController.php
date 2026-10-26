@@ -47,8 +47,8 @@ class HomeController extends Controller
             ->select('id', 'name', 'slug', 'image', 'thumbnail_image', 'category_order')
             ->orderBy('category_order', 'ASC')
             ->get();
-
-        return view('front.home.index', compact('homeCategories'));
+        $silders = Slider::get(); 
+        return view('front.home.index', compact('homeCategories','silders'));
     }
 
     public function productListing(Request $request, $path)
@@ -81,13 +81,16 @@ class HomeController extends Controller
         $priceDrop = PriceDrop::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->where('is_deleted',0)->latest()->first();
         
         $DB = Product::select('id','name','slug','buying_price','selling_price','discount','discount_type','sku','best_seller','qty')->where('is_deleted', 0)
-            ->where('is_active', "1")->orderBy('id','DESC'); 
+            ->where('is_active', "1");
 
         $hasCategoryFilter = $request->filled('category_id') || $request->filled('sub_category_id') ||  $request->filled('sub_child_category_id');
         
         if (!$hasCategoryFilter) {
             if (count($segments) === 1) {
-                $DB->where('main_category_id', $category->id)->orWhere('main_collection_id',$category->id);
+                $DB->where(function ($query) use ($category) {
+                    $query->where('main_category_id', $category->id)
+                        ->orWhere('main_collection_id', $category->id);
+                });
                 $categoriesData = Category::where('is_active', 1)
                     ->where('is_deleted', 0)
                     ->where('parent_id', $category->id)
@@ -156,6 +159,19 @@ class HomeController extends Controller
             );
         }
 
+        $selectedAttributeValues = $request->input('attribute_values', []);
+        if (is_array($selectedAttributeValues)) {
+            foreach ($selectedAttributeValues as $attributeId => $valueIds) {
+                $valueIds = (array) $valueIds;
+                if ($valueIds) {
+                    $DB->whereHas('productAttributes', function ($query) use ($attributeId, $valueIds) {
+                        $query->where('attribute_id', $attributeId)
+                            ->whereIn('attribute_value_id', $valueIds);
+                    });
+                }
+            }
+        }
+
         if ($request->filled('price_range')) {
             $range = explode('-',$request->input('price_range'));
             if (count($range) === 2) {
@@ -170,6 +186,7 @@ class HomeController extends Controller
         switch ($request->input('sortBy')) {
             case 'new_arrivals':
                 $DB->where('is_new_arrivals', 1);
+                $DB->orderBy('id', 'desc');
                 break;
 
             case 'best_seller':
@@ -213,7 +230,7 @@ class HomeController extends Controller
             $catAttributeIds = CategoryAttribute::where('category_id',$category->id)->pluck('attribute_id');
         }
 
-        $attributes = Attribute::whereIn('id',$catAttributeIds)->where('is_active', 1)->where('is_deleted', 0)->get();
+        $attributes = Attribute::with('attribute_values')->whereIn('id',$catAttributeIds)->where('is_active', 1)->where('is_deleted', 0)->get();
         $AllMainCategory = Category::select('id','name','slug','parent_id')->whereNull('parent_id')->where('is_active', 1)->where('is_deleted', 0)->get();
         $allSubCategory = Category::select('id','name','slug','parent_id')->where('is_active', 1)->where('is_deleted', 0)->whereIn('parent_id',$AllMainCategory->pluck('id'))->get();
         $allChildCategory = Category::select('id','name','slug','parent_id')->where('is_active',1)->where('is_deleted',0)->whereIn('parent_id',$allSubCategory->pluck('id'))->get(); 
@@ -221,7 +238,10 @@ class HomeController extends Controller
         $variants = Variant::where('is_active', 1)
             ->where('is_deleted', 0)
             ->get();
-        $variantColor = VariantValue::whereIn('variant_id',$variants->pluck('id'))->get();
+        $colorVariantIds = $variants->filter(function ($variant) {
+            return strtolower($variant->name) === 'color';
+        })->pluck('id');
+        $variantColor = VariantValue::whereIn('variant_id',$colorVariantIds)->get();
         $results->each(function ($product) {
 
             $product->primary_variant_value = null;
@@ -615,12 +635,14 @@ class HomeController extends Controller
         }
 
         $totalPayable = $grandTotal;
-        $hasOrdered = Order::where('user_id', $user->id)->exists();
+   
+ 
+        $hasOrdered = Order::where('user_id', $user?->id)->exists();
 
         $allCoupons = CouponUser::with('coupon')
             ->where(function ($query) use ($user, $hasOrdered) {
                 $query->where(function ($q) use ($user) {
-                    $q->where('user_id', $user->id)
+                    $q->where('user_id', $user?->id)
                     ->whereHas('coupon', function ($coupon) {
                         $coupon->where('coupon_type', 'private');
                     });

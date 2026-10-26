@@ -112,6 +112,7 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
     .quantity button:hover{ background:#F2D7D5;}
     .quantity input{ flex:1; border:none; outline:none; text-align:center; font-size:18px; background:none; width: 100%;}
 </style>
+@if (Auth::guard('customer')->check())
 <div class="coupon_apply_popup" style="display: none;" id="coupon_apply_popup">
 	<div class="coupon_apply_popup_bg"></div>
 	<div class="coupon_apply_popup_inner">
@@ -185,6 +186,7 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
 		</div>
 	</div>
 </div>
+@endif
 <div class="cart_main_top">
 	<div class="container">
         @if (Auth::guard('customer')->check())
@@ -235,7 +237,9 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
 			</div>
 			<div class="col-md-4">
 				<div class="cart_item_right_box">
+                    @if (Auth::guard('customer')->check())
 					<button class="cart_apply_coupon">Apply Coupon<div class="apply_coup_arrow"></div></button>
+                    @endif
 					<div class="order_summary_txt">
                         @if (Auth::guard('customer')->check())
                             <div class="order_summary_txt1">
@@ -252,7 +256,6 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
                             <div class="order_summary_txt1">
                                 <p class="totalMRP">Total MRP <span class="price-values cart-country-price">₹0</span></p>
                                 <p class="discount">Discount <span class="price-values cart-country-price">₹0</span></p>
-                                <p class="couponDiscount">Coupon Discount <span class="price-values cart-country-price" data-base-amount="0" data-display-sign="-">-₹0.00</span></p>
                                 <p class="subtotal">Subtotal <span class="price-values cart-country-price">₹0</span></p>
                                 <p class="grandTotal">Grand Total <span class="price-values cart-country-price">₹0</span></p>
                                 <p class="taxableAmount">Taxable Amount <span class="price-values cart-country-price">₹0</span></p>
@@ -285,6 +288,7 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
         grandTotal: @json((float) $grandTotal),
         totalPayable: @json((float) $totalPayable)
     };
+    window.couponApplyVersion = 0;
 </script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="{{ asset('assets/js/cart.js') }}"></script>
@@ -293,6 +297,9 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
     document.addEventListener('DOMContentLoaded', function () {
         const couponPopup = document.getElementById('coupon_apply_popup');
         const closeButton = document.getElementById('coupon_close_icon');
+        if (!window.isLoggedIn || !couponPopup || !closeButton) {
+            return;
+        }
 
         document.querySelectorAll('.cart_apply_coupon').forEach(function (button) {
             button.addEventListener('click', function (e) {
@@ -328,6 +335,7 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
 
 
     function applyCoupon(couponCode, isRestoringCoupon = false) {
+        const requestVersion = ++window.couponApplyVersion;
         couponCode = (couponCode || '').trim();
         if (!window.isLoggedIn) {
             window.location.href="{{ route('front-user.login') }}";
@@ -359,6 +367,9 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
                 _token: $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
+                if (requestVersion !== window.couponApplyVersion) {
+                    return;
+                }
                 if (response.status) {
                     if (!isRestoringCoupon) {
                         showFlashMessage(response.message);
@@ -399,6 +410,9 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
                 }
             },
             error: function(xhr) {
+                if (requestVersion !== window.couponApplyVersion) {
+                    return;
+                }
                 let message = xhr.responseJSON?.message || 'Unable to apply coupon. Please try again.';
                 if (isRestoringCoupon) {
                     clearStoredCoupon();
@@ -437,6 +451,15 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
         localStorage.removeItem('coupon_id');
         localStorage.removeItem('coupon_discount');
         localStorage.removeItem('coupon_code');
+    }
+
+    function clearCouponAfterCartChange() {
+        window.couponApplyVersion++;
+        clearStoredCoupon();
+        couponDiscount = 0;
+        $('#couponCode').val('');
+        $('.flate-off-l').empty();
+        updateCouponOrderSummary(0);
     }
 
     $(function() {
@@ -504,8 +527,9 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
     }
 
     $(document).on('click', '.remove-cart-product', function(){
+        const removeButton = $(this);
         if(window.isLoggedIn){
-            let cartId = $(this).data('cartid'); 
+            let cartId = removeButton.data('cartid');
             $.ajax({
                 url: "{{ route('front-remove-cart-product') }}",
                 type: "POST",
@@ -516,8 +540,8 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
                 success: function(response) {
                     console.log('Remove cart response:', response);
                     if (response.success) {
-                        $(this).closest('.cart_main_item').remove();
-                        showFlashMessage("Product removed from cart", "warning");
+                        clearCouponAfterCartChange();
+                        window.location.reload();
                     }
                 },
                 error: function(error) {
@@ -530,7 +554,7 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
             let randomId = $(this).data('randomId');
             let index = $(this).data('index'); 
             removeCartItem(index); 
-            $(this).closest('.cart_main_item').remove();
+            window.location.reload();
         }
     });
     function removeCartItem(index) {
@@ -569,7 +593,14 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
             return;
         }
         $('.cart-country-price').each(function () {
-            const baseAmount = Number($(this).attr('data-base-amount')) || 0;
+            const baseAmountValue = $(this).attr('data-base-amount');
+            if (baseAmountValue === undefined || baseAmountValue === '') {
+                return;
+            }
+            const baseAmount = Number(baseAmountValue);
+            if (!Number.isFinite(baseAmount)) {
+                return;
+            }
             const convertedAmount = baseAmount * currency.rate;
             const displaySign = $(this).attr('data-display-sign') || '';
             $(this).text(
@@ -593,7 +624,7 @@ button.add {background-color: #b47d3d;color: #fff;border: none;cursor: pointer;f
         if(window.isLoggedIn){
 			window.location.href = "{{ route('front-product.checkoutBag') }}";
 		}else{
-			window.location.href = "{{ route('front-user.login') }}";
+            window.location.href = "{{ route('front-user.login', ['return_to' => 'cart']) }}";
 		}
     }); 
    
