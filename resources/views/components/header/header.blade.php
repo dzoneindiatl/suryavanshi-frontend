@@ -252,7 +252,7 @@
 									</div>
 		    					</div>
 		    				</div>
-		          
+		         
 		          			<div class="menu account display-lg">
 							@if (Auth::guard('customer')->check())
 								<a class="px-0 login-menu" href="{{ route('user.dashboard') }}">
@@ -261,7 +261,7 @@
 		                					<img class="pf-user" src="{{ asset('assets/image/userIcon.svg') }}" alt="Login Icon" loading="lazy">
 		            					</div>
 										<div>
-											<span class="display-lg login-icon login-text" data-name="Login">Dashboard</span>
+											<span class="display-lg login-icon login-text" data-name="Login">{{ Auth::guard('customer')->user()->name ?? 'My Account' }}</span>
 										</div>
 		        					</div>
 		  						</a>

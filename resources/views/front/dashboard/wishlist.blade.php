@@ -244,5 +244,50 @@
                 </div>
             </div>
         </div>
-    </div>            
+    </div>          
+    
+    
+
+<script>
+$(document).on('click', '.addtoWishList', function (e) {
+    e.preventDefault();
+
+    const button = $(this);
+    const wishlistId = button.data('wishlist-id');
+
+    if (!wishlistId) {
+        alert('Wishlist item ID is missing.');
+        return;
+    }
+
+    button.prop('disabled', true);
+
+    $.ajax({
+        url: "{{ route('front-user.wishlist.remove') }}",
+        type: "POST",
+        data: {
+            wishlist_id: wishlistId,
+            _token: "{{ csrf_token() }}"
+        },
+        success: function (response) {
+            if (response.success) {
+                window.location.reload();
+            } else {
+                button.prop('disabled', false);
+                alert(response.message || 'Unable to remove item.');
+            }
+        },
+        error: function (xhr) {
+            button.prop('disabled', false);
+
+            const message = xhr.responseJSON?.message
+                || 'Something went wrong. Please try again.';
+
+            alert(message);
+        }
+    });
+});
+</script>
+
+
 @endsection 

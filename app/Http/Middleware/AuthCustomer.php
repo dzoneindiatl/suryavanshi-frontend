@@ -22,7 +22,9 @@ class AuthCustomer
     public function handle(Request $request, Closure $next)
     {   
         if(!Auth::guard('customer')->check()){
-            return Redirect()->route('front-user.login');
+            return Redirect()->route('front-user.login', [
+                'return_to' => $request->getRequestUri(),
+            ]);
         }
             
         if(Auth::guard('customer')->user()->user_role_id != 4){

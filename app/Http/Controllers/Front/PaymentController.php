@@ -19,6 +19,7 @@ use Srmklive\PayPal\Services\PayPal as PayPalClient;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Order;
+use App\Services\PaymentCancellationService;
 class PaymentController extends Controller
 
 {
@@ -84,7 +85,7 @@ class PaymentController extends Controller
                     'paypal' => [ 
                         'experience_context' => [ 
                             'return_url' => route('front-paypal.success'),
-                            'cancel_url' => route('front-paypal.cancel'), 
+                            'cancel_url' => route('front-paypal.cancel', ['order_id' => $order->id]),
                             'user_action' => 'PAY_NOW', 
                             'landing_page' => 'LOGIN', 
                         ], 
@@ -200,13 +201,36 @@ class PaymentController extends Controller
         }
         $order->payment_status = 'paid';
         $order->save();
+        session()->forget('buy_now');
         return view('front.paypal.success', [
             'paypalOrderId' => $paypalOrderId,
         ]);
     }
 
-    public function cancel()
+    public function cancel(Request $request, PaymentCancellationService $cancellationService)
     {
+        $customer = Auth::guard('customer')->user();
+        $orderId = $request->integer('order_id');
+        $paypalOrderId = $request->query('token');
+        if ($customer && ($orderId > 0 || $paypalOrderId)) {
+            $order = Order::where('user_id', $customer->id)
+                ->where('payment_method', 'paypal')
+                ->where(function ($query) use ($orderId, $paypalOrderId) {
+                    if ($orderId > 0) {
+                        $query->where('id', $orderId);
+                    }
+                    if ($paypalOrderId) {
+                        $method = $orderId > 0 ? 'orWhere' : 'where';
+                        $query->{$method}('paypal_order_id', $paypalOrderId);
+                    }
+                })
+                ->first();
+            if ($order && $cancellationService->cancelUnpaidOrder((int) $order->id)) {
+                return redirect()->route('front-product.checkoutBag')
+                    ->with('error', 'Payment was cancelled. Your cart has been restored.');
+            }
+        }
+
         return redirect()->route('front-product.checkoutBag')
             ->with('error', 'PayPal payment was cancelled.');
     }

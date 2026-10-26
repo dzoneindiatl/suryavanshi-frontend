@@ -168,7 +168,10 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
+    'secure' => env(
+        'SESSION_SECURE_COOKIE',
+        env('APP_ENV') === 'production' || env('SESSION_SAME_SITE') === 'none'
+    ),
 
     /*
     |--------------------------------------------------------------------------
@@ -196,6 +199,9 @@ return [
     |
     */
 
-    'same_site' => 'lax',
+    'same_site' => env(
+        'SESSION_SAME_SITE',
+        env('APP_ENV') === 'production' ? 'none' : 'lax'
+    ),
 
 ];

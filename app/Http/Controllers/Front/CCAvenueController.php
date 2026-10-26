@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\PaymentCancellationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -48,8 +49,16 @@ class CCAvenueController extends Controller
             'order_id' => $order->order_number,
             'currency' => config('services.ccavenue.currency', 'INR'),
             'amount' => number_format((float) $order->total, 2, '.', ''),
-            'redirect_url' => config('services.ccavenue.redirect_url') ?: route('front-ccavenue.response'),
-            'cancel_url' => config('services.ccavenue.cancel_url') ?: route('front-ccavenue.cancel'),
+            'redirect_url' => $this->gatewayCallbackUrl(
+                $request,
+                config('services.ccavenue.redirect_url'),
+                'front-ccavenue.response'
+            ),
+            'cancel_url' => $this->gatewayCallbackUrl(
+                $request,
+                config('services.ccavenue.cancel_url'),
+                'front-ccavenue.cancel'
+            ),
             'language' => 'EN',
             'billing_name' => $billing['name'] ?? $order->user->name ?? '',
             'billing_address' => $billing['address'] ?? '',
@@ -72,6 +81,42 @@ class CCAvenueController extends Controller
             'accessCode' => $accessCode,
             'gatewayUrl' => $gatewayUrl,
         ]);
+    }
+
+    private function gatewayCallbackUrl(Request $request, ?string $configuredUrl, string $routeName): string
+    {
+        $fallbackUrl = $request->getSchemeAndHttpHost() . route($routeName, [], false);
+        if (!$configuredUrl) {
+            return $fallbackUrl;
+        }
+
+        $configuredParts = parse_url($configuredUrl);
+        if ($configuredParts === false) {
+            return $fallbackUrl;
+        }
+
+        if (empty($configuredParts['host'])) {
+            $configuredPath = $configuredParts['path'] ?? '';
+            return str_starts_with($configuredPath, '/')
+                ? $request->getSchemeAndHttpHost() . $configuredUrl
+                : $fallbackUrl;
+        }
+
+        if (
+            strcasecmp($configuredParts['host'], $request->getHost()) !== 0
+            || (isset($configuredParts['scheme'])
+                && strcasecmp($configuredParts['scheme'], $request->getScheme()) !== 0)
+        ) {
+            Log::warning('CCAvenue callback URL host differs from checkout host; using the checkout host.', [
+                'configured_host' => $configuredParts['host'],
+                'checkout_host' => $request->getHost(),
+                'route' => $routeName,
+            ]);
+
+            return $fallbackUrl;
+        }
+
+        return $configuredUrl;
     }
 
     public function response(Request $request)
@@ -134,6 +179,7 @@ class CCAvenueController extends Controller
                 $order->payment_status = 'paid';
                 $order->save();
             }
+            session()->forget('buy_now');
 
             return view('front.ccavenue.result', [
                 'success' => true,
@@ -146,6 +192,11 @@ class CCAvenueController extends Controller
             'order_id' => $order->order_number,
             'gateway_status' => $responseData['order_status'] ?? ($cancelled ? 'Cancelled' : 'Unknown'),
         ]);
+
+        if ($cancelled && app(PaymentCancellationService::class)->cancelUnpaidOrder((int) $order->id)) {
+            return redirect()->route('front-product.checkoutBag')
+                ->with('error', 'Payment was cancelled. Your cart has been restored.');
+        }
 
         return view('front.ccavenue.result', [
             'success' => false,

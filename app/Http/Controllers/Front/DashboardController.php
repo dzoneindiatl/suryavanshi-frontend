@@ -667,5 +667,49 @@ class DashboardController extends Controller
         return view('front.modules.dashboard.inviteFriends');
     }
 
-    /* New function accoring to new design od dashboard */
+  
+public function removeWishlist(Request $request)
+{
+    try {
+        $user = Auth::guard('customer')->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please login first.'
+            ], 401);
+        }
+
+        $request->validate([
+            'wishlist_id' => 'required|integer'
+        ]);
+
+        $wishlist = Wishlist::where('id', $request->wishlist_id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$wishlist) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Wishlist item not found.'
+            ], 404);
+        }
+
+        $wishlist->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product removed from wishlist.'
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Wishlist removal failed: ' . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Unable to remove product from wishlist.'
+        ], 500);
+    }
+}
+
 }

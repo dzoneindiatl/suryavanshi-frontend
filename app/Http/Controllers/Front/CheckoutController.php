@@ -752,7 +752,9 @@ class CheckoutController extends Controller
         if (!$isBuyNowOrder) {
             Cart::where('user_id', $user_id)->delete();
         }
-        session()->forget('buy_now');
+        if (!in_array($payment_method, ['paypal', 'ccavenue'], true)) {
+            session()->forget('buy_now');
+        }
 
         //Generating Invoice
         $invoicePath = $this->generateInvoiceAmit($checkout_data, $order_id);

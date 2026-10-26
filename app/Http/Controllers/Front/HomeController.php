@@ -47,8 +47,22 @@ class HomeController extends Controller
             ->select('id', 'name', 'slug', 'image', 'thumbnail_image', 'category_order')
             ->orderBy('category_order', 'ASC')
             ->get();
-        $silders = Slider::get(); 
-        return view('front.home.index', compact('homeCategories','silders'));
+        $sliders = Slider::query()
+            ->where('media_type', 'banner')
+            ->where('is_active', 1)
+            ->where('is_deleted', 0)
+            ->whereNotNull('media_url')
+            ->where('media_url', '!=', '')
+            ->orderBy('id')
+            ->get([
+                'id',
+                'media_url',
+                'title',
+                'description',
+                'redirection_url',
+            ]);
+
+        return view('front.home.index', compact('homeCategories', 'sliders'));
     }
 
     public function productListing(Request $request, $path)
