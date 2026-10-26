@@ -1,3 +1,4 @@
+@include('components.category-grid.category-grid')
 @php
     $fallbackImages = ['ring1.png', 'ring2.png', 'ring3.png', 'ring4.png', 'ring5.png', 'ring6.png', 'ring1.png', 'ring2.png', 'ring3.png', 'ring4.png', 'ring5.png', 'ring6.png', 'ring1.png', 'ring2.png'];
     $targetCategoryCount = 12;

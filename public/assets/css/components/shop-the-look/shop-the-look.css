@@ -1,0 +1,235 @@
+/* ========================================================
+   COMPONENT: Shop-the-look
+   ======================================================== */
+
+.shop_look_main {
+    margin-top: 80px;
+    background: #f6f5f0;
+    padding: 130px 0px;
+}
+
+.shop_look_inner {
+    margin: 0px auto;
+    max-width: 1200px;
+}
+
+.shop_look_inner1 {
+    display: flex;
+    gap: 50px;
+    align-items: center;
+}
+
+.shop_look_inner_left {
+    width: 60%;
+    text-align: center;
+    position: relative;
+}
+
+.shop_look_inner_right {
+    width: 40%;
+}
+
+.shop_look_inner_right h2 {
+    font-size: 65px;
+    margin-bottom: 15px;
+    color: #ba8341;
+}
+
+.shop_look_inner_right p {
+    font-style: italic;
+    font-size: 20px;
+}
+
+a.btn_shop_look {
+    background: #ba8341;
+    width: 200px;
+    display: inline-block;
+    color: #fff;
+    text-decoration: none;
+    text-align: center;
+    height: 50px;
+    line-height: 50px;
+    margin-top: 20px;
+    transition: all 0.3s ease-in-out;
+}
+
+a.btn_shop_look:hover {
+    background: #9b6322;
+    color: #fff;
+}
+
+img.shop_img3 {
+    position: relative;
+    background: #fff;
+    border: 6px solid #fff;
+    border-radius: 10px;
+}
+
+img.shop_img2 {
+    position: absolute;
+    bottom: -45px;
+    right: 45px;
+    opacity: 0;
+    transition:
+        transform 0.8s ease,
+        opacity 0.8s ease;
+    transform: translate3d(25%, 0, 0);
+}
+
+[data-animate-in].in-view {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    transition:
+        transform 0.6s ease,
+        opacity 0.6s ease;
+}
+
+img.shop_img1 {
+    position: absolute;
+    top: -45px;
+    left: 45px;
+}
+
+.transitionSlideIn {
+    opacity: 1;
+    -webkit-animation: fade-in-left 1s 1;
+    animation: fade-in-left 1s 1;
+}
+
+.shop_img_reveal {
+    visibility: hidden;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(50px) scale(0.5);
+    transition: all 3s;
+}
+
+.shop_img_reveal.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0px) scale(1);
+}
+
+@keyframes fade-in-left {
+    0% {
+        transform: translate(-25%, 0);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(0, 0);
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes fade-in-left {
+    0% {
+        transform: translate(-25%, 0);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(0, 0);
+        opacity: 1;
+    }
+}
+
+.shop_img_hover {
+    overflow: hidden;
+}
+
+/*.collection_inner_box:hover .shop_img_hover img {transform: scale(1.1);}*/
+.collection_inner_box_icon {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+@media (max-width: 767px) {
+.shop_look_inner1 {
+        gap: 70px;
+        padding: 0px 15px;
+        flex-direction: column;
+    }
+
+img.shop_img1 {
+        left: -68px;
+        width: 100%;
+    }
+
+img.shop_img2 {
+        right: -68px;
+        width: 100%;
+    }
+
+img.shop_img3 {
+        width: 100%;
+    }
+
+.shop_look_inner_right {
+        width: 100%;
+    }
+
+.shop_look_inner_right h2 {
+        font-size: 35px;
+    }
+
+.shop_look_inner_right p {
+        font-size: 16px;
+        line-height: 20px;
+    }
+
+a.btn_shop_look {
+        width: 180px;
+        margin-top: 10px;
+    }
+
+.shop_look_main {
+        padding: 130px 0px 80px;
+        overflow: hidden;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+.shop_look_inner1 {
+        gap: 25px;
+    }
+
+img.shop_img1 {
+        left: 15px;
+    }
+
+img.shop_img2 {
+        right: 15px;
+    }
+
+.shop_look_inner_right h2 {
+        font-size: 35px;
+    }
+
+.shop_look_inner_right p {
+        font-size: 15px;
+        line-height: 20px;
+    }
+
+a.btn_shop_look {
+        width: 170px;
+        height: 44px;
+        line-height: 44px;
+        margin-top: 10px;
+    }
+
+img.shop_img3 {
+        max-width: 100%;
+    }
+
+.shop_img_reveal {
+        max-width: 70%;
+        margin: 0px auto;
+    }
+}

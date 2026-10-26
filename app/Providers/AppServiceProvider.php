@@ -20,14 +20,22 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-     public function boot(): void
+    public function boot(): void
     {
-          View::composer(
-            'front.includes.header',
+        View::composer(
+            [
+                'components.header.header',
+                'components.responsive-navbar.responsive-navbar',
+                'front.includes.header',
+                'front.includes.responsive-navbar'
+            ],
             HeaderComposer::class
         );
         View::composer(
-            'front.includes.footer',
+            [
+                'components.footer.footer',
+                'front.includes.footer'
+            ],
             FooterComposer::class
         );
     }

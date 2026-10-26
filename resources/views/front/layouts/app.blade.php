@@ -11,10 +11,10 @@
     
     <body>
         <div class="wrapper">
-            @include('front.includes.header')
+            @include('components.header.header')
             <div id="flash-msg" class="alert alert-info d-none"></div>
             @yield('content')
-            @include('front.includes.footer')
+            @include('components.footer.footer')
             @include('front.includes.script')
         </div>
     </body>

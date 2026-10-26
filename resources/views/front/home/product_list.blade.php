@@ -1,3 +1,4 @@
+@include('components.product-list.product-list')
 @include('front.includes.head')
 @include('front.includes.header')
 
