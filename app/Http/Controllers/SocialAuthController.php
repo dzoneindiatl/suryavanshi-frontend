@@ -35,6 +35,16 @@ class SocialAuthController extends Controller
 
         Auth::guard('customer')->login($customer, true);
 
+        if (session()->pull('login_return_to_cart', false)) {
+            session()->forget('login_return_to');
+            return redirect()->route('product.viewBag');
+        }
+
+        $returnTo = session()->pull('login_return_to');
+        if ($returnTo !== null) {
+            return redirect()->to($returnTo);
+        }
+
         return redirect('/');
     }
 
@@ -58,6 +68,17 @@ class SocialAuthController extends Controller
         }
 
         Auth::guard('customer')->login($customer);
+
+        if (session()->pull('login_return_to_cart', false)) {
+            session()->forget('login_return_to');
+            return redirect()->route('product.viewBag');
+        }
+
+        $returnTo = session()->pull('login_return_to');
+        if ($returnTo !== null) {
+            return redirect()->to($returnTo);
+        }
+
         return redirect('/');
     }
 

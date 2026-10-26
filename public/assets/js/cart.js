@@ -287,6 +287,10 @@ function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
         $('.cart-collaterals').show();
     }
 
+    if (!window.isLoggedIn) {
+        priceCalculation();
+    }
+
     var notRequiredQtyAjaxClickonQtyBtnNew = notRequiredQtyAjaxClickonQtyBtn;
     console.log(' before foreach notRequiredQtyAjaxClickonQtyBtn : ',notRequiredQtyAjaxClickonQtyBtn);
     console.log('cartItems : ',cartItems);
@@ -436,9 +440,6 @@ function displayCartItems(notRequiredQtyAjaxClickonQtyBtn) {
 
     // localStorage.setItem('applied_coupon',[]);
     // localStorage.setItem('coupon_discount',0);
-    if (!window.isLoggedIn) {
-        priceCalculation();
-    }
 }
 
 function decodeHtml(html) {
@@ -595,33 +596,19 @@ function priceCalculation() {
         totalPayable = grandTotal + totalTaxPrice;
     }
 
-    $('.totalMRP .price-values').html(
-        `₹${totalMrp.toFixed(2)}`
-    );
-
-    $('.discount .price-values').html(
-        `₹${totalDiscount.toFixed(2)}`
-    );
-
-    $('.subtotal .price-values').html(
-        `₹${subtotal.toFixed(2)}`
-    );
-
-    $('.grandTotal .price-values').html(
-        `₹${grandTotal.toFixed(2)}`
-    );
-
-    $('.taxableAmount .price-values').html(
-        `₹${taxableAmount.toFixed(2)}`
-    );
-
-    $('.totalGst .price-values').html(
-        `₹${totalTaxPrice.toFixed(2)}`
-    );
-
-    $('.totalPayable .price-values').html(
-        `₹${totalPayable.toFixed(2)}`
-    );
+    [
+        ['.totalMRP .cart-country-price', totalMrp],
+        ['.discount .cart-country-price', totalDiscount],
+        ['.subtotal .cart-country-price', subtotal],
+        ['.grandTotal .cart-country-price', grandTotal],
+        ['.taxableAmount .cart-country-price', taxableAmount],
+        ['.totalGst .cart-country-price', totalTaxPrice],
+        ['.totalPayable .cart-country-price', totalPayable]
+    ].forEach(function([selector, amount]) {
+        $(selector)
+            .attr('data-base-amount', amount)
+            .html(`₹${amount.toFixed(2)}`);
+    });
 
     $('#totalMrp').html(`₹${totalMrp.toFixed(2)}`);
     $('#totalDiscount').html(`₹${totalDiscount.toFixed(2)}`);
@@ -653,6 +640,10 @@ function priceCalculation() {
         taxRate: taxRate,
         taxType: taxType
     };
+
+    if (typeof updateCartCountryPrices === 'function') {
+        updateCartCountryPrices();
+    }
 
     console.log('========== CART CALCULATION ==========');
     console.log(window.cartCalculation);
