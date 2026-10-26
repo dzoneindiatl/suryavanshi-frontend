@@ -33,6 +33,19 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         try {
+            if ($request->query('return_to') === 'cart') {
+                $request->session()->put('login_return_to_cart', true);
+                $request->session()->forget('login_return_to');
+            } else {
+                $request->session()->forget('login_return_to_cart');
+                $returnTo = $this->safeLoginReturnPath($request->query('return_to'));
+                if ($returnTo !== null) {
+                    $request->session()->put('login_return_to', $returnTo);
+                } else {
+                    $request->session()->forget('login_return_to');
+                }
+            }
+
             return view('front.auth.login');
         } catch (Exception $e) {
             Log::error($e);
@@ -123,6 +136,8 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
         $loggedInUser = Auth::guard('customer')->user();
+        $returnToCart = $request->input('return_to') === 'cart'
+            || $request->session()->get('login_return_to_cart', false);
 
         Cookie::queue('user_email',$request->email,60 * 24 * 15);
 
@@ -140,10 +155,45 @@ class AuthController extends Controller
             }
         }
         if (session()->has('buy_now')) {
+            $request->session()->forget('login_return_to_cart');
+            $request->session()->forget('login_return_to');
             return redirect()->route('front-product.checkoutBag')
                 ->with('success', trans('Login successfully'));
         }
+
+        if ($returnToCart) {
+            $request->session()->forget('login_return_to_cart');
+            $request->session()->forget('login_return_to');
+            return redirect()->route('product.viewBag')
+                ->with('success', trans('Login successfully'));
+        }
+
+        $returnTo = $request->session()->pull('login_return_to');
+        if ($returnTo !== null) {
+            return redirect()->to($returnTo)
+                ->with('success', trans('Login successfully'));
+        }
+
         return Redirect::route('user.dashboard')->with('success', trans('Login successfully'));
+    }
+
+    private function safeLoginReturnPath(?string $returnTo): ?string
+    {
+        if (
+            !$returnTo
+            || !str_starts_with($returnTo, '/')
+            || str_starts_with($returnTo, '//')
+            || preg_match('/[\x00-\x1F\x7F\\\\]/', $returnTo)
+        ) {
+            return null;
+        }
+
+        $parts = parse_url($returnTo);
+        if ($parts === false || isset($parts['scheme']) || isset($parts['host'])) {
+            return null;
+        }
+
+        return $returnTo;
     }
 
     private function cartItems($cartItems)

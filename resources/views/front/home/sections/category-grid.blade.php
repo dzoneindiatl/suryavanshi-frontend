@@ -16,37 +16,37 @@
     $collectionShortcuts = [
         [
             'name' => 'All Jewellery',
-            'url' => url('/shop'),
+            'url' => url('#'),
             'image' => asset('assets/image/ring2.png'),
         ],
         [
             'name' => 'New Arrivals',
-            'url' => url('/shop'),
+            'url' => url('#'),
             'image' => asset('assets/image/ring3.png'),
         ],
         [
             'name' => 'Bestsellers',
-            'url' => url('/shop'),
+            'url' => url('#'),
             'image' => asset('assets/image/ring4.png'),
         ],
         [
             'name' => 'Rings',
-            'url' => url('/shop'),
+            'url' => url('#'),
             'image' => asset('assets/image/ring5.png'),
         ],
         [
             'name' => 'Earrings',
-            'url' => url('/shop'),
+            'url' => url('#'),
             'image' => asset('assets/image/ring6.png'),
         ],
         [
             'name' => 'Pendants',
-            'url' => url('/shop'),
+            'url' => url('#'),
             'image' => asset('assets/image/ring1.png'),
         ],
         [
             'name' => 'Bracelets',
-            'url' => url('/shop'),
+            'url' => url('#'),
             'image' => asset('assets/image/ring2.png'),
         ],
     ];

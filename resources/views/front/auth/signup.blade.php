@@ -46,7 +46,7 @@ label.checkbox-label {font-size: 14px;font-weight: 400;cursor: pointer;padding-l
 <div class="suryavanshi_signup_main">
 	<div class="container">
 		<div class="login_inner_main">
-			<h2>Signup to Suryavanshi</h2>
+			<h2>Signup to jaipur Jewellery House</h2>
 			<p class="login_txt">Unlock Best prices and become an insider for our exclusive launches & offers. Complete your profile and get ₹250 worth of xCLusive Points</p>
 			
             <div class="login_another_btn">
