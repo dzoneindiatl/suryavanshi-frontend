@@ -48,7 +48,7 @@ class HomeController extends Controller
             ->orderBy('category_order', 'ASC')
             ->get();
         $sliders = Slider::query()
-            ->where('media_type', 'banner')
+            ->where('media_type', 'banner','image')
             ->where('is_active', 1)
             ->where('is_deleted', 0)
             ->whereNotNull('media_url')

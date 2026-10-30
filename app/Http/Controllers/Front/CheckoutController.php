@@ -88,40 +88,41 @@ class CheckoutController extends Controller
     {
         $user = Auth::guard('customer')->user();
 
-        if($user){
-            $validator = Validator::make($request->all(),
+        if ($user) {
+            $validator = Validator::make(
+                $request->all(),
                 array(
-                    'type'=>'required',
-                    'first_name'=>'required',
-                    'last_name'=>'required',
-                    'email'=>'required',
-                    'phone_number'=>'required',
-                    'country_id'=>'required',
-                    'state_id'=>'required',
-                    'city_id'=>'required',
-                    'address_type'=>'required',
-                    'address'=>'required',
-                    'landmark'=>'required',
-                    'pincode'=>'required'
+                    'type' => 'required',
+                    'first_name' => 'required',
+                    'last_name' => 'required',
+                    'email' => 'required',
+                    'phone_number' => 'required',
+                    'country_id' => 'required',
+                    'state_id' => 'required',
+                    'city_id' => 'required',
+                    'address_type' => 'required',
+                    'address' => 'required',
+                    'landmark' => 'required',
+                    'pincode' => 'required'
                 ),
                 array(
-                    'type.required'=>'Please select the type',
-                    'first_name.required'=>'First Name is required',
-                    'last_name.required'=>'Last Name is required',
-                    'email.required'=>'Email is required',
-                    'phone_number'=>'Phone Number is required',
-                    'country_id.required'=>'Country is required',
-                    'state_id.required'=>'State is required',
-                    'city_id.required'=>'City is required',
-                    'address_type.required'=>'Address type is required',
-                    'address.required'=>'Address is required',
-                    'landmark.required'=>'landmark is required',
-                    'pincode.required'=>'Postal Code is required'
+                    'type.required' => 'Please select the type',
+                    'first_name.required' => 'First Name is required',
+                    'last_name.required' => 'Last Name is required',
+                    'email.required' => 'Email is required',
+                    'phone_number' => 'Phone Number is required',
+                    'country_id.required' => 'Country is required',
+                    'state_id.required' => 'State is required',
+                    'city_id.required' => 'City is required',
+                    'address_type.required' => 'Address type is required',
+                    'address.required' => 'Address is required',
+                    'landmark.required' => 'landmark is required',
+                    'pincode.required' => 'Postal Code is required'
                 )
             );
             if ($validator->fails()) {
                 return redirect()->back()->withErrors($validator)->withInput();
-            }else{
+            } else {
                 $address = new UserAddress();
                 $address->type = $request->type;
                 $address->user_id = $user->id;
@@ -138,12 +139,11 @@ class CheckoutController extends Controller
                 $address->address_type = $request->address_type;
                 $address->save();
 
-                session()->flash('success','User Address Saved Successfully'); 
-                return redirect()->route('front-product.checkoutBag'); 
+                session()->flash('success', 'User Address Saved Successfully');
+                return redirect()->route('front-product.checkoutBag');
             }
-        }
-        else{
-            return redirect()->route('front.user-login'); 
+        } else {
+            return redirect()->route('front.user-login');
         }
     }
 
@@ -152,7 +152,7 @@ class CheckoutController extends Controller
         $user = Auth::guard('customer')->user();
 
         $postData = $request->all();
-        if(isset($postData['addressId']) && !empty($postData['addressId'])){
+        if (isset($postData['addressId']) && !empty($postData['addressId'])) {
             $address = UserAddress::where('id', $postData['addressId'])->firstOrFail();
         } else {
             $address = new UserAddress();
@@ -178,50 +178,50 @@ class CheckoutController extends Controller
     public function placeOrder(Request $request)
     {
         $resp = [];
-        info("-----------request-all--------",[$request->all()]); 
+        info("-----------request-all--------", [$request->all()]);
         // Backend Order validation 
-        $login_user_id =  Auth::guard('customer')->user()->id;
+        $login_user_id = Auth::guard('customer')->user()->id;
         $userAvailableWalletAmount = $this->getuserWallet($login_user_id);
 
         $codMaxLimit = 12000;
         $invoiceSetting = InvoiceSetting::where('prefix', 'site')->first();
-        
-        if(!empty($invoiceSetting)){
+
+        if (!empty($invoiceSetting)) {
             $codMaxLimit = $invoiceSetting->cash_on_limit;
         }
 
         $validation_error = '';
-        
-        if(count($request->cartItems)==0){
+
+        if (count($request->cartItems) == 0) {
             $validation_error .= " </br> You should be alteast add 1 item in cart";
-        } 
-        
-        if($request->sub_total < 1 && $request->payment_mode != 'wallet'){
+        }
+
+        if ($request->sub_total < 1 && $request->payment_mode != 'wallet') {
             $validation_error .= " </br>Your order amount should be greater than zero";
         }
-        
-        if($request->wallet_amount > $userAvailableWalletAmount){
+
+        if ($request->wallet_amount > $userAvailableWalletAmount) {
             $validation_error .= " </br> You dont have exact amount in wallet";
-        } 
+        }
 
-        if($request->payment_mode =='cod' && $request->sub_total > $codMaxLimit){
+        if ($request->payment_mode == 'cod' && $request->sub_total > $codMaxLimit) {
             $validation_error .= " </br> You have reached maximum amount for COD order.";
-        } 
+        }
 
-        $currencySymbol = $request->currencySymbol; 
-        $countryCode = $request->countryCode; 
-        $countryName = $request->countryName; 
-        $countryId = $request->countryId; 
-        $currencyRate = $request->currencyRate; 
+        $currencySymbol = $request->currencySymbol;
+        $countryCode = $request->countryCode;
+        $countryName = $request->countryName;
+        $countryId = $request->countryId;
+        $currencyRate = $request->currencyRate;
 
-        if(!empty($request->cartItems)){
-            foreach($request->cartItems as $cart){
+        if (!empty($request->cartItems)) {
+            foreach ($request->cartItems as $cart) {
                 $productId = $cart['product_id'];
                 $quantity = $cart['quantity'];
 
                 $product = Product::where('id', $productId)->first();
-                if(!empty($product)){
-                    if($product->in_stock == 0){
+                if (!empty($product)) {
+                    if ($product->in_stock == 0) {
                         $validation_error .= ' </br> You have some out of stock product into order items';
                     }
 
@@ -242,7 +242,7 @@ class CheckoutController extends Controller
                     } elseif ((int) $product->qty < $quantity) {
                         $validation_error .= ' </br> Product does not have sufficient quantity.';
                     }
-                    if(!empty($product->max_selling_units) && $product->max_selling_units!=0 &&  $quantity > $product->max_selling_units){
+                    if (!empty($product->max_selling_units) && $product->max_selling_units != 0 && $quantity > $product->max_selling_units) {
                         $validation_error .= ' </br> You have reached maximum quantity for product.';
                     }
 
@@ -251,7 +251,7 @@ class CheckoutController extends Controller
                 }
             }
         }
-        
+
         $buyNowData = session('buy_now');
         $cartItems = $request->input('cartItems', []);
         $isBuyNowCheckout = is_array($buyNowData)
@@ -266,8 +266,8 @@ class CheckoutController extends Controller
 
         if (!$isBuyNowCheckout && !empty($request->coupon_id)) {
             $couponDetail = Coupon::where('id', $request->coupon_id)->where('is_active', 1)->first();
-            if(empty($couponDetail)){
-                    $validation_error .= ' </br> Your coupon does not activated';
+            if (empty($couponDetail)) {
+                $validation_error .= ' </br> Your coupon does not activated';
             } else {
                 $couponCartItems = $request->input('cartItems', []);
                 $couponCartSubtotal = collect($couponCartItems)->sum(function ($item) {
@@ -313,7 +313,7 @@ class CheckoutController extends Controller
             return response()->json($responseError);
         }
 
-        $ip_address = $request->ip(); 
+        $ip_address = $request->ip();
 
         if ($request->payment_mode == 'cod') {
             $order_id = $this->createOrder(
@@ -338,9 +338,7 @@ class CheckoutController extends Controller
             $resp['message'] = "Success";
             $resp['url'] = route('front-order.success', ['order_id' => encrypt($order_id)]);
             return response()->json($resp);
-        } 
-        
-        elseif ($request->payment_mode == 'ccavenue') {
+        } elseif ($request->payment_mode == 'ccavenue') {
 
             $order_id = $this->createOrder(
                 $ip_address,
@@ -371,9 +369,7 @@ class CheckoutController extends Controller
             $resp['message'] = 'Order created. Redirecting to CCAvenue.';
 
             return response()->json($resp);
-        }
-        
-        elseif($request->payment_mode == 'paypal'){
+        } elseif ($request->payment_mode == 'paypal') {
             $paypalCurrency = config('services.paypal.currency', 'USD');
             $amount = round((float) $request->sub_total, 2);
             if ($amount <= 0) {
@@ -413,30 +409,48 @@ class CheckoutController extends Controller
             $resp['message'] = 'Pending order created successfully.';
 
             return response()->json($resp);
-        } 
-        
-        elseif ($request->payment_mode == 'wallet') {
-            $order_number = $this->random_strings(8);
+        } elseif ($request->payment_mode == 'wallet') {
+            $walletAmount = (float) $request->wallet_amount;
+            $orderAmount = (float) $request->sub_total;
+
+            // Check wallet balance
+            if ($walletAmount < $orderAmount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient wallet balance.',
+                ]);
+            }
+
+            if ($walletAmount > $userAvailableWalletAmount) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You dont have exact amount in wallet.',
+                ]);
+            }
 
             $order_id = $this->createOrder(
                 $ip_address,
-                $request->payment_mode,
-                $request->wallet_amount,
-                'received',
+                'wallet',
+                $orderAmount,
+                'paid',
                 $request->coupon_id,
-                $request->coupon_discount,
-                $request->wallet_amount,
+                $request->coupon_discount ?? 0,
+                $walletAmount,
                 $request->shippingcharge ?? 0,
                 $request->billing_id,
                 $request->shipping_id,
-                $request->cartItems
+                $request->cartItems,
+                $currencySymbol,
+                $countryCode,
+                $countryName,
+                $countryId,
+                $currencyRate
             );
-            Order::find($order_id)->update([
-                'payment_status'      => 'paid',
-            ]);
             $resp['success'] = true;
-            $resp['url'] = route('front-order.success', ['order_id' => encrypt($order_id)]);
-            $resp['message'] = "Success";
+            $resp['url'] = route('front-order.success', [
+                'order_id' => encrypt($order_id)
+            ]);
+            $resp['message'] = 'Success';
             return response()->json($resp);
         }
     }
@@ -444,7 +458,7 @@ class CheckoutController extends Controller
     public function checkout_callback(Request $request)
     {
         $razorpayOrderId = $request->razorpay_order_id;
-        $ip_address = $request->ip(); 
+        $ip_address = $request->ip();
         // Call Razorpay to get all payments for this order
         $paymentsResponse = $this->callApi(
             "https://api.razorpay.com/v1/orders/{$razorpayOrderId}/payments",
@@ -505,7 +519,7 @@ class CheckoutController extends Controller
                 // Save payment ID
                 Order::find($order_id)->update([
                     'razorpay_payment_id' => $latestPayment['id'],
-                    'payment_status'      => 'paid',
+                    'payment_status' => 'paid',
                 ]);
 
                 session()->forget('cart_items');
@@ -517,10 +531,10 @@ class CheckoutController extends Controller
         return redirect()->back();
     }
 
-    public function createOrder($ip_address,$payment_method,$amount,$order_status,$coupon_id,$coupon_discount,$wallet_amount,$shippingcharge,$billingId,$shippingId,$checkout_data,  $currencySymbol, $countryCode, $countryName, $countryId, $currencyRate)
+    public function createOrder($ip_address, $payment_method, $amount, $order_status, $coupon_id, $coupon_discount, $wallet_amount, $shippingcharge, $billingId, $shippingId, $checkout_data, $currencySymbol, $countryCode, $countryName, $countryId, $currencyRate)
     {
         $debitFromWallet = 0;
-        $user_id =  Auth::guard('customer')->user()->id;
+        $user_id = Auth::guard('customer')->user()->id;
         $buyNowData = session('buy_now');
         $isBuyNowOrder = is_array($buyNowData)
             && count($checkout_data) === 1
@@ -561,7 +575,7 @@ class CheckoutController extends Controller
             $couponChildCategoryIds = !empty($coupon->child_category) ? array_filter(json_decode($coupon->child_category, true)) : null;
             $order->coupon_name = $coupon->coupon_code;
             $order->coupon_discount = round($coupon_discount, 2);
-            $discount  = round($coupon_discount, 2);
+            $discount = round($coupon_discount, 2);
         }
 
         // $order->order_number = $this->random_strings(8);
@@ -577,16 +591,16 @@ class CheckoutController extends Controller
         $order->total = round((float) $amount, 2);
         $order->payment_method = $payment_method;
         $order->payment_status = $order_status;
-        $order->currency_symbol = $currencySymbol; 
-        $order->country_code = $countryCode; 
-        $order->country_name = $countryName ; 
-        $order->country_id = $countryId; 
-        $order->currency_rate = $currencyRate; 
+        $order->currency_symbol = $currencySymbol;
+        $order->country_code = $countryCode;
+        $order->country_name = $countryName;
+        $order->country_id = $countryId;
+        $order->currency_rate = $currencyRate;
         // $order->payment_status = 'pending';
         $order->ip_address = $ip_address;
         $order->save();
 
-        $this->mailService->orderAccepted($order,$checkout_data);
+        $this->mailService->orderAccepted($order, $checkout_data);
 
         $order_id = $order->id;
         if (!empty($coupon)) {
@@ -629,9 +643,9 @@ class CheckoutController extends Controller
                 if (empty($couponSubCategoryIds)) {
                     $applyDiscount = true;
                 } elseif (in_array($productSubCategoryId, $couponSubCategoryIds)) {
-                    if(empty($couponChildCategoryIds)){
+                    if (empty($couponChildCategoryIds)) {
                         $applyDiscount = true;
-                    } elseif (in_array($productChildCategoryId, $couponChildCategoryIds)){
+                    } elseif (in_array($productChildCategoryId, $couponChildCategoryIds)) {
                         $applyDiscount = true;
                     }
                 }
@@ -652,9 +666,9 @@ class CheckoutController extends Controller
                 if (empty($couponSubCategoryIds)) {
                     $applyDiscount = true;
                 } elseif (in_array($productSubCategoryId, $couponSubCategoryIds)) {
-                    if(empty($couponChildCategoryIds)){
+                    if (empty($couponChildCategoryIds)) {
                         $applyDiscount = true;
-                    } elseif (in_array($productChildCategoryId, $couponChildCategoryIds)){
+                    } elseif (in_array($productChildCategoryId, $couponChildCategoryIds)) {
                         $applyDiscount = true;
                     }
                 }
@@ -670,9 +684,9 @@ class CheckoutController extends Controller
             $order_items->selling_price = $item['sellingPrice'];
             $order_items->discount_amount = $total_discount;
             $order_items->tax_amount = $item['tax_price'];
-            $order_items->sub_total = (($item['quantity'] * $item['sellingPrice']) - ($item['tax_price'] +  $total_discount));
+            $order_items->sub_total = (($item['quantity'] * $item['sellingPrice']) - ($item['tax_price'] + $total_discount));
             $order_items->total = (($item['quantity'] * $item['sellingPrice']) - $total_discount);
-            $order_items->combination =  json_encode($item['selectedVariants']);
+            $order_items->combination = json_encode($item['selectedVariants']);
             $order_items->order_status_id = 1; // Pending
             $order_items->status = 'pending';
             $order_items->save();
@@ -862,12 +876,12 @@ class CheckoutController extends Controller
         $address = UserAddress::getShippingAddress('shipping', $addressId);
         $pincode = $address['shipping_pincode'];
 
-        if(!empty($request->productData)){
+        if (!empty($request->productData)) {
             $productIds = array_column($request->productData, 'productId');
             $product = Product::whereIn('id', $productIds)->select('weight', 'weight_type')->get();
             $totalWeight = 0;
             foreach ($product as $products) {
-                if(!empty($products->weight)){
+                if (!empty($products->weight)) {
                     $weight = @$products->weight;
                     if ($products->weight_type == 'kg') {
                         $weight = @$products->weight * 1000;
@@ -878,7 +892,7 @@ class CheckoutController extends Controller
         }
 
         $productweight = $totalWeight ?? 250;
-        $shippingPrice =  getShippingCharge($pincode, $productweight, $totalAmountcart);
+        $shippingPrice = getShippingCharge($pincode, $productweight, $totalAmountcart);
         return response()->json([
             'success' => true,
             'message' => 'Shipping Price fetched successfully.',
@@ -918,15 +932,15 @@ class CheckoutController extends Controller
     {
         $userwallet = 0;
         $userwalletArr = User::where('id', $userId)->first();
-        if(!empty($userwalletArr)){
+        if (!empty($userwalletArr)) {
             $userwallet = $userwalletArr->wallet_avl_balance;
         }
         return $userwallet;
     }
 
-    public function applyCoupon($coupon_code=null, $cart_total=null, $cart_items=null)
+    public function applyCoupon($coupon_code = null, $cart_total = null, $cart_items = null)
     {
-        $userId =  Auth::guard('customer')->check() ? Auth::guard('customer')->id() : null;
+        $userId = Auth::guard('customer')->check() ? Auth::guard('customer')->id() : null;
 
         $coupon = Coupon::where('coupon_code', $coupon_code)
             ->where('is_active', 1)
@@ -943,7 +957,7 @@ class CheckoutController extends Controller
             return response()->json(['status' => false, 'message' => 'Invalid or inactive coupon.']);
         }
         $checkCategory = $coupon->category_id;
-        $checkSubCat   = !empty($coupon->sub_categories) ? array_filter(json_decode($coupon->sub_categories, true)) : null;
+        $checkSubCat = !empty($coupon->sub_categories) ? array_filter(json_decode($coupon->sub_categories, true)) : null;
         $discountCartTotal = (float) $cart_total;
         if ($checkCategory || $checkSubCat) {
             $productIds = collect($cart_items)
@@ -972,7 +986,7 @@ class CheckoutController extends Controller
                         || in_array((string) $product->main_sub_category_id, $allowedSubCats, true);
                 })
                 ->pluck('id')
-                ->map(fn ($id) => (int) $id)
+                ->map(fn($id) => (int) $id)
                 ->all();
 
             if (empty($eligibleProductIds)) {
@@ -983,8 +997,8 @@ class CheckoutController extends Controller
             }
 
             $discountCartTotal = collect($cart_items)
-                ->filter(fn ($item) => in_array((int) ($item['productId'] ?? 0), $eligibleProductIds, true))
-                ->sum(fn ($item) => (float) ($item['sellingPrice'] ?? 0) * (int) ($item['quantity'] ?? 0));
+                ->filter(fn($item) => in_array((int) ($item['productId'] ?? 0), $eligibleProductIds, true))
+                ->sum(fn($item) => (float) ($item['sellingPrice'] ?? 0) * (int) ($item['quantity'] ?? 0));
         }
 
         if ($coupon->user_type && $coupon->user_type !== 'all' && $userId) {
@@ -1063,76 +1077,75 @@ class CheckoutController extends Controller
         $discount = min($discount, $discountCartTotal);
 
         return response()->json([
-            'status'   => true,
-            'message'  => 'Coupon applied successfully.',
+            'status' => true,
+            'message' => 'Coupon applied successfully.',
             'discount' => round($discount, 2),
-            'coupon'   => $coupon->only('id', 'coupon_code', 'discount_type', 'discount_value'),
+            'coupon' => $coupon->only('id', 'coupon_code', 'discount_type', 'discount_value'),
         ]);
     }
 
-    public function orderCancelled(Request $request){       
+    public function orderCancelled(Request $request)
+    {
         $request->validate([
             'orderId' => 'required|integer|exists:orders,id',
         ]);
- 
-        $orderStatusArray = ['Shipped','out-for-delivery','in-transit','Delivered'];
+
+        $orderStatusArray = ['Shipped', 'out-for-delivery', 'in-transit', 'Delivered'];
         $order = OrderItem::with('order')->where('order_id', $request->orderId)->firstOrFail();
-        if(in_array($order->order->status,$orderStatusArray)){
+        if (in_array($order->order->status, $orderStatusArray)) {
             return response()->json([
-                'status'=>true,
-                'message'=>'Your Order is in '.$order->status.' So You can not cancel this order Now'
+                'status' => true,
+                'message' => 'Your Order is in ' . $order->status . ' So You can not cancel this order Now'
             ]);
-        }
-        else{
-            if($order->order->payment_method == "cod" && $order->order->payment_status == "unpaid"){
-                Order::where('id',$request->orderId)->update([
-                    'status'=>'cancelled'
+        } else {
+            if ($order->order->payment_method == "cod" && $order->order->payment_status == "unpaid") {
+                Order::where('id', $request->orderId)->update([
+                    'status' => 'cancelled'
                 ]);
- 
-                OrderItem::where('order_id',$request->orderId)->update([
-                    'status'=>'cancelled'
+
+                OrderItem::where('order_id', $request->orderId)->update([
+                    'status' => 'cancelled'
                 ]);
-                $userData = User::where('id',$order->order->user_id)->first();
+                $userData = User::where('id', $order->order->user_id)->first();
                 $orderData = OrderItem::with('order')->where('order_id', $request->orderId)->get();
-                info("----userData-----",["UserData:",$userData, "orderData:",$orderData]);
-                $this->mailService->orderCancelled($userData,$orderData);
+                info("----userData-----", ["UserData:", $userData, "orderData:", $orderData]);
+                $this->mailService->orderCancelled($userData, $orderData);
                 return response()->json([
-                    'status'=>true,
-                    'message'=>"Your Order is successfully Cancelled"
+                    'status' => true,
+                    'message' => "Your Order is successfully Cancelled"
                 ]);
-            }
-            else{
-                if(($order->order->payment_method == "wallet" || $order->order->payment_method == "razorpay") && $order->order->payment_status == "paid"){
- 
-                    $userData = User::where('id',$order->order->user_id)->first();
+            } else {
+                if (($order->order->payment_method == "wallet" || $order->order->payment_method == "razorpay") && $order->order->payment_status == "paid") {
+
+                    $userData = User::where('id', $order->order->user_id)->first();
                     $newAmount = $order->order->total + $userData->wallet_avl_balance;
-                   
-                    User::where('id',$userData->id)->update([
-                        'wallet_avl_balance'=>$newAmount
+
+                    User::where('id', $userData->id)->update([
+                        'wallet_avl_balance' => $newAmount
                     ]);
-                     $orderData = OrderItem::with('order')->where('order_id', $request->orderId)->get();
-                    $this->mailService->orderCancelled($userData,$orderData);
-                   
-                    $history = new WalletHistory ;
+                    $orderData = OrderItem::with('order')->where('order_id', $request->orderId)->get();
+                    $this->mailService->orderCancelled($userData, $orderData);
+
+                    $history = new WalletHistory;
                     $history->user_id = $userData->id;
                     $history->order_id = $order->order->id;
-                    $history->amount = $order->total;  
-                    $history->gst_amount = 0.00 ;
+                    $history->amount = $order->total;
+                    $history->gst_amount = 0.00;
                     $history->type = "credit";
                     $history->transaction_id = null;
                     $history->save();
- 
-                    DB::Transaction(function() use ($order){
-                        Order::where('id',$order->order->id)->update([
-                            'status'=>'cancelled'
+
+                    DB::Transaction(function () use ($order) {
+                        Order::where('id', $order->order->id)->update([
+                            'status' => 'cancelled'
                         ]);
- 
-                        OrderItem::where('order_id',$order->order->id)->update([
-                            'status'=>'cancelled'
+
+                        OrderItem::where('order_id', $order->order->id)->update([
+                            'status' => 'cancelled'
                         ]);
                     });
                 }
-               
+
             }
         }
     }
